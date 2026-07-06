@@ -1,0 +1,202 @@
+type http_request_result = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = 
+ record {
+   colorScheme: text;
+   language: text;
+   name: text;
+   theme: text;
+ };
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: http_request_result;
+ };
+type Transaction = 
+ record {
+   amount: float64;
+   assetName: text;
+   assetSymbol: text;
+   comment: text;
+   date: int;
+   id: nat;
+   price: float64;
+   "type": text;
+ };
+type TechnicalData = 
+ record {
+   change24h: float64;
+   currentPrice: float64;
+   lastUpdated: int;
+   marketCap: float64;
+   name: text;
+   symbol: text;
+   volume24h: float64;
+ };
+type PriorityAsset = 
+ record {
+   id: text;
+   lastUpdated: int;
+   marketCap: float64;
+   name: text;
+   price: float64;
+   symbol: text;
+ };
+type Portfolio = 
+ record {
+   assets: vec Asset;
+   createdAt: int;
+   historicalProfitLoss: vec HistoricalProfitLoss;
+   historicalTotalValue: vec HistoricalTotalValue;
+   historicalUnrealizedProfitLoss: vec HistoricalUnrealizedProfitLoss;
+   historicalValues: vec HistoricalValue;
+   id: nat;
+   name: text;
+   totalProfitLoss: float64;
+   totalPurchaseValue: float64;
+   trackedAssets: vec text;
+   transactions: vec Transaction;
+   unrealizedProfitLoss: float64;
+ };
+type MarketDataStatus = 
+ record {
+   apiHealth: text;
+   calculationQuality: float64;
+   colorScheme: text;
+   lastUpdated: int;
+   status: text;
+   trackedAssetsCount: nat;
+ };
+type MarketData = 
+ record {
+   id: nat;
+   lastUpdated: int;
+   marketCap: float64;
+   name: text;
+   price: float64;
+   symbol: text;
+ };
+type HistoricalValue = 
+ record {
+   timestamp: int;
+   totalValue: float64;
+ };
+type HistoricalUnrealizedProfitLoss = 
+ record {
+   timestamp: int;
+   unrealizedProfitLoss: float64;
+ };
+type HistoricalTotalValue = 
+ record {
+   timestamp: int;
+   totalValue: float64;
+ };
+type HistoricalProfitLoss = 
+ record {
+   timestamp: int;
+   totalProfitLoss: float64;
+ };
+type AuthResult_1 = 
+ variant {
+   notFound: text;
+   ok: UserProfile;
+   unauthorized: text;
+ };
+type AuthResult = 
+ variant {
+   notFound: text;
+   ok: vec Portfolio;
+   unauthorized: text;
+ };
+type Asset = 
+ record {
+   amount: float64;
+   averagePrice: float64;
+   averagePurchasePrice: float64;
+   currentPrice: float64;
+   currentValue: float64;
+   name: text;
+   profitLoss: float64;
+   profitLossPercentage: float64;
+   purchaseValue: float64;
+   realizedProfitLoss: float64;
+   symbol: text;
+ };
+service : {
+  _initializeAccessControl: () -> ();
+  addTransaction: (portfolioId: nat, transaction: Transaction) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  createPortfolio: (name: text) -> (nat);
+  deletePortfolio: (portfolioId: nat) -> ();
+  deleteTransaction: (portfolioId: nat, transactionId: nat) -> ();
+  editTransaction: (portfolioId: nat, transactionId: nat, updatedTransaction:
+   Transaction) -> ();
+  fetchHistoricalPriceData: (assetId: text) -> (text);
+  fetchMarketData: () -> ();
+  fetchPriorityAssetPrices: () -> ();
+  fetchTechnicalData: (assetId: text) -> ();
+  getAvailableAssets: () -> (vec text) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserProfileWithStatus: () -> (AuthResult_1) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getMarketData: () -> (vec MarketData) query;
+  getMarketDataStatus: () -> (opt MarketDataStatus) query;
+  getPortfolioAssets: (portfolioId: nat) -> (vec Asset) query;
+  getPortfolioHistoricalProfitLoss: (portfolioId: nat) ->
+   (vec HistoricalProfitLoss) query;
+  getPortfolioHistoricalTotalValue: (portfolioId: nat) ->
+   (vec HistoricalTotalValue) query;
+  getPortfolioHistoricalUnrealizedProfitLoss: (portfolioId: nat) ->
+   (vec HistoricalUnrealizedProfitLoss) query;
+  getPortfolioHistoricalValues: (portfolioId: nat) ->
+   (vec HistoricalValue) query;
+  getPortfolioSummary: (portfolioId: nat) ->
+   (opt
+     record {
+       totalProfitLoss: float64;
+       totalPurchaseValue: float64;
+       totalValue: float64;
+       unrealizedProfitLoss: float64;
+     }) query;
+  getPortfolioTrackedAssets: (portfolioId: nat) -> (vec text) query;
+  getPortfolioTransactions: (portfolioId: nat) -> (vec Transaction) query;
+  getPortfolios: () -> (vec Portfolio) query;
+  getPortfoliosWithStatus: () -> (AuthResult) query;
+  getPriorityAssets: () -> (vec PriorityAsset) query;
+  getSystemHealth: () ->
+   (record {
+      currentTime: int;
+      isHealthy: bool;
+      lastCheck: int;
+    }) query;
+  getTechnicalData: (assetId: text) -> (opt TechnicalData) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  initializeAccessControl: () -> ();
+  isAuthenticated: () -> (bool) query;
+  isCallerAdmin: () -> (bool) query;
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
+  updateAssetPrices: (portfolioId: nat) -> ();
+  updateMarketDataStatus: (status: MarketDataStatus) -> ();
+}

@@ -1,0 +1,22 @@
+{
+  "overview": "Bilingual crypto portfolio manager with export/import, real-time prices, TradingView charts, and multi-portfolio support on Internet Computer.",
+  "features": [
+    "Manage up to 10 independent portfolios",
+    "Export selected portfolios to JSON file",
+    "Import portfolios from JSON file (merge with existing)",
+    "Real-time prices auto-refreshed every minute",
+    "TradingView candlestick charts per asset",
+    "Transaction history with zero-price staking support",
+    "Multiple color themes (default, gray, navy)",
+    "Bilingual Polish/English interface"
+  ],
+  "category": "finance",
+  "tags": [
+    "crypto",
+    "portfolio",
+    "finance",
+    "internet-computer",
+    "bilingual"
+  ],
+  "last_updated": "2026-06-04T07:55:19.020Z"
+}

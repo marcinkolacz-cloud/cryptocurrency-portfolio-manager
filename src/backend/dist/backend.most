@@ -1,0 +1,145 @@
+// Version: 1.0.0
+type Asset__191761896 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    symbol : Text
+  };
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type HistoricalProfitLoss__827809591 =
+  {timestamp : Int; totalProfitLoss : Float};
+type HistoricalTotalValue__237814692 = {timestamp : Int; totalValue : Float};
+type HistoricalUnrealizedProfitLoss__766859379 =
+  {timestamp : Int; unrealizedProfitLoss : Float};
+type HistoricalValue__461698983 = {timestamp : Int; totalValue : Float};
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__334413012<K, V> = {root : Tree__4145630<K, V>; size : Nat};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type MarketDataStatus__1069269376 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketData__386355075 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Portfolio__529122221 =
+  {
+    assets : [Asset__191761896];
+    createdAt : Int;
+    historicalProfitLoss : [HistoricalProfitLoss__827809591];
+    historicalTotalValue : [HistoricalTotalValue__237814692];
+    historicalUnrealizedProfitLoss :
+      [HistoricalUnrealizedProfitLoss__766859379];
+    historicalValues : [HistoricalValue__461698983];
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__865268250];
+    unrealizedProfitLoss : Float
+  };
+type Principal__224692764 = Principal;
+type Principal__565152929 = Principal__224692764;
+type PriorityAsset__358510014 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type TechnicalData__677488086 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
+type Transaction__865268250 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Tree__4145630<K, V> =
+  {
+    #black : (Tree__4145630<K, V>, K, V, Tree__4145630<K, V>);
+    #leaf;
+    #red : (Tree__4145630<K, V>, K, V, Tree__4145630<K, V>)
+  };
+type UserProfile__491224006 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
+type UserRole__1073662873 = {#admin; #guest; #user};
+actor {
+  stable var _acAdminAssigned : Bool;
+  stable var _acState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1073662873>
+    };
+  stable var _acUserRoles : [(Principal, UserRole__1073662873)];
+  stable var accessControlState :
+    {
+      var adminAssigned : Bool;
+      var userRoles : Map__334413012<Principal, UserRole__1073662873>
+    };
+  stable var isSystemHealthy : Bool;
+  stable var lastHealthCheck : Int;
+  stable var marketData :
+    {root : Tree__4145630<Nat, MarketData__386355075>; size : Nat};
+  stable var marketDataStatus :
+    {root : Tree__4145630<Nat, MarketDataStatus__1069269376>; size : Nat};
+  stable var portfolios :
+    {
+      root : Tree__4145630<Principal__565152929, [Portfolio__529122221]>;
+      size : Nat
+    };
+  stable var priorityAssets :
+    {root : Tree__4145630<Nat, PriorityAsset__358510014>; size : Nat};
+  stable var technicalData :
+    {root : Tree__4145630<Nat, TechnicalData__677488086>; size : Nat};
+  stable var userProfiles :
+    {
+      root : Tree__4145630<Principal__565152929, UserProfile__491224006>;
+      size : Nat
+    }
+};

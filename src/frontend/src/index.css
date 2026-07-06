@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+    --background: 0.98 0 0;
+    --foreground: 0.145 0 0;
+    --card: 1 0 0;
+    --card-foreground: 0.145 0 0;
+    --popover: 1 0 0;
+    --popover-foreground: 0.145 0 0;
+    --primary: 0.55 0.22 264;
+    --primary-foreground: 0.985 0 0;
+    --secondary: 0.96 0 0;
+    --secondary-foreground: 0.145 0 0;
+    --muted: 0.96 0 0;
+    --muted-foreground: 0.5 0 0;
+    --accent: 0.94 0 0;
+    --accent-foreground: 0.145 0 0;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.92 0 0;
+    --input: 0.92 0 0;
+    --ring: 0.55 0.22 264;
+    --chart-1: 0.646 0.222 41.116;
+    --chart-2: 0.6 0.118 184.704;
+    --chart-3: 0.398 0.07 227.392;
+    --chart-4: 0.828 0.189 84.429;
+    --chart-5: 0.769 0.188 70.08;
+    --sidebar: 0.985 0 0;
+    --sidebar-foreground: 0.145 0 0;
+    --sidebar-primary: 0.55 0.22 264;
+    --sidebar-primary-foreground: 0.985 0 0;
+    --sidebar-accent: 0.96 0 0;
+    --sidebar-accent-foreground: 0.145 0 0;
+    --sidebar-border: 0.92 0 0;
+    --sidebar-ring: 0.55 0.22 264;
+  }
+
+  .dark {
+    --background: 0.12 0 0;
+    --foreground: 0.985 0 0;
+    --card: 0.16 0 0;
+    --card-foreground: 0.985 0 0;
+    --popover: 0.18 0 0;
+    --popover-foreground: 0.985 0 0;
+    --primary: 0.65 0.24 264;
+    --primary-foreground: 0.985 0 0;
+    --secondary: 0.22 0 0;
+    --secondary-foreground: 0.985 0 0;
+    --muted: 0.22 0 0;
+    --muted-foreground: 0.65 0 0;
+    --accent: 0.28 0 0;
+    --accent-foreground: 0.985 0 0;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.28 0 0;
+    --input: 0.28 0 0;
+    --ring: 0.65 0.24 264;
+    --chart-1: 0.488 0.243 264.376;
+    --chart-2: 0.696 0.17 162.48;
+    --chart-3: 0.769 0.188 70.08;
+    --chart-4: 0.627 0.265 303.9;
+    --chart-5: 0.645 0.246 16.439;
+    --sidebar: 0.16 0 0;
+    --sidebar-foreground: 0.985 0 0;
+    --sidebar-primary: 0.65 0.24 264;
+    --sidebar-primary-foreground: 0.985 0 0;
+    --sidebar-accent: 0.22 0 0;
+    --sidebar-accent-foreground: 0.985 0 0;
+    --sidebar-border: 0.28 0 0;
+    --sidebar-ring: 0.65 0.24 264;
+  }
+
+  * {
+    @apply border-border;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Chart grid styling for light mode */
+.chart-grid-light {
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 1.5;
+}
+
+/* Chart grid styling for dark mode - highly visible with maximum contrast */
+.chart-grid-dark {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.5;
+}
+
+/* Chart axis styling for light mode */
+.chart-axis-light {
+  stroke: rgba(0, 0, 0, 0.7);
+}
+
+/* Chart axis styling for dark mode - maximum brightness for readability */
+.chart-axis-dark {
+  stroke: rgba(255, 255, 255, 0.95);
+}
+
+/* Chart axis label styling for light mode */
+.chart-axis-label-light {
+  fill: rgba(0, 0, 0, 0.8);
+}
+
+/* Chart axis label styling for dark mode - maximum contrast and brightness */
+.chart-axis-label-dark {
+  fill: rgba(255, 255, 255, 1);
+}
+
+/* Recharts text elements in light mode */
+:root .recharts-text {
+  fill: rgba(0, 0, 0, 0.8);
+  transition: fill 0.3s ease;
+}
+
+/* Recharts text elements in dark mode - maximum contrast */
+.dark .recharts-text {
+  fill: rgba(255, 255, 255, 1);
+  font-weight: 600;
+}
+
+/* Recharts cartesian axis tick in light mode */
+:root .recharts-cartesian-axis-tick-value {
+  fill: rgba(0, 0, 0, 0.8);
+  transition: fill 0.3s ease;
+}
+
+/* Recharts cartesian axis tick in dark mode - maximum readability */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: rgba(255, 255, 255, 1);
+  font-weight: 600;
+}
+
+/* Recharts legend text in light mode */
+:root .recharts-legend-item-text {
+  color: rgba(0, 0, 0, 0.85) !important;
+  transition: color 0.3s ease;
+}
+
+/* Recharts legend text in dark mode - bright and clear */
+.dark .recharts-legend-item-text {
+  color: rgba(255, 255, 255, 1) !important;
+  font-weight: 600;
+}
+
+/* Recharts pie chart label text */
+:root .recharts-pie-label-text {
+  fill: rgba(0, 0, 0, 0.9);
+  font-weight: 600;
+  transition: fill 0.3s ease;
+}
+
+.dark .recharts-pie-label-text {
+  fill: rgba(255, 255, 255, 1);
+  font-weight: 700;
+}
+
+/* Smooth transitions for all interactive elements */
+@layer utilities {
+  .modal-overlay {
+    @apply fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300;
+  }
+
+  .modal-content {
+    @apply relative z-50 bg-card text-card-foreground border border-border rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto;
+  }
+
+  .modal-header {
+    @apply px-6 py-4 border-b border-border flex items-center justify-between;
+  }
+
+  .modal-body {
+    @apply px-6 py-4 space-y-4;
+  }
+
+  .modal-footer {
+    @apply px-6 py-4 border-t border-border flex gap-3 justify-end bg-muted/20;
+  }
+
+  .modal-title {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .modal-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .checkbox-group {
+    @apply space-y-3 py-2;
+  }
+
+  .checkbox-item {
+    @apply flex items-center gap-3 p-3 rounded-md hover:bg-accent/10 cursor-pointer transition-colors duration-200;
+  }
+
+  .checkbox-item:hover .checkbox-label {
+    @apply text-foreground;
+  }
+
+  .checkbox-input {
+    @apply h-5 w-5 rounded border-2 border-border cursor-pointer transition-all duration-200 accent-primary checked:bg-primary checked:border-primary;
+  }
+
+  .checkbox-label {
+    @apply text-sm font-medium cursor-pointer select-none flex-1;
+  }
+
+  .confirmation-dialog {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+  }
+
+  .confirmation-content {
+    @apply bg-card text-card-foreground border border-border rounded-lg shadow-xl p-6 max-w-sm mx-4;
+  }
+
+  .confirmation-title {
+    @apply text-lg font-semibold mb-2;
+  }
+
+  .confirmation-message {
+    @apply text-sm text-muted-foreground mb-6;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:opacity-90 transition-opacity duration-200;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-secondary text-secondary-foreground border border-border rounded-md font-medium hover:bg-muted transition-colors duration-200;
+  }
+
+  .btn-destructive {
+    @apply px-4 py-2 bg-destructive text-destructive-foreground rounded-md font-medium hover:opacity-90 transition-opacity duration-200;
+  }
+
+  .btn-success {
+    @apply px-4 py-2 bg-chart-4 text-white rounded-md font-medium hover:opacity-90 transition-opacity duration-200;
+  }
+}
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card transitions */
+[class*="card"] {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow
+    0.3s ease;
+}
+
+/* Dialog and modal transitions */
+[role="dialog"],
+[role="alertdialog"] {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Table transitions */
+table,
+th,
+td {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s
+    ease;
+}
