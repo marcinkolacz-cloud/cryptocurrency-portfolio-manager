@@ -32,6 +32,9 @@ const translations = {
     debugErrorLabel: "Błąd:",
     debugTimestampLabel: "Czas błędu:",
     debugLoading: "Ładowanie danych debugowania...",
+    debugBlockMarketData: "Dane rynkowe (top 250 monet)",
+    debugBlockPriorityAssets: "Priorytetowe aktywa ICP",
+    debugBlockTechnicalData: "Dane techniczne",
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -46,6 +49,9 @@ const translations = {
     debugErrorLabel: "Error:",
     debugTimestampLabel: "Error time:",
     debugLoading: "Loading debug data...",
+    debugBlockMarketData: "Market data (top 250 coins)",
+    debugBlockPriorityAssets: "Priority ICP assets",
+    debugBlockTechnicalData: "Technical data",
   },
 };
 
@@ -92,33 +98,51 @@ export default function MarketDataStatusPanel({
     });
   };
 
+  const renderErrorBlock = (
+    label: string,
+    field: { error: string; timestamp: bigint } | null,
+  ) => {
+    return (
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        {field === null ? (
+          <p className="text-sm text-muted-foreground">{t.debugNoError}</p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {t.debugErrorLabel}
+              </span>{" "}
+              {field.error}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {t.debugTimestampLabel}
+              </span>{" "}
+              {formatDateTime(new Date(Number(field.timestamp) / 1_000_000))}
+            </p>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const renderDebugContent = () => {
     if (lastFetchErrorQuery.isLoading) {
       return <p className="text-sm text-muted-foreground">{t.debugLoading}</p>;
     }
 
-    const data = lastFetchErrorQuery.data ?? null;
-
-    if (data === null) {
-      return <p className="text-sm text-muted-foreground">{t.debugNoError}</p>;
-    }
-
-    const errorDate = new Date(Number(data.timestamp) / 1_000_000);
+    const data = lastFetchErrorQuery.data ?? {
+      marketData: null,
+      priorityAssets: null,
+      technicalData: null,
+    };
 
     return (
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">
-            {t.debugErrorLabel}
-          </span>{" "}
-          {data.error}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">
-            {t.debugTimestampLabel}
-          </span>{" "}
-          {formatDateTime(errorDate)}
-        </p>
+      <div className="flex flex-col gap-3">
+        {renderErrorBlock(t.debugBlockMarketData, data.marketData)}
+        {renderErrorBlock(t.debugBlockPriorityAssets, data.priorityAssets)}
+        {renderErrorBlock(t.debugBlockTechnicalData, data.technicalData)}
       </div>
     );
   };

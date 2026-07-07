@@ -159,9 +159,19 @@ export interface backendInterface {
     getCallerUserProfileWithStatus(): Promise<AuthResult_1>;
     getCallerUserRole(): Promise<UserRole>;
     getLastFetchError(): Promise<{
-        error: string;
-        timestamp: bigint;
-    } | null>;
+        marketData?: {
+            error: string;
+            timestamp: bigint;
+        };
+        priorityAssets?: {
+            error: string;
+            timestamp: bigint;
+        };
+        technicalData?: {
+            error: string;
+            timestamp: bigint;
+        };
+    }>;
     getMarketData(): Promise<Array<MarketData>>;
     getMarketDataStatus(): Promise<MarketDataStatus | null>;
     getPortfolioAssets(portfolioId: bigint): Promise<Array<Asset>>;

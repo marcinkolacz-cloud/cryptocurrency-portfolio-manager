@@ -14,7 +14,12 @@ import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
+import Migration "migration";
 
+// Explicit migration: absorbs the previous canister's lastFetchError /
+// lastFetchErrorTimestamp stable vars (now retired) and initializes the
+// three new per-function error pairs to null. See migration.mo.
+(with migration = Migration.run)
 actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
    var accessControlState : {
@@ -65,23 +70,38 @@ actor {
     };
   };
 
-  // Admin-only query to inspect the last fetch error from a refresh/outcall.
-  // Mirrors the getSystemHealth admin-gating pattern. Returns null when no
-  // error is recorded, or ?{ error; timestamp } when one is.
-  public query ({ caller }) func getLastFetchError() : async ?{
-    error : Text;
-    timestamp : Int;
+  // Admin-only query to inspect per-function fetch errors from refresh/outcall.
+  // Mirrors the getSystemHealth admin-gating pattern. Returns a record with
+  // three optional fields (one per refresh function); each field is null when
+  // that function has no recorded error, or ?{ error; timestamp } when it does.
+  public query ({ caller }) func getLastFetchError() : async {
+    marketData : ?{ error : Text; timestamp : Int };
+    priorityAssets : ?{ error : Text; timestamp : Int };
+    technicalData : ?{ error : Text; timestamp : Int };
   } {
     if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
       Debug.trap("Unauthorized: Only administrators can check fetch errors");
     };
 
-    switch (lastFetchError, lastFetchErrorTimestamp) {
+    let marketData = switch (lastMarketDataError, lastMarketDataErrorTimestamp) {
       case (?e, ?t) { ?{ error = e; timestamp = t } };
       case (?e, null) { ?{ error = e; timestamp = 0 } };
       case (null, ?t) { ?{ error = ""; timestamp = t } };
       case (null, null) { null };
     };
+    let priorityAssets = switch (lastPriorityAssetsError, lastPriorityAssetsErrorTimestamp) {
+      case (?e, ?t) { ?{ error = e; timestamp = t } };
+      case (?e, null) { ?{ error = e; timestamp = 0 } };
+      case (null, ?t) { ?{ error = ""; timestamp = t } };
+      case (null, null) { null };
+    };
+    let technicalData = switch (lastTechnicalDataError, lastTechnicalDataErrorTimestamp) {
+      case (?e, ?t) { ?{ error = e; timestamp = t } };
+      case (?e, null) { ?{ error = e; timestamp = 0 } };
+      case (null, ?t) { ?{ error = ""; timestamp = t } };
+      case (null, null) { null };
+    };
+    { marketData; priorityAssets; technicalData };
   };
 
   // Check if caller is authenticated - only returns info about the caller themselves
@@ -248,12 +268,19 @@ actor {
   var technicalData = natMap.empty<TechnicalData>();
   var marketDataStatus = natMap.empty<MarketDataStatus>();
 
-  // Last fetch error tracking — set when an HTTP outcall traps or Json.parse
-  // fails inside a refresh function, cleared on the next successful refresh.
+  // Per-function fetch error tracking — each refresh function owns its own
+  // pair so a later function's success cannot erase an earlier function's
+  // error. Set when an HTTP outcall traps or Json.parse fails inside the
+  // owning function, cleared on that function's next successful refresh
+  // (fetchTechnicalData does not clear on success — see its comment).
   // Implicitly stable under --default-persistent-actors (matches the existing
   // state-var pattern above).
-  var lastFetchError : ?Text = null;
-  var lastFetchErrorTimestamp : ?Int = null;
+  var lastMarketDataError : ?Text = null;
+  var lastMarketDataErrorTimestamp : ?Int = null;
+  var lastPriorityAssetsError : ?Text = null;
+  var lastPriorityAssetsErrorTimestamp : ?Int = null;
+  var lastTechnicalDataError : ?Text = null;
+  var lastTechnicalDataErrorTimestamp : ?Int = null;
 
   // JSON helper: walk a dot/bracket path (e.g. "market_data.current_price.usd")
   // via Json.get and return the #string value, or "" if absent/wrong type.
@@ -1134,8 +1161,8 @@ actor {
     let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
       // existing marketData map — preserve prior data and record the error.
-      lastFetchError := ?("_refreshMarketData: " # err.message());
-      lastFetchErrorTimestamp := ?Time.now();
+      lastMarketDataError := ?("_refreshMarketData: " # err.message());
+      lastMarketDataErrorTimestamp := ?Time.now();
       return;
     };
 
@@ -1144,8 +1171,8 @@ actor {
     switch (Json.parse(response)) {
       case (#err(e)) {
         // Parse failed — leave marketData untouched and record the error.
-        lastFetchError := ?("_refreshMarketData: JSON parse failed: " # Json.errToText(e));
-        lastFetchErrorTimestamp := ?currentTime;
+        lastMarketDataError := ?("_refreshMarketData: JSON parse failed: " # Json.errToText(e));
+        lastMarketDataErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
         return;
       };
@@ -1177,13 +1204,13 @@ actor {
               index := index + 1;
             };
             // Successful refresh — clear any prior fetch error.
-            lastFetchError := null;
-            lastFetchErrorTimestamp := null;
+            lastMarketDataError := null;
+            lastMarketDataErrorTimestamp := null;
           };
           case _ {
             // Unexpected shape — record the error, leave prior data intact.
-            lastFetchError := ?"_refreshMarketData: unexpected JSON shape (not an array)";
-            lastFetchErrorTimestamp := ?currentTime;
+            lastMarketDataError := ?"_refreshMarketData: unexpected JSON shape (not an array)";
+            lastMarketDataErrorTimestamp := ?currentTime;
           };
         };
         lastHealthCheck := currentTime;
@@ -1230,8 +1257,8 @@ actor {
     let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
       // existing priorityAssets map — preserve prior data and record the error.
-      lastFetchError := ?("_refreshPriorityAssetPrices: " # err.message());
-      lastFetchErrorTimestamp := ?Time.now();
+      lastPriorityAssetsError := ?("_refreshPriorityAssetPrices: " # err.message());
+      lastPriorityAssetsErrorTimestamp := ?Time.now();
       return;
     };
 
@@ -1240,8 +1267,8 @@ actor {
     switch (Json.parse(response)) {
       case (#err(e)) {
         // Parse failed — leave priorityAssets untouched and record the error.
-        lastFetchError := ?("_refreshPriorityAssetPrices: JSON parse failed: " # Json.errToText(e));
-        lastFetchErrorTimestamp := ?currentTime;
+        lastPriorityAssetsError := ?("_refreshPriorityAssetPrices: JSON parse failed: " # Json.errToText(e));
+        lastPriorityAssetsErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
         return;
       };
@@ -1270,8 +1297,8 @@ actor {
           index := index + 1;
         };
         // Successful refresh — clear any prior fetch error.
-        lastFetchError := null;
-        lastFetchErrorTimestamp := null;
+        lastPriorityAssetsError := null;
+        lastPriorityAssetsErrorTimestamp := null;
         lastHealthCheck := currentTime;
       };
     };
@@ -1675,8 +1702,8 @@ actor {
     let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT overwrite
       // existing technicalData — preserve prior data and record the error.
-      lastFetchError := ?("fetchTechnicalData(" # assetId # "): " # err.message());
-      lastFetchErrorTimestamp := ?Time.now();
+      lastTechnicalDataError := ?("fetchTechnicalData(" # assetId # "): " # err.message());
+      lastTechnicalDataErrorTimestamp := ?Time.now();
       return;
     };
 
@@ -1698,8 +1725,8 @@ actor {
       case (#err(e)) {
         // Parse failed — record the error and keep the zero defaults. Do NOT
         // overwrite technicalData with zeros; leave prior data intact.
-        lastFetchError := ?("fetchTechnicalData(" # assetId # "): JSON parse failed: " # Json.errToText(e));
-        lastFetchErrorTimestamp := ?currentTime;
+        lastTechnicalDataError := ?("fetchTechnicalData(" # assetId # "): JSON parse failed: " # Json.errToText(e));
+        lastTechnicalDataErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
         return;
       };

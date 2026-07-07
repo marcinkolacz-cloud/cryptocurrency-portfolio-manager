@@ -153,7 +153,19 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getLastFetchError' : IDL.Func(
       [],
-      [IDL.Opt(IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int }))],
+      [
+        IDL.Record({
+          'marketData' : IDL.Opt(
+            IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+          ),
+          'priorityAssets' : IDL.Opt(
+            IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+          ),
+          'technicalData' : IDL.Opt(
+            IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+          ),
+        }),
+      ],
       ['query'],
     ),
   'getMarketData' : IDL.Func([], [IDL.Vec(MarketData)], ['query']),
@@ -385,7 +397,19 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getLastFetchError' : IDL.Func(
         [],
-        [IDL.Opt(IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int }))],
+        [
+          IDL.Record({
+            'marketData' : IDL.Opt(
+              IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+            ),
+            'priorityAssets' : IDL.Opt(
+              IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+            ),
+            'technicalData' : IDL.Opt(
+              IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int })
+            ),
+          }),
+        ],
         ['query'],
       ),
     'getMarketData' : IDL.Func([], [IDL.Vec(MarketData)], ['query']),

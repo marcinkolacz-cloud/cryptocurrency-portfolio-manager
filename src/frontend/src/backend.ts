@@ -206,9 +206,19 @@ export interface backendInterface {
     getCallerUserProfileWithStatus(): Promise<AuthResult_1>;
     getCallerUserRole(): Promise<UserRole>;
     getLastFetchError(): Promise<{
-        error: string;
-        timestamp: bigint;
-    } | null>;
+        marketData?: {
+            error: string;
+            timestamp: bigint;
+        };
+        priorityAssets?: {
+            error: string;
+            timestamp: bigint;
+        };
+        technicalData?: {
+            error: string;
+            timestamp: bigint;
+        };
+    }>;
     getMarketData(): Promise<Array<MarketData>>;
     getMarketDataStatus(): Promise<MarketDataStatus | null>;
     getPortfolioAssets(portfolioId: bigint): Promise<Array<Asset>>;
@@ -456,20 +466,30 @@ export class Backend implements backendInterface {
         }
     }
     async getLastFetchError(): Promise<{
-        error: string;
-        timestamp: bigint;
-    } | null> {
+        marketData?: {
+            error: string;
+            timestamp: bigint;
+        };
+        priorityAssets?: {
+            error: string;
+            timestamp: bigint;
+        };
+        technicalData?: {
+            error: string;
+            timestamp: bigint;
+        };
+    }> {
         if (this.processError) {
             try {
                 const result = await this.actor.getLastFetchError();
-                return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getLastFetchError();
-            return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getMarketData(): Promise<Array<MarketData>> {
@@ -490,14 +510,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getMarketDataStatus();
-                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getMarketDataStatus();
-            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPortfolioAssets(arg0: bigint): Promise<Array<Asset>> {
@@ -579,14 +599,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPortfolioSummary(arg0);
-                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPortfolioSummary(arg0);
-            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPortfolioTrackedAssets(arg0: bigint): Promise<Array<string>> {
@@ -635,14 +655,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPortfoliosWithStatus();
-                return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
+                return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPortfoliosWithStatus();
-            return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
+            return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPriorityAssets(): Promise<Array<PriorityAsset>> {
@@ -681,14 +701,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getTechnicalData(arg0);
-                return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getTechnicalData(arg0);
-            return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -807,13 +827,16 @@ export class Backend implements backendInterface {
 function from_candid_AuthResult_1_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuthResult_1): AuthResult_1 {
     return from_candid_variant_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuthResult_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuthResult): AuthResult {
-    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuthResult): AuthResult {
+    return from_candid_variant_n13(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n7(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [{
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_MarketDataStatus]): MarketDataStatus | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [{
         totalProfitLoss: number;
         totalValue: number;
         totalPurchaseValue: number;
@@ -826,13 +849,13 @@ function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 } | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TechnicalData]): TechnicalData | null {
+function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TechnicalData]): TechnicalData | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [{
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [{
         error: string;
         timestamp: bigint;
     }]): {
@@ -841,10 +864,40 @@ function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 } | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_MarketDataStatus]): MarketDataStatus | null {
-    return value.length === 0 ? null : value[0];
+function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    marketData: [] | [{
+            error: string;
+            timestamp: bigint;
+        }];
+    priorityAssets: [] | [{
+            error: string;
+            timestamp: bigint;
+        }];
+    technicalData: [] | [{
+            error: string;
+            timestamp: bigint;
+        }];
+}): {
+    marketData?: {
+        error: string;
+        timestamp: bigint;
+    };
+    priorityAssets?: {
+        error: string;
+        timestamp: bigint;
+    };
+    technicalData?: {
+        error: string;
+        timestamp: bigint;
+    };
+} {
+    return {
+        marketData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.marketData)),
+        priorityAssets: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.priorityAssets)),
+        technicalData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.technicalData))
+    };
 }
-function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: Array<_Portfolio>;
 } | {
     notFound: string;

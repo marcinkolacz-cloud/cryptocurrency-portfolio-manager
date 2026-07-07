@@ -332,24 +332,40 @@ export function useGetPriorityAssets() {
   });
 }
 
-export interface LastFetchError {
+export interface FetchError {
   error: string;
   timestamp: bigint;
 }
 
+export interface LastFetchErrors {
+  marketData: FetchError | null;
+  priorityAssets: FetchError | null;
+  technicalData: FetchError | null;
+}
+
+const EMPTY_LAST_FETCH_ERRORS: LastFetchErrors = {
+  marketData: null,
+  priorityAssets: null,
+  technicalData: null,
+};
+
 export function useGetLastFetchError() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery<LastFetchError | null>({
+  return useQuery<LastFetchErrors>({
     queryKey: ["lastFetchError"],
     queryFn: async () => {
-      if (!actor) return null;
+      if (!actor) return EMPTY_LAST_FETCH_ERRORS;
       try {
         const result = await actor.getLastFetchError();
-        return result ?? null;
+        return {
+          marketData: result.marketData ?? null,
+          priorityAssets: result.priorityAssets ?? null,
+          technicalData: result.technicalData ?? null,
+        };
       } catch (error) {
         console.error("Error fetching last fetch error:", error);
-        return null;
+        return EMPTY_LAST_FETCH_ERRORS;
       }
     },
     enabled: !!actor && !actorFetching,

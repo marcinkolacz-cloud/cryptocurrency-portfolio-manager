@@ -160,10 +160,21 @@ service : {
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserProfileWithStatus: () -> (AuthResult_1) query;
   getCallerUserRole: () -> (UserRole) query;
-  getLastFetchError: () -> (opt record {
-                                  error: text;
-                                  timestamp: int;
-                                }) query;
+  getLastFetchError: () ->
+   (record {
+      marketData: opt record {
+                        error: text;
+                        timestamp: int;
+                      };
+      priorityAssets: opt record {
+                            error: text;
+                            timestamp: int;
+                          };
+      technicalData: opt record {
+                           error: text;
+                           timestamp: int;
+                         };
+    }) query;
   getMarketData: () -> (vec MarketData) query;
   getMarketDataStatus: () -> (opt MarketDataStatus) query;
   getPortfolioAssets: (portfolioId: nat) -> (vec Asset) query;

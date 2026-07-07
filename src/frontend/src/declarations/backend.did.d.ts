@@ -142,7 +142,11 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getLastFetchError' : ActorMethod<
     [],
-    [] | [{ 'error' : string, 'timestamp' : bigint }]
+    {
+      'marketData' : [] | [{ 'error' : string, 'timestamp' : bigint }],
+      'priorityAssets' : [] | [{ 'error' : string, 'timestamp' : bigint }],
+      'technicalData' : [] | [{ 'error' : string, 'timestamp' : bigint }],
+    }
   >,
   'getMarketData' : ActorMethod<[], Array<MarketData>>,
   'getMarketDataStatus' : ActorMethod<[], [] | [MarketDataStatus]>,

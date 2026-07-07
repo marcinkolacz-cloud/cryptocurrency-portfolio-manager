@@ -36748,7 +36748,19 @@ Service({
   "getCallerUserRole": Func([], [UserRole], ["query"]),
   "getLastFetchError": Func(
     [],
-    [Opt(Record({ "error": Text$1, "timestamp": Int }))],
+    [
+      Record({
+        "marketData": Opt(
+          Record({ "error": Text$1, "timestamp": Int })
+        ),
+        "priorityAssets": Opt(
+          Record({ "error": Text$1, "timestamp": Int })
+        ),
+        "technicalData": Opt(
+          Record({ "error": Text$1, "timestamp": Int })
+        )
+      })
+    ],
     ["query"]
   ),
   "getMarketData": Func([], [Vec(MarketData)], ["query"]),
@@ -36976,7 +36988,19 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getCallerUserRole": IDL2.Func([], [UserRole2], ["query"]),
     "getLastFetchError": IDL2.Func(
       [],
-      [IDL2.Opt(IDL2.Record({ "error": IDL2.Text, "timestamp": IDL2.Int }))],
+      [
+        IDL2.Record({
+          "marketData": IDL2.Opt(
+            IDL2.Record({ "error": IDL2.Text, "timestamp": IDL2.Int })
+          ),
+          "priorityAssets": IDL2.Opt(
+            IDL2.Record({ "error": IDL2.Text, "timestamp": IDL2.Int })
+          ),
+          "technicalData": IDL2.Opt(
+            IDL2.Record({ "error": IDL2.Text, "timestamp": IDL2.Int })
+          )
+        })
+      ],
       ["query"]
     ),
     "getMarketData": IDL2.Func([], [IDL2.Vec(MarketData2)], ["query"]),
@@ -37067,6 +37091,9 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "updateMarketDataStatus": IDL2.Func([MarketDataStatus2], [], [])
   });
 };
+function record_opt_to_undefined(arg) {
+  return arg == null ? void 0 : arg;
+}
 class Backend {
   constructor(actor, _uploadFile, _downloadFile, processError2) {
     this.actor = actor;
@@ -37288,14 +37315,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getLastFetchError();
-        return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getLastFetchError();
-      return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMarketData() {
@@ -37316,14 +37343,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMarketDataStatus();
-        return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMarketDataStatus();
-      return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioAssets(arg0) {
@@ -37400,14 +37427,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfolioSummary(arg0);
-        return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfolioSummary(arg0);
-      return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioTrackedAssets(arg0) {
@@ -37456,14 +37483,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfoliosWithStatus();
-        return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfoliosWithStatus();
-      return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPriorityAssets() {
@@ -37498,14 +37525,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getTechnicalData(arg0);
-        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getTechnicalData(arg0);
-      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
@@ -37624,8 +37651,8 @@ class Backend {
 function from_candid_AuthResult_1_n4(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuthResult_n11(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n12(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_n12(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n13(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n6(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n7(_uploadFile, _downloadFile, value);
@@ -37633,19 +37660,26 @@ function from_candid_UserRole_n6(_uploadFile, _downloadFile, value) {
 function from_candid_opt_n10(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n13(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n11(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n14(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n3(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n8(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
-}
 function from_candid_opt_n9(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_variant_n12(_uploadFile, _downloadFile, value) {
+function from_candid_record_n8(_uploadFile, _downloadFile, value) {
+  return {
+    marketData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.marketData)),
+    priorityAssets: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.priorityAssets)),
+    technicalData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.technicalData))
+  };
+}
+function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -37954,18 +37988,27 @@ function useGetPriorityAssets() {
     staleTime: 6e4
   });
 }
+const EMPTY_LAST_FETCH_ERRORS = {
+  marketData: null,
+  priorityAssets: null,
+  technicalData: null
+};
 function useGetLastFetchError() {
   const { actor, isFetching: actorFetching } = useActor();
   return useQuery({
     queryKey: ["lastFetchError"],
     queryFn: async () => {
-      if (!actor) return null;
+      if (!actor) return EMPTY_LAST_FETCH_ERRORS;
       try {
         const result = await actor.getLastFetchError();
-        return result ?? null;
+        return {
+          marketData: result.marketData ?? null,
+          priorityAssets: result.priorityAssets ?? null,
+          technicalData: result.technicalData ?? null
+        };
       } catch (error) {
         console.error("Error fetching last fetch error:", error);
-        return null;
+        return EMPTY_LAST_FETCH_ERRORS;
       }
     },
     enabled: !!actor && !actorFetching,
@@ -73528,7 +73571,10 @@ const translations$3 = {
     debugNoError: "Brak błędu — ostatnie odświeżanie zakończone sukcesem.",
     debugErrorLabel: "Błąd:",
     debugTimestampLabel: "Czas błędu:",
-    debugLoading: "Ładowanie danych debugowania..."
+    debugLoading: "Ładowanie danych debugowania...",
+    debugBlockMarketData: "Dane rynkowe (top 250 monet)",
+    debugBlockPriorityAssets: "Priorytetowe aktywa ICP",
+    debugBlockTechnicalData: "Dane techniczne"
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -73542,7 +73588,10 @@ const translations$3 = {
     debugNoError: "No error — last refresh succeeded.",
     debugErrorLabel: "Error:",
     debugTimestampLabel: "Error time:",
-    debugLoading: "Loading debug data..."
+    debugLoading: "Loading debug data...",
+    debugBlockMarketData: "Market data (top 250 coins)",
+    debugBlockPriorityAssets: "Priority ICP assets",
+    debugBlockTechnicalData: "Technical data"
   }
 };
 function MarketDataStatusPanel({
@@ -73582,26 +73631,36 @@ function MarketDataStatusPanel({
       second: "2-digit"
     });
   };
+  const renderErrorBlock = (label, field) => {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-semibold text-foreground", children: label }),
+      field === null ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: t2.debugNoError }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugErrorLabel }),
+          " ",
+          field.error
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugTimestampLabel }),
+          " ",
+          formatDateTime(new Date(Number(field.timestamp) / 1e6))
+        ] })
+      ] })
+    ] });
+  };
   const renderDebugContent = () => {
     if (lastFetchErrorQuery.isLoading) {
       return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: t2.debugLoading });
     }
-    const data = lastFetchErrorQuery.data ?? null;
-    if (data === null) {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: t2.debugNoError });
-    }
-    const errorDate = new Date(Number(data.timestamp) / 1e6);
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugErrorLabel }),
-        " ",
-        data.error
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugTimestampLabel }),
-        " ",
-        formatDateTime(errorDate)
-      ] })
+    const data = lastFetchErrorQuery.data ?? {
+      marketData: null,
+      priorityAssets: null,
+      technicalData: null
+    };
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3", children: [
+      renderErrorBlock(t2.debugBlockMarketData, data.marketData),
+      renderErrorBlock(t2.debugBlockPriorityAssets, data.priorityAssets),
+      renderErrorBlock(t2.debugBlockTechnicalData, data.technicalData)
     ] });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "mb-6 border-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
