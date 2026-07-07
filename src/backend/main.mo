@@ -1372,7 +1372,6 @@ actor {
   // pro-api.coingecko.com host requires paid auth we do not have).
   private func _refreshPriorityAssetPrices() : async () {
     let priorityAssetIds : [Text] = [
-      "folks",
       "waterneuron",
       "rujira",
       "gold-dao",
@@ -1381,7 +1380,29 @@ actor {
       "iclighthouse-dao",
       "origyn-foundation",
       "sonic-2",
+      "internet-computer",
+      "injective-protocol",
     ];
+
+    // Maps each CoinGecko id (lowercase slug) to its proper uppercase ticker
+    // symbol, matching how portfolios/transactions reference assets. The `id`
+    // field stays the lowercase slug (used as the CoinGecko URL ids param and
+    // the JSON path key "id.usd"); only the stored `symbol` uses the ticker.
+    let tickerFor : Text -> Text = func(id) {
+      switch (id) {
+        case ("waterneuron") "WTN";
+        case ("rujira") "RUJIRA";
+        case ("gold-dao") "GOLD";
+        case ("openchat") "OPENCHAT";
+        case ("icpswap-token") "ICS";
+        case ("iclighthouse-dao") "ICL";
+        case ("origyn-foundation") "OGY";
+        case ("sonic-2") "SONIC";
+        case ("internet-computer") "ICP";
+        case ("injective-protocol") "INJ";
+        case (_) id;
+      };
+    };
 
     let idsParam = Array.foldLeft(
       priorityAssetIds,
@@ -1425,7 +1446,7 @@ actor {
             index,
             {
               id;
-              symbol = id;
+              symbol = tickerFor(id);
               name = id;
               price;
               marketCap = 0.0; // simple/price endpoint does not return market cap
@@ -1783,7 +1804,6 @@ actor {
     );
 
     let priorityAssets : [Text] = [
-      "folks",
       "waterneuron",
       "rujira",
       "gold-dao",
@@ -1792,6 +1812,8 @@ actor {
       "iclighthouse-dao",
       "origyn-foundation",
       "sonic-2",
+      "internet-computer",
+      "injective-protocol",
     ];
 
     let combinedAssets = Array.append(availableAssets, priorityAssets);

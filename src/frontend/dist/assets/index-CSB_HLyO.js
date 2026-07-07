@@ -61084,7 +61084,6 @@ function DialogDescription({
   );
 }
 const ICP_NO_CHART_COIN_IDS = /* @__PURE__ */ new Set([
-  "folks",
   "waterneuron",
   "rujira",
   "gold-dao",
@@ -61092,12 +61091,15 @@ const ICP_NO_CHART_COIN_IDS = /* @__PURE__ */ new Set([
   "icpswap-token",
   "iclighthouse-dao",
   "origyn-foundation",
-  "sonic-2"
+  "sonic-2",
+  "internet-computer",
+  "injective-protocol"
 ]);
 const TV_SYMBOL_MAP = {
   bitcoin: "BINANCE:BTCUSDT",
   ethereum: "BINANCE:ETHUSDT",
   "internet-computer": "BINANCE:ICPUSDT",
+  "injective-protocol": "BINANCE:INJUSDT",
   binancecoin: "BINANCE:BNBUSDT",
   cardano: "BINANCE:ADAUSDT",
   solana: "BINANCE:SOLUSDT",

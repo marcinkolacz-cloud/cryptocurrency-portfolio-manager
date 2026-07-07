@@ -20,7 +20,6 @@ interface AssetChartModalProps {
 
 // ICP ecosystem tokens that have no TradingView chart
 const ICP_NO_CHART_COIN_IDS = new Set([
-  "folks",
   "waterneuron",
   "rujira",
   "gold-dao",
@@ -29,6 +28,8 @@ const ICP_NO_CHART_COIN_IDS = new Set([
   "iclighthouse-dao",
   "origyn-foundation",
   "sonic-2",
+  "internet-computer",
+  "injective-protocol",
 ]);
 
 // Explicit coinId → TradingView symbol map
@@ -36,6 +37,7 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   bitcoin: "BINANCE:BTCUSDT",
   ethereum: "BINANCE:ETHUSDT",
   "internet-computer": "BINANCE:ICPUSDT",
+  "injective-protocol": "BINANCE:INJUSDT",
   binancecoin: "BINANCE:BNBUSDT",
   cardano: "BINANCE:ADAUSDT",
   solana: "BINANCE:SOLUSDT",
