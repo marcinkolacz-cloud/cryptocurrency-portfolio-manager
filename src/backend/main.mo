@@ -1081,21 +1081,53 @@ actor {
 
   // /coins/markets element: keep only id, symbol, name, current_price,
   // market_cap (all floats rounded to 8 decimals).
+  //
+  // Single-pass extraction: pattern-match once on the coin's #object_ entries
+  // instead of calling Json.get(coin, "field") five times (each re-scanning the
+  // object). This keeps the per-coin cost O(n) in the entry count rather than
+  // O(5n), which matters at 100 coins × 2 passes (transform + _refreshMarketData)
+  // against the IC instruction budget.
   private func _canonicalizeMarketCoin(coin : Json.Json) : Json.Json {
-    let id = switch (Json.get(coin, "id")) {
-      case (?(#string(s))) { s };
-      case _ { "" };
+    var id : Text = "";
+    var symbol : Text = "";
+    var name : Text = "";
+    var currentPrice : Float = 0.0;
+    var marketCap : Float = 0.0;
+    switch (coin) {
+      case (#object_(entries)) {
+        for ((k, v) in entries.vals()) {
+          if (k == "id") {
+            switch (v) {
+              case (#string(s)) { id := s };
+              case _ {};
+            };
+          } else if (k == "symbol") {
+            switch (v) {
+              case (#string(s)) { symbol := s };
+              case _ {};
+            };
+          } else if (k == "name") {
+            switch (v) {
+              case (#string(s)) { name := s };
+              case _ {};
+            };
+          } else if (k == "current_price") {
+            switch (v) {
+              case (#number(#float(n))) { currentPrice := n };
+              case (#number(#int(n))) { currentPrice := Float.fromInt(n) };
+              case _ {};
+            };
+          } else if (k == "market_cap") {
+            switch (v) {
+              case (#number(#float(n))) { marketCap := n };
+              case (#number(#int(n))) { marketCap := Float.fromInt(n) };
+              case _ {};
+            };
+          };
+        };
+      };
+      case _ {};
     };
-    let symbol = switch (Json.get(coin, "symbol")) {
-      case (?(#string(s))) { s };
-      case _ { "" };
-    };
-    let name = switch (Json.get(coin, "name")) {
-      case (?(#string(s))) { s };
-      case _ { "" };
-    };
-    let currentPrice = _getFieldFloat(coin, "current_price");
-    let marketCap = _getFieldFloat(coin, "market_cap");
     #object_([
       ("id", #string(id)),
       ("symbol", #string(symbol)),
@@ -1248,11 +1280,53 @@ actor {
             marketData := natMap.empty<MarketData>();
             var index : Nat = 0;
             for (coin in coins.vals()) {
-              let idText = _getText(coin, "id");
-              let symbol = _getText(coin, "symbol");
-              let name = _getText(coin, "name");
-              let price = _getFloat(coin, "current_price");
-              let marketCap = _getFloat(coin, "market_cap");
+              // Single-pass extraction over the canonical coin's #object_
+              // entries. By this point transform() has already reduced each
+              // coin to the 5 flat keys (id, symbol, name, current_price,
+              // market_cap), so direct key match is enough — no path/dot
+              // parsing needed. This avoids 4× per-coin Json.get path walks
+              // (the prior _getText/_getFloat calls) that blew the IC
+              // instruction budget at 100 coins.
+              var idText : Text = "";
+              var symbol : Text = "";
+              var name : Text = "";
+              var price : Float = 0.0;
+              var marketCap : Float = 0.0;
+              switch (coin) {
+                case (#object_(entries)) {
+                  for ((k, v) in entries.vals()) {
+                    if (k == "id") {
+                      switch (v) {
+                        case (#string(s)) { idText := s };
+                        case _ {};
+                      };
+                    } else if (k == "symbol") {
+                      switch (v) {
+                        case (#string(s)) { symbol := s };
+                        case _ {};
+                      };
+                    } else if (k == "name") {
+                      switch (v) {
+                        case (#string(s)) { name := s };
+                        case _ {};
+                      };
+                    } else if (k == "current_price") {
+                      switch (v) {
+                        case (#number(#float(n))) { price := n };
+                        case (#number(#int(n))) { price := Float.fromInt(n) };
+                        case _ {};
+                      };
+                    } else if (k == "market_cap") {
+                      switch (v) {
+                        case (#number(#float(n))) { marketCap := n };
+                        case (#number(#int(n))) { marketCap := Float.fromInt(n) };
+                        case _ {};
+                      };
+                    };
+                  };
+                };
+                case _ {};
+              };
               marketData := natMap.put(
                 marketData,
                 index,
