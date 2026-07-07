@@ -20,9 +20,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
-  useFetchCoinGeckoData,
+  useGetMarketData,
   useGetPortfolioTrackedAssets,
   useGetPortfolios,
+  useGetPriorityAssets,
 } from "../hooks/useQueries";
 import AssetList from "./AssetList";
 import ExportPortfolioModal from "./ExportPortfolioModal";
@@ -99,13 +100,14 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
   const { data: trackedAssets = [], isLoading: trackedAssetsLoading } =
     useGetPortfolioTrackedAssets(selectedPortfolioId);
 
-  // Fetch market data only for tracked assets
+  // Fetch market data and priority assets from backend
   const {
-    data: coinGeckoData,
+    data: marketData,
     isLoading: marketDataLoading,
     error: marketDataError,
     refetch,
-  } = useFetchCoinGeckoData(trackedAssets);
+  } = useGetMarketData();
+  const { data: priorityAssets } = useGetPriorityAssets();
 
   // Auto-select first portfolio when portfolios load
   useEffect(() => {
@@ -143,10 +145,10 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
 
   // Update last updated timestamp when market data finishes loading
   useEffect(() => {
-    if (!marketDataLoading && !isRefreshing && coinGeckoData) {
+    if (!marketDataLoading && !isRefreshing && marketData) {
       setLastUpdated(new Date());
     }
-  }, [marketDataLoading, isRefreshing, coinGeckoData]);
+  }, [marketDataLoading, isRefreshing, marketData]);
 
   const handleRefreshMarketData = async () => {
     setIsRefreshing(true);
@@ -156,7 +158,10 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       await queryClient.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"],
       });
-      // Then refetch market data for those assets
+      // Invalidate market data and priority assets; priority assets auto-refetch
+      await queryClient.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
+      // Refetch market data via useGetMarketData's refetch
       await refetch();
       await refetchPortfolios();
       setLastUpdated(new Date());
@@ -195,9 +200,8 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       await queryClient.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"],
       });
-      await queryClient.invalidateQueries({
-        queryKey: ["coinGeckoMarketData"],
-      });
+      await queryClient.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
       setLastUpdated(new Date());
     } catch (error) {
       console.error("[PortfolioManager] Error refreshing after import:", error);
@@ -213,9 +217,8 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       await queryClient.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"],
       });
-      await queryClient.invalidateQueries({
-        queryKey: ["coinGeckoMarketData"],
-      });
+      await queryClient.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
       setLastUpdated(new Date());
     } catch (error) {
       console.error(
@@ -230,10 +233,10 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
 
   // Calculate calculation quality (simple heuristic based on data availability)
   const calculationQuality =
-    trackedAssets.length > 0 && coinGeckoData && coinGeckoData.length > 0
+    trackedAssets.length > 0 && marketData && marketData.length > 0
       ? Math.min(
           100,
-          Math.round((coinGeckoData.length / trackedAssets.length) * 100),
+          Math.round((marketData.length / trackedAssets.length) * 100),
         )
       : 0;
 
@@ -415,7 +418,8 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
         <AssetList
           portfolio={selectedPortfolio}
           language={language}
-          marketData={coinGeckoData || []}
+          marketData={marketData || []}
+          priorityAssets={priorityAssets || []}
           onDialogActionComplete={handleDialogActionComplete}
         />
       )}

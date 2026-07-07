@@ -50,9 +50,13 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { Portfolio, Transaction } from "../backend";
+import type {
+  MarketData,
+  Portfolio,
+  PriorityAsset,
+  Transaction,
+} from "../backend";
 import { useDeleteTransaction } from "../hooks/useQueries";
-import type { CoinGeckoMarketData } from "../hooks/useQueries";
 import TransactionEditDialog from "./TransactionEditDialog";
 
 interface TransactionHistoryModalProps {
@@ -60,7 +64,8 @@ interface TransactionHistoryModalProps {
   language: "pl" | "en";
   open: boolean;
   onClose: () => void;
-  marketData?: CoinGeckoMarketData[];
+  marketData?: MarketData[];
+  priorityAssets?: PriorityAsset[];
 }
 
 const translations = {
@@ -151,6 +156,7 @@ export default function TransactionHistoryModal({
   open,
   onClose,
   marketData,
+  priorityAssets,
 }: TransactionHistoryModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "buy" | "sell">("all");
@@ -695,6 +701,7 @@ export default function TransactionHistoryModal({
           onClose={handleEditDialogClose}
           language={language}
           marketData={marketData}
+          priorityAssets={priorityAssets}
         />
       )}
     </>

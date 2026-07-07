@@ -35,10 +35,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { Asset } from "../backend";
-import { useAddTransaction } from "../hooks/useQueries";
-import { useFetchCoinGeckoDataExtended } from "../hooks/useQueries";
-import type { CoinGeckoMarketData } from "../hooks/useQueries";
+import type { Asset, MarketData, PriorityAsset } from "../backend";
+import {
+  useAddTransaction,
+  useGetMarketData,
+  useGetPriorityAssets,
+} from "../hooks/useQueries";
 
 interface TransactionDialogProps {
   portfolioId: bigint;
@@ -46,7 +48,8 @@ interface TransactionDialogProps {
   language: "pl" | "en";
   initialType?: "buy" | "sell";
   preselectedAsset?: Asset;
-  marketData?: CoinGeckoMarketData[];
+  marketData?: MarketData[];
+  priorityAssets?: PriorityAsset[];
 }
 
 const translations = {
@@ -124,6 +127,15 @@ const translations = {
   },
 };
 
+// Normalized shape used by the asset picker
+type PickerAsset = {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  marketCap: number;
+};
+
 export default function TransactionDialog({
   portfolioId,
   onClose,
@@ -131,6 +143,7 @@ export default function TransactionDialog({
   initialType = "buy",
   preselectedAsset,
   marketData: _externalMarketData,
+  priorityAssets: _externalPriorityAssets,
 }: TransactionDialogProps) {
   const [type, setType] = useState<"buy" | "sell">(initialType);
   const [selectedAsset, setSelectedAsset] = useState<{
@@ -146,23 +159,13 @@ export default function TransactionDialog({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const addTransaction = useAddTransaction();
   const {
-    data: coinGeckoData,
+    data: marketData,
     isLoading: marketDataLoading,
     refetch: refetchMarketData,
     isFetching: marketDataFetching,
-  } = useFetchCoinGeckoDataExtended();
+  } = useGetMarketData();
+  const { data: priorityAssets } = useGetPriorityAssets();
   const t = translations[language];
-
-  // Use extended market data for asset selection (full list)
-  const marketData = coinGeckoData || [];
-
-  // Trigger data fetch when dialog opens
-  useEffect(() => {
-    // Refetch market data when dialog opens to ensure fresh data
-    if (!marketDataLoading && !marketDataFetching) {
-      refetchMarketData();
-    }
-  }, [marketDataLoading, marketDataFetching, refetchMarketData]);
 
   useEffect(() => {
     if (preselectedAsset) {
@@ -175,12 +178,39 @@ export default function TransactionDialog({
     }
   }, [preselectedAsset]);
 
-  const sortedMarketData = useMemo(() => {
-    if (!marketData || marketData.length === 0) return [];
-    return [...marketData].sort(
-      (a, b) => (a.market_cap_rank || 999999) - (b.market_cap_rank || 999999),
+  // Build a combined, deduplicated asset list for the picker.
+  // Priority assets take precedence over marketData for the same symbol.
+  const sortedMarketData = useMemo<PickerAsset[]>(() => {
+    const marketList: PickerAsset[] = (marketData || []).map((coin) => ({
+      id: coin.id.toString(),
+      symbol: coin.symbol,
+      name: coin.name,
+      price: coin.price,
+      marketCap: coin.marketCap,
+    }));
+
+    const priorityList: PickerAsset[] = (priorityAssets || []).map((coin) => ({
+      id: coin.id,
+      symbol: coin.symbol,
+      name: coin.name,
+      price: coin.price,
+      marketCap: coin.marketCap,
+    }));
+
+    // Merge: priority assets override marketData entries with the same symbol
+    const merged = new Map<string, PickerAsset>();
+    for (const coin of marketList) {
+      merged.set(coin.symbol.toUpperCase(), coin);
+    }
+    for (const coin of priorityList) {
+      merged.set(coin.symbol.toUpperCase(), coin);
+    }
+
+    // Sort by marketCap descending (backend MarketData has no market_cap_rank)
+    return Array.from(merged.values()).sort(
+      (a, b) => (b.marketCap || 0) - (a.marketCap || 0),
     );
-  }, [marketData]);
+  }, [marketData, priorityAssets]);
 
   const handleAssetSelect = (asset: {
     symbol: string;
@@ -283,7 +313,7 @@ export default function TransactionDialog({
   const handleRefreshAssets = async () => {
     try {
       await refetchMarketData();
-      toast.success(`${marketData.length} ${t.assetsLoaded}`);
+      toast.success(`${sortedMarketData.length} ${t.assetsLoaded}`);
     } catch (error) {
       console.error("Error refreshing assets:", error);
     }
@@ -372,8 +402,8 @@ export default function TransactionDialog({
                   ) : (
                     <span className="text-muted-foreground">
                       {t.selectAsset}{" "}
-                      {marketData.length > 0 &&
-                        `(${marketData.length} ${t.assetsLoaded})`}
+                      {sortedMarketData.length > 0 &&
+                        `(${sortedMarketData.length} ${t.assetsLoaded})`}
                     </span>
                   )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -396,7 +426,7 @@ export default function TransactionDialog({
                             handleAssetSelect({
                               symbol: asset.symbol.toUpperCase(),
                               name: asset.name,
-                              price: asset.current_price,
+                              price: asset.price,
                             })
                           }
                         >
@@ -419,7 +449,7 @@ export default function TransactionDialog({
                               </div>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {formatCurrency(asset.current_price)}
+                              {formatCurrency(asset.price)}
                             </div>
                           </div>
                         </CommandItem>

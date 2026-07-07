@@ -19,18 +19,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { Transaction } from "../backend";
+import type { MarketData, PriorityAsset, Transaction } from "../backend";
 import { useEditTransaction } from "../hooks/useQueries";
-import type { CoinGeckoMarketData } from "../hooks/useQueries";
 
 interface TransactionEditDialogProps {
   portfolioId: bigint;
   transaction: Transaction;
   onClose: () => void;
   language: "pl" | "en";
-  marketData?: CoinGeckoMarketData[];
+  marketData?: MarketData[];
+  priorityAssets?: PriorityAsset[];
 }
 
 const translations = {
@@ -88,6 +88,7 @@ export default function TransactionEditDialog({
   onClose,
   language,
   marketData: _marketData,
+  priorityAssets: _priorityAssets,
 }: TransactionEditDialogProps) {
   const [amount, setAmount] = useState(transaction.amount.toString());
   const [price, setPrice] = useState(transaction.price.toString());

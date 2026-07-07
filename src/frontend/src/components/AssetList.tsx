@@ -19,9 +19,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import type { Asset, Portfolio } from "../backend";
+import type { Asset, MarketData, Portfolio, PriorityAsset } from "../backend";
 import { updatePortfolioWithMarketPrices } from "../hooks/useQueries";
-import type { CoinGeckoMarketData } from "../hooks/useQueries";
 import AssetAllocationChart from "./AssetAllocationChart";
 import AssetChartModal from "./AssetChartModal";
 import PortfolioChart from "./PortfolioChart";
@@ -31,7 +30,8 @@ import TransactionHistoryModal from "./TransactionHistoryModal";
 interface AssetListProps {
   portfolio: Portfolio;
   language: "pl" | "en";
-  marketData: CoinGeckoMarketData[];
+  marketData: MarketData[];
+  priorityAssets: PriorityAsset[];
   onDialogActionComplete?: () => void;
 }
 
@@ -102,6 +102,7 @@ export default function AssetList({
   portfolio,
   language,
   marketData,
+  priorityAssets,
   onDialogActionComplete,
 }: AssetListProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -120,8 +121,12 @@ export default function AssetList({
   const t = translations[language];
 
   const updatedPortfolio = useMemo(() => {
-    return updatePortfolioWithMarketPrices(portfolio, marketData);
-  }, [portfolio, marketData]);
+    return updatePortfolioWithMarketPrices(
+      portfolio,
+      marketData,
+      priorityAssets,
+    );
+  }, [portfolio, marketData, priorityAssets]);
 
   // Helper function to calculate profit/loss percentage for an asset
   const calculateProfitLossPercentage = useCallback((asset: Asset): number => {
@@ -280,13 +285,19 @@ export default function AssetList({
   };
 
   const handleAssetClick = (asset: Asset) => {
-    const coinGeckoAsset = marketData?.find(
+    const marketCoin = marketData?.find(
+      (coin) => coin.symbol.toLowerCase() === asset.symbol.toLowerCase(),
+    );
+    const priorityCoin = priorityAssets?.find(
       (coin) => coin.symbol.toLowerCase() === asset.symbol.toLowerCase(),
     );
 
-    if (coinGeckoAsset) {
+    // Priority assets take precedence over marketData for the same symbol
+    const coinId = priorityCoin?.id || marketCoin?.id.toString();
+
+    if (coinId) {
       setSelectedChartAsset({
-        id: coinGeckoAsset.id,
+        id: coinId,
         symbol: asset.symbol,
         name: asset.name,
       });
@@ -588,6 +599,7 @@ export default function AssetList({
           initialType={transactionType}
           preselectedAsset={selectedAsset || undefined}
           marketData={marketData}
+          priorityAssets={priorityAssets}
         />
       )}
 
@@ -598,6 +610,7 @@ export default function AssetList({
           open={historyModalOpen}
           onClose={handleHistoryModalClose}
           marketData={marketData}
+          priorityAssets={priorityAssets}
         />
       )}
 

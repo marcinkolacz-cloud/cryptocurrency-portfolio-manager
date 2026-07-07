@@ -21,13 +21,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Portfolio } from "../backend";
-import type { CoinGeckoMarketData } from "../hooks/useQueries";
+import type { MarketData, Portfolio } from "../backend";
 
 interface PortfolioChartProps {
   portfolio: Portfolio;
   language: "pl" | "en";
-  marketData?: CoinGeckoMarketData[];
+  marketData?: MarketData[];
 }
 
 type DateRange = "7d" | "30d" | "90d" | "ytd" | "max";
@@ -96,8 +95,8 @@ export default function PortfolioChart({
     const map = new Map<string, number>();
     if (marketData && Array.isArray(marketData)) {
       for (const coin of marketData) {
-        if (coin?.symbol && typeof coin.current_price === "number") {
-          map.set(coin.symbol.toUpperCase(), coin.current_price);
+        if (coin?.symbol && typeof coin.price === "number") {
+          map.set(coin.symbol.toUpperCase(), coin.price);
         }
       }
     }

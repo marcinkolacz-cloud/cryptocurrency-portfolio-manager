@@ -37838,8 +37838,8 @@ function useAddTransaction() {
     onSuccess: () => {
       queryClient2.invalidateQueries({ queryKey: ["portfolios"] });
       queryClient2.invalidateQueries({ queryKey: ["portfolioTrackedAssets"] });
-      queryClient2.invalidateQueries({ queryKey: ["coinGeckoMarketData"] });
-      queryClient2.invalidateQueries({ queryKey: ["priorityAssetPrices"] });
+      queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
     },
     onError: (error) => {
       console.error("Error adding transaction:", error);
@@ -37861,8 +37861,8 @@ function useEditTransaction() {
     onSuccess: () => {
       queryClient2.invalidateQueries({ queryKey: ["portfolios"] });
       queryClient2.invalidateQueries({ queryKey: ["portfolioTrackedAssets"] });
-      queryClient2.invalidateQueries({ queryKey: ["coinGeckoMarketData"] });
-      queryClient2.invalidateQueries({ queryKey: ["priorityAssetPrices"] });
+      queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
     },
     onError: (error) => {
       console.error("Error editing transaction:", error);
@@ -37883,12 +37883,48 @@ function useDeleteTransaction() {
     onSuccess: () => {
       queryClient2.invalidateQueries({ queryKey: ["portfolios"] });
       queryClient2.invalidateQueries({ queryKey: ["portfolioTrackedAssets"] });
-      queryClient2.invalidateQueries({ queryKey: ["coinGeckoMarketData"] });
-      queryClient2.invalidateQueries({ queryKey: ["priorityAssetPrices"] });
+      queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
     },
     onError: (error) => {
       console.error("Error deleting transaction:", error);
     }
+  });
+}
+function useGetMarketData() {
+  const { actor, isFetching: actorFetching } = useActor();
+  return useQuery({
+    queryKey: ["marketData"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const data = await actor.getMarketData();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching market data:", error);
+        return [];
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 6e4
+  });
+}
+function useGetPriorityAssets() {
+  const { actor, isFetching: actorFetching } = useActor();
+  return useQuery({
+    queryKey: ["priorityAssets"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const data = await actor.getPriorityAssets();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching priority assets:", error);
+        return [];
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 6e4
   });
 }
 function useGetPortfolioTrackedAssets(portfolioId) {
@@ -37908,395 +37944,6 @@ function useGetPortfolioTrackedAssets(portfolioId) {
     },
     enabled: !!actor && !actorFetching && portfolioId !== null,
     staleTime: 6e4
-  });
-}
-const PRIORITY_ICP_ASSETS = [
-  "folks",
-  "waterneuron",
-  "rujira",
-  "gold-dao",
-  "openchat",
-  "icpswap-token",
-  "iclighthouse-dao",
-  "origyn-foundation",
-  "sonic-2"
-];
-const PRIORITY_ASSET_SYMBOL_MAP = {
-  folks: "FOLKS",
-  waterneuron: "WTN",
-  rujira: "RJR",
-  "gold-dao": "GLD",
-  openchat: "CHAT",
-  "icpswap-token": "ICS",
-  "iclighthouse-dao": "ICL",
-  "origyn-foundation": "OGY",
-  "sonic-2": "SONIC"
-};
-async function fetchPriorityAssetPricesFromCoinGecko() {
-  const priceMap = /* @__PURE__ */ new Map();
-  try {
-    const idsParam = PRIORITY_ICP_ASSETS.join(",");
-    console.log(
-      `
-🎯 [CoinGecko Simple/Price] Fetching priority ICP assets: ${idsParam}`
-    );
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15e3);
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${idsParam}&vs_currencies=usd`,
-      {
-        signal: controller.signal,
-        headers: {
-          Accept: "application/json"
-        }
-      }
-    );
-    clearTimeout(timeoutId);
-    if (!response.ok) {
-      console.error(
-        `[CoinGecko Simple/Price] API failed: ${response.status} ${response.statusText}`
-      );
-      return priceMap;
-    }
-    const data = await response.json();
-    console.log("[CoinGecko Simple/Price] Response:", data);
-    for (const assetId of PRIORITY_ICP_ASSETS) {
-      const priceData = data[assetId];
-      if (priceData && typeof priceData.usd === "number" && priceData.usd > 0) {
-        const symbol = PRIORITY_ASSET_SYMBOL_MAP[assetId];
-        priceMap.set(symbol, priceData.usd);
-        console.log(
-          `✅ [CoinGecko Simple/Price] ${symbol}: $${priceData.usd.toFixed(6)}`
-        );
-      } else {
-        const symbol = PRIORITY_ASSET_SYMBOL_MAP[assetId];
-        console.warn(
-          `⚠️ [CoinGecko Simple/Price] No valid price for ${symbol} (${assetId})`
-        );
-      }
-    }
-    console.log(
-      `
-📊 [CoinGecko Simple/Price] Successfully fetched ${priceMap.size}/${PRIORITY_ICP_ASSETS.length} priority asset prices`
-    );
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      console.error("[CoinGecko Simple/Price] Request timeout");
-    } else {
-      console.error("[CoinGecko Simple/Price] Error:", error);
-    }
-  }
-  return priceMap;
-}
-function useFetchPriorityAssetPrices() {
-  return useQuery({
-    queryKey: ["priorityAssetPrices"],
-    queryFn: fetchPriorityAssetPricesFromCoinGecko,
-    staleTime: 2 * 60 * 1e3,
-    // 2 minutes
-    gcTime: 5 * 60 * 1e3,
-    // 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(2e3 * 2 ** attemptIndex, 1e4)
-  });
-}
-function useFetchCoinGeckoData(trackedAssets = []) {
-  const { data: priorityPrices } = useFetchPriorityAssetPrices();
-  return useQuery({
-    queryKey: ["coinGeckoMarketData", trackedAssets.sort().join(",")],
-    queryFn: async () => {
-      var _a3;
-      if (!trackedAssets || trackedAssets.length === 0) {
-        console.log("No tracked assets, skipping market data fetch");
-        return [];
-      }
-      console.log("🚀 Fetching market data for tracked assets:", trackedAssets);
-      const symbolsQuery = trackedAssets.map((s2) => s2.toLowerCase()).join(",");
-      const allData = [];
-      try {
-        console.log("[CoinGecko Markets] Fetching tracked assets...");
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&symbols=${symbolsQuery}&order=market_cap_desc&per_page=250&page=1&sparkline=false`,
-          {
-            headers: {
-              Accept: "application/json"
-            }
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            allData.push(...data);
-            console.log(
-              `✅ [CoinGecko Markets] Fetched ${data.length} tracked assets`
-            );
-          }
-        } else {
-          console.error(
-            `[CoinGecko Markets] Failed to fetch tracked assets: ${response.status}`
-          );
-        }
-      } catch (error) {
-        console.error(
-          "[CoinGecko Markets] Error fetching tracked assets:",
-          error
-        );
-      }
-      const trackedPrioritySymbols = trackedAssets.filter((symbol) => {
-        const upperSymbol = symbol.toUpperCase();
-        return Object.values(PRIORITY_ASSET_SYMBOL_MAP).includes(upperSymbol);
-      });
-      if (trackedPrioritySymbols.length > 0) {
-        console.log(
-          `
-🎯 Found ${trackedPrioritySymbols.length} priority ICP assets in tracked list:`,
-          trackedPrioritySymbols
-        );
-        if (priorityPrices && priorityPrices.size > 0) {
-          console.log("✅ Using priority prices from dedicated query");
-          for (const symbol of trackedPrioritySymbols) {
-            const upperSymbol = symbol.toUpperCase();
-            const price = priorityPrices.get(upperSymbol);
-            if (price && price > 0) {
-              const existingIndex = allData.findIndex(
-                (coin) => coin.symbol.toUpperCase() === upperSymbol
-              );
-              if (existingIndex >= 0) {
-                allData[existingIndex] = {
-                  ...allData[existingIndex],
-                  current_price: price
-                };
-                console.log(
-                  `✅ Updated ${upperSymbol} with priority price: ${price.toFixed(6)}`
-                );
-              } else {
-                const assetId = ((_a3 = Object.entries(PRIORITY_ASSET_SYMBOL_MAP).find(
-                  ([, sym]) => sym === upperSymbol
-                )) == null ? void 0 : _a3[0]) || upperSymbol.toLowerCase();
-                allData.push({
-                  id: assetId,
-                  symbol: upperSymbol.toLowerCase(),
-                  name: upperSymbol,
-                  current_price: price,
-                  market_cap: 0,
-                  market_cap_rank: 999999
-                });
-                console.log(
-                  `✅ Added ${upperSymbol} with priority price: ${price.toFixed(6)}`
-                );
-              }
-            } else {
-              console.warn(`⚠️ No priority price available for ${upperSymbol}`);
-            }
-          }
-        } else {
-          console.warn("⚠️ Priority prices not available yet");
-        }
-      }
-      console.log(`
-📊 Total market data returned: ${allData.length} coins`);
-      return allData;
-    },
-    enabled: trackedAssets.length > 0,
-    staleTime: 2 * 60 * 1e3,
-    // 2 minutes
-    gcTime: 5 * 60 * 1e3,
-    // 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(2e3 * 2 ** attemptIndex, 1e4)
-  });
-}
-function useFetchCoinGeckoDataExtended() {
-  const { data: priorityPrices } = useFetchPriorityAssetPrices();
-  return useQuery({
-    queryKey: ["coinGeckoMarketDataExtended"],
-    queryFn: async () => {
-      console.log(
-        "🚀 Fetching extended CoinGecko market data with GUARANTEED priority ICP assets..."
-      );
-      const allData = [];
-      const perPage = 250;
-      const totalPages = 8;
-      for (let page = 1; page <= totalPages; page++) {
-        try {
-          console.log(`[CoinGecko] Fetching page ${page}/${totalPages}...`);
-          const response = await fetch(
-            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false`,
-            {
-              headers: {
-                Accept: "application/json"
-              }
-            }
-          );
-          if (!response.ok) {
-            console.error(
-              `[CoinGecko] Failed to fetch page ${page}: ${response.status}`
-            );
-            continue;
-          }
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            allData.push(...data);
-            console.log(`✅ [CoinGecko] Page ${page}: ${data.length} coins`);
-          }
-          if (page < totalPages) {
-            await new Promise((resolve) => setTimeout(resolve, 300));
-          }
-        } catch (error) {
-          console.error(`[CoinGecko] Error fetching page ${page}:`, error);
-        }
-      }
-      try {
-        console.log("\n[CoinGecko] Fetching ICP ecosystem category...");
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        const icpResponse = await fetch(
-          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=internet-computer-ecosystem&order=market_cap_desc&per_page=250&page=1&sparkline=false",
-          {
-            headers: {
-              Accept: "application/json"
-            }
-          }
-        );
-        if (icpResponse.ok) {
-          const icpData = await icpResponse.json();
-          if (Array.isArray(icpData)) {
-            console.log(
-              `✅ [CoinGecko] Fetched ${icpData.length} ICP ecosystem tokens`
-            );
-            const existingIds = new Set(allData.map((coin) => coin.id));
-            const newIcpTokens = icpData.filter(
-              (coin) => !existingIds.has(coin.id)
-            );
-            allData.push(...newIcpTokens);
-            console.log(
-              `✅ Added ${newIcpTokens.length} new ICP ecosystem tokens`
-            );
-          }
-        } else {
-          console.error(
-            `[CoinGecko] Failed to fetch ICP ecosystem: ${icpResponse.status}`
-          );
-        }
-      } catch (error) {
-        console.error(
-          "[CoinGecko] Error fetching ICP ecosystem tokens:",
-          error
-        );
-      }
-      console.log(
-        "\n🎯 GUARANTEED PRIORITY ASSETS: Ensuring all priority ICP assets..."
-      );
-      if (priorityPrices && priorityPrices.size > 0) {
-        console.log(
-          `✅ Using ${priorityPrices.size} priority prices from dedicated query`
-        );
-        for (const assetId of PRIORITY_ICP_ASSETS) {
-          const symbol = PRIORITY_ASSET_SYMBOL_MAP[assetId];
-          const price = priorityPrices.get(symbol);
-          const existingIndex = allData.findIndex(
-            (coin) => coin.id.toLowerCase() === assetId.toLowerCase() || coin.symbol.toUpperCase() === symbol
-          );
-          if (existingIndex >= 0) {
-            if (price && price > 0) {
-              allData[existingIndex] = {
-                ...allData[existingIndex],
-                current_price: price
-              };
-              console.log(
-                `✅ Updated ${symbol} with priority price: $${price.toFixed(6)}`
-              );
-            } else {
-              console.warn(
-                `⚠️ ${symbol} exists but no priority price available (keeping existing: $${allData[existingIndex].current_price})`
-              );
-            }
-          } else {
-            const marketData = {
-              id: assetId,
-              symbol: symbol.toLowerCase(),
-              name: assetId.split("-").map((w2) => w2.charAt(0).toUpperCase() + w2.slice(1)).join(" "),
-              current_price: price || 0,
-              market_cap: 0,
-              market_cap_rank: 999999
-            };
-            allData.push(marketData);
-            if (price && price > 0) {
-              console.log(
-                `✅ Added ${symbol} with priority price: $${price.toFixed(6)}`
-              );
-            } else {
-              console.warn(
-                `⚠️ Added ${symbol} with $0 (no priority price available)`
-              );
-            }
-          }
-        }
-      } else {
-        console.warn(
-          "⚠️ Priority prices not available, adding priority assets with $0"
-        );
-        for (const assetId of PRIORITY_ICP_ASSETS) {
-          const symbol = PRIORITY_ASSET_SYMBOL_MAP[assetId];
-          const existingIndex = allData.findIndex(
-            (coin) => coin.id.toLowerCase() === assetId.toLowerCase() || coin.symbol.toUpperCase() === symbol
-          );
-          if (existingIndex < 0) {
-            allData.push({
-              id: assetId,
-              symbol: symbol.toLowerCase(),
-              name: assetId.split("-").map((w2) => w2.charAt(0).toUpperCase() + w2.slice(1)).join(" "),
-              current_price: 0,
-              market_cap: 0,
-              market_cap_rank: 999999
-            });
-            console.log(
-              `⚠️ Added ${symbol} with $0 (priority prices not loaded)`
-            );
-          }
-        }
-      }
-      const finalIds = new Set(allData.map((coin) => coin.id.toLowerCase()));
-      const verificationResults = PRIORITY_ICP_ASSETS.map((assetId) => {
-        const included = finalIds.has(assetId.toLowerCase());
-        const coin = allData.find(
-          (c2) => c2.id.toLowerCase() === assetId.toLowerCase()
-        );
-        const price = (coin == null ? void 0 : coin.current_price) || 0;
-        return {
-          asset: assetId,
-          symbol: PRIORITY_ASSET_SYMBOL_MAP[assetId],
-          included,
-          price: price > 0 ? `$${price.toFixed(6)}` : "$0 (API failed)"
-        };
-      });
-      console.log("\n📊 PRIORITY ICP ASSETS VERIFICATION:");
-      for (const r2 of verificationResults) {
-        const status = r2.included ? "✅" : "❌";
-        console.log(`${status} ${r2.symbol} (${r2.asset}): ${r2.price}`);
-      }
-      const allIncluded = verificationResults.every((r2) => r2.included);
-      const allHavePrices = verificationResults.every(
-        (r2) => !r2.price.includes("$0")
-      );
-      console.log(
-        `
-🎯 Priority assets included: ${allIncluded ? "SUCCESS ✅" : "FAILED ❌"}`
-      );
-      console.log(
-        `💰 All have prices: ${allHavePrices ? "YES ✅" : "NO ⚠️ (some API calls failed)"}`
-      );
-      console.log(
-        `
-📊 Total extended CoinGecko data: ${allData.length} coins`
-      );
-      return allData;
-    },
-    staleTime: 5 * 60 * 1e3,
-    // 5 minutes
-    gcTime: 10 * 60 * 1e3,
-    // 10 minutes
-    retry: 2,
-    retryDelay: 3e3
   });
 }
 function useFetchCoinTechnicalData(coinId) {
@@ -38329,14 +37976,23 @@ function useFetchCoinTechnicalData(coinId) {
     retryDelay: 2e3
   });
 }
-function updatePortfolioWithMarketPrices(portfolio, marketData) {
-  if (!portfolio || !marketData || !Array.isArray(marketData)) {
-    return portfolio || null;
+function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) {
+  if (!portfolio) {
+    return null;
   }
   const priceMap = /* @__PURE__ */ new Map();
-  for (const coin of marketData) {
-    if ((coin == null ? void 0 : coin.symbol) && typeof coin.current_price === "number" && coin.current_price > 0) {
-      priceMap.set(coin.symbol.toUpperCase(), coin.current_price);
+  if (Array.isArray(marketData)) {
+    for (const coin of marketData) {
+      if ((coin == null ? void 0 : coin.symbol) && typeof coin.price === "number" && coin.price > 0) {
+        priceMap.set(coin.symbol.toUpperCase(), coin.price);
+      }
+    }
+  }
+  if (Array.isArray(priorityAssets)) {
+    for (const asset of priorityAssets) {
+      if ((asset == null ? void 0 : asset.symbol) && typeof asset.price === "number" && asset.price > 0) {
+        priceMap.set(asset.symbol.toUpperCase(), asset.price);
+      }
     }
   }
   console.log(`
@@ -67956,8 +67612,8 @@ function PortfolioChart({
     const map2 = /* @__PURE__ */ new Map();
     if (marketData && Array.isArray(marketData)) {
       for (const coin of marketData) {
-        if ((coin == null ? void 0 : coin.symbol) && typeof coin.current_price === "number") {
-          map2.set(coin.symbol.toUpperCase(), coin.current_price);
+        if ((coin == null ? void 0 : coin.symbol) && typeof coin.price === "number") {
+          map2.set(coin.symbol.toUpperCase(), coin.price);
         }
       }
     }
@@ -69062,7 +68718,8 @@ function TransactionDialog({
   language,
   initialType = "buy",
   preselectedAsset,
-  marketData: _externalMarketData
+  marketData: _externalMarketData,
+  priorityAssets: _externalPriorityAssets
 }) {
   const [type, setType] = reactExports.useState(initialType);
   const [selectedAsset, setSelectedAsset] = reactExports.useState(null);
@@ -69074,18 +68731,13 @@ function TransactionDialog({
   const [calendarOpen, setCalendarOpen] = reactExports.useState(false);
   const addTransaction = useAddTransaction();
   const {
-    data: coinGeckoData,
+    data: marketData,
     isLoading: marketDataLoading,
     refetch: refetchMarketData,
     isFetching: marketDataFetching
-  } = useFetchCoinGeckoDataExtended();
+  } = useGetMarketData();
+  const { data: priorityAssets } = useGetPriorityAssets();
   const t2 = translations$9[language];
-  const marketData = coinGeckoData || [];
-  reactExports.useEffect(() => {
-    if (!marketDataLoading && !marketDataFetching) {
-      refetchMarketData();
-    }
-  }, [marketDataLoading, marketDataFetching, refetchMarketData]);
   reactExports.useEffect(() => {
     if (preselectedAsset) {
       setSelectedAsset({
@@ -69097,11 +68749,31 @@ function TransactionDialog({
     }
   }, [preselectedAsset]);
   const sortedMarketData = reactExports.useMemo(() => {
-    if (!marketData || marketData.length === 0) return [];
-    return [...marketData].sort(
-      (a2, b2) => (a2.market_cap_rank || 999999) - (b2.market_cap_rank || 999999)
+    const marketList = (marketData || []).map((coin) => ({
+      id: coin.id.toString(),
+      symbol: coin.symbol,
+      name: coin.name,
+      price: coin.price,
+      marketCap: coin.marketCap
+    }));
+    const priorityList = (priorityAssets || []).map((coin) => ({
+      id: coin.id,
+      symbol: coin.symbol,
+      name: coin.name,
+      price: coin.price,
+      marketCap: coin.marketCap
+    }));
+    const merged = /* @__PURE__ */ new Map();
+    for (const coin of marketList) {
+      merged.set(coin.symbol.toUpperCase(), coin);
+    }
+    for (const coin of priorityList) {
+      merged.set(coin.symbol.toUpperCase(), coin);
+    }
+    return Array.from(merged.values()).sort(
+      (a2, b2) => (b2.marketCap || 0) - (a2.marketCap || 0)
     );
-  }, [marketData]);
+  }, [marketData, priorityAssets]);
   const handleAssetSelect = (asset) => {
     setSelectedAsset(asset);
     setPrice(asset.price.toString());
@@ -69181,7 +68853,7 @@ function TransactionDialog({
   const handleRefreshAssets = async () => {
     try {
       await refetchMarketData();
-      ue$1.success(`${marketData.length} ${t2.assetsLoaded}`);
+      ue$1.success(`${sortedMarketData.length} ${t2.assetsLoaded}`);
     } catch (error) {
       console.error("Error refreshing assets:", error);
     }
@@ -69269,7 +68941,7 @@ function TransactionDialog({
                 ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-muted-foreground", children: [
                   t2.selectAsset,
                   " ",
-                  marketData.length > 0 && `(${marketData.length} ${t2.assetsLoaded})`
+                  sortedMarketData.length > 0 && `(${sortedMarketData.length} ${t2.assetsLoaded})`
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronsUpDown, { className: "ml-2 h-4 w-4 shrink-0 opacity-50" })
               ]
@@ -69291,7 +68963,7 @@ function TransactionDialog({
                       onSelect: () => handleAssetSelect({
                         symbol: asset.symbol.toUpperCase(),
                         name: asset.name,
-                        price: asset.current_price
+                        price: asset.price
                       }),
                       children: [
                         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -69308,7 +68980,7 @@ function TransactionDialog({
                             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: asset.symbol.toUpperCase() }),
                             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground", children: asset.name })
                           ] }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm text-muted-foreground", children: formatCurrency(asset.current_price) })
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm text-muted-foreground", children: formatCurrency(asset.price) })
                         ] })
                       ]
                     },
@@ -71801,7 +71473,8 @@ function TransactionEditDialog({
   transaction,
   onClose,
   language,
-  marketData: _marketData
+  marketData: _marketData,
+  priorityAssets: _priorityAssets
 }) {
   const [amount, setAmount] = reactExports.useState(transaction.amount.toString());
   const [price, setPrice] = reactExports.useState(transaction.price.toString());
@@ -72054,7 +71727,8 @@ function TransactionHistoryModal({
   language,
   open,
   onClose,
-  marketData
+  marketData,
+  priorityAssets
 }) {
   const [searchTerm, setSearchTerm] = reactExports.useState("");
   const [typeFilter, setTypeFilter] = reactExports.useState("all");
@@ -72498,7 +72172,8 @@ function TransactionHistoryModal({
         transaction: transactionToEdit,
         onClose: handleEditDialogClose,
         language,
-        marketData
+        marketData,
+        priorityAssets
       }
     )
   ] });
@@ -72557,6 +72232,7 @@ function AssetList({
   portfolio,
   language,
   marketData,
+  priorityAssets,
   onDialogActionComplete
 }) {
   const [searchTerm, setSearchTerm] = reactExports.useState("");
@@ -72570,8 +72246,12 @@ function AssetList({
   const [selectedChartAsset, setSelectedChartAsset] = reactExports.useState(null);
   const t2 = translations$6[language];
   const updatedPortfolio = reactExports.useMemo(() => {
-    return updatePortfolioWithMarketPrices(portfolio, marketData);
-  }, [portfolio, marketData]);
+    return updatePortfolioWithMarketPrices(
+      portfolio,
+      marketData,
+      priorityAssets
+    );
+  }, [portfolio, marketData, priorityAssets]);
   const calculateProfitLossPercentage = reactExports.useCallback((asset) => {
     const purchaseValue = asset.purchaseValue || 0;
     const currentValue = asset.currentValue || 0;
@@ -72700,12 +72380,16 @@ function AssetList({
     setTransactionDialogOpen(true);
   };
   const handleAssetClick = (asset) => {
-    const coinGeckoAsset = marketData == null ? void 0 : marketData.find(
+    const marketCoin = marketData == null ? void 0 : marketData.find(
       (coin) => coin.symbol.toLowerCase() === asset.symbol.toLowerCase()
     );
-    if (coinGeckoAsset) {
+    const priorityCoin = priorityAssets == null ? void 0 : priorityAssets.find(
+      (coin) => coin.symbol.toLowerCase() === asset.symbol.toLowerCase()
+    );
+    const coinId = (priorityCoin == null ? void 0 : priorityCoin.id) || (marketCoin == null ? void 0 : marketCoin.id.toString());
+    if (coinId) {
       setSelectedChartAsset({
-        id: coinGeckoAsset.id,
+        id: coinId,
         symbol: asset.symbol,
         name: asset.name
       });
@@ -72946,7 +72630,8 @@ function AssetList({
         language,
         initialType: transactionType,
         preselectedAsset: selectedAsset || void 0,
-        marketData
+        marketData,
+        priorityAssets
       }
     ),
     historyModalOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -72956,7 +72641,8 @@ function AssetList({
         language,
         open: historyModalOpen,
         onClose: handleHistoryModalClose,
-        marketData
+        marketData,
+        priorityAssets
       }
     ),
     chartModalOpen && selectedChartAsset && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -73964,11 +73650,12 @@ function PortfolioManager({ language }) {
   const t2 = translations$1[language];
   const { data: trackedAssets = [], isLoading: trackedAssetsLoading } = useGetPortfolioTrackedAssets(selectedPortfolioId);
   const {
-    data: coinGeckoData,
+    data: marketData,
     isLoading: marketDataLoading,
     error: marketDataError,
     refetch
-  } = useFetchCoinGeckoData(trackedAssets);
+  } = useGetMarketData();
+  const { data: priorityAssets } = useGetPriorityAssets();
   reactExports.useEffect(() => {
     var _a3, _b3;
     if (portfolios && Array.isArray(portfolios) && portfolios.length > 0 && !selectedPortfolioId) {
@@ -73993,10 +73680,10 @@ function PortfolioManager({ language }) {
     }
   }, [portfoliosError, marketDataError]);
   reactExports.useEffect(() => {
-    if (!marketDataLoading && !isRefreshing && coinGeckoData) {
+    if (!marketDataLoading && !isRefreshing && marketData) {
       setLastUpdated(/* @__PURE__ */ new Date());
     }
-  }, [marketDataLoading, isRefreshing, coinGeckoData]);
+  }, [marketDataLoading, isRefreshing, marketData]);
   const handleRefreshMarketData = async () => {
     setIsRefreshing(true);
     try {
@@ -74004,6 +73691,8 @@ function PortfolioManager({ language }) {
       await queryClient2.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"]
       });
+      await queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
       await refetch();
       await refetchPortfolios();
       setLastUpdated(/* @__PURE__ */ new Date());
@@ -74038,9 +73727,8 @@ function PortfolioManager({ language }) {
       await queryClient2.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"]
       });
-      await queryClient2.invalidateQueries({
-        queryKey: ["coinGeckoMarketData"]
-      });
+      await queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
       setLastUpdated(/* @__PURE__ */ new Date());
     } catch (error) {
       console.error("[PortfolioManager] Error refreshing after import:", error);
@@ -74055,9 +73743,8 @@ function PortfolioManager({ language }) {
       await queryClient2.invalidateQueries({
         queryKey: ["portfolioTrackedAssets"]
       });
-      await queryClient2.invalidateQueries({
-        queryKey: ["coinGeckoMarketData"]
-      });
+      await queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
       setLastUpdated(/* @__PURE__ */ new Date());
     } catch (error) {
       console.error(
@@ -74067,9 +73754,9 @@ function PortfolioManager({ language }) {
     }
   };
   const selectedPortfolio = (portfolios == null ? void 0 : portfolios.find((p2) => (p2 == null ? void 0 : p2.id) === selectedPortfolioId)) || null;
-  const calculationQuality = trackedAssets.length > 0 && coinGeckoData && coinGeckoData.length > 0 ? Math.min(
+  const calculationQuality = trackedAssets.length > 0 && marketData && marketData.length > 0 ? Math.min(
     100,
-    Math.round(coinGeckoData.length / trackedAssets.length * 100)
+    Math.round(marketData.length / trackedAssets.length * 100)
   ) : 0;
   if (portfoliosError && !isLoading) {
     const errorMessage = portfoliosError instanceof Error ? portfoliosError.message : String(portfoliosError);
@@ -74209,7 +73896,8 @@ function PortfolioManager({ language }) {
       {
         portfolio: selectedPortfolio,
         language,
-        marketData: coinGeckoData || [],
+        marketData: marketData || [],
+        priorityAssets: priorityAssets || [],
         onDialogActionComplete: handleDialogActionComplete
       }
     ),
