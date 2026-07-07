@@ -1,12 +1,24 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useGetIsAdmin, useGetLastFetchError } from "@/hooks/useQueries";
-import { Activity, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
+import {
+  useFetchMarketData,
+  useFetchPriorityAssetPrices,
+  useGetIsAdmin,
+  useGetLastFetchError,
+} from "@/hooks/useQueries";
+import {
+  Activity,
+  CheckCircle2,
+  ChevronDown,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface MarketDataStatusPanelProps {
@@ -35,6 +47,9 @@ const translations = {
     debugBlockMarketData: "Dane rynkowe (top 250 monet)",
     debugBlockPriorityAssets: "Priorytetowe aktywa ICP",
     debugBlockTechnicalData: "Dane techniczne",
+    refreshPrices: "Odśwież ceny",
+    refreshPricesLoading: "Odświeżanie...",
+    refreshPricesError: "Błąd odświeżania cen",
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -52,6 +67,9 @@ const translations = {
     debugBlockMarketData: "Market data (top 250 coins)",
     debugBlockPriorityAssets: "Priority ICP assets",
     debugBlockTechnicalData: "Technical data",
+    refreshPrices: "Refresh prices",
+    refreshPricesLoading: "Refreshing...",
+    refreshPricesError: "Error refreshing prices",
   },
 };
 
@@ -66,10 +84,31 @@ export default function MarketDataStatusPanel({
   const t = translations[language];
   const [currentTime, setCurrentTime] = useState(new Date());
   const [debugOpen, setDebugOpen] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
 
   const lastFetchErrorQuery = useGetLastFetchError();
   const isAdminQuery = useGetIsAdmin();
   const showDebug = isAdmin || isAdminQuery;
+
+  const fetchMarketDataMutation = useFetchMarketData();
+  const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
+
+  const isRefreshing =
+    fetchMarketDataMutation.isPending ||
+    fetchPriorityAssetPricesMutation.isPending;
+
+  const handleRefreshPrices = async () => {
+    setRefreshError(false);
+    try {
+      await Promise.all([
+        fetchMarketDataMutation.mutateAsync(),
+        fetchPriorityAssetPricesMutation.mutateAsync(),
+      ]);
+    } catch (error) {
+      console.error("Error refreshing prices:", error);
+      setRefreshError(true);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -223,6 +262,38 @@ export default function MarketDataStatusPanel({
                 {trackedAssetsCount}
               </Badge>
             </div>
+
+            {showDebug && (
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshPrices}
+                  disabled={isRefreshing}
+                  data-ocid="market_data_status.refresh_prices_button"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {t.refreshPricesLoading}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      {t.refreshPrices}
+                    </>
+                  )}
+                </Button>
+                {refreshError && (
+                  <span
+                    className="text-xs text-red-600 dark:text-red-400"
+                    data-ocid="market_data_status.refresh_prices_error"
+                  >
+                    {t.refreshPricesError}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

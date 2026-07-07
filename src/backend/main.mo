@@ -1206,7 +1206,7 @@ actor {
   // Internal refresh for market data — no auth gate, called by the recurring
   // timer and by the admin-only fetchMarketData public function.
   private func _refreshMarketData() : async () {
-    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false";
+    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=40&page=1&sparkline=false";
     // Note: OutCall.httpGetRequest (caffeineai-http-outcalls 0.1.1) does not
     // expose a max_response_bytes option — it hardcodes null internally, so the
     // IC system API default (2MB) applies. That is comfortably larger than a
@@ -1945,12 +1945,13 @@ actor {
     await _refreshPriorityAssetPrices();
   };
 
-  // Recurring timer: refresh market data and priority asset prices every 4
-  // minutes (240_000_000_000 nanoseconds) in the background. The timer ID is
-  // transient state — timer IDs are not stable across upgrades, so the timer is
-  // re-registered on every (re)start.
-  transient let _refreshTimerId : Timer.TimerId = Timer.recurringTimer(
-    #nanoseconds(240_000_000_000),
+  // One-time timer: fire _scheduledRefresh once ~5 seconds after actor start
+  // so marketData/priorityAssets aren't empty right after a fresh deploy, with
+  // no recurring cost afterward. The timer ID is transient state — timer IDs
+  // are not stable across upgrades, so the timer is re-registered on every
+  // (re)start.
+  transient let _refreshTimerId : Timer.TimerId = Timer.setTimer(
+    #nanoseconds(5_000_000_000),
     _scheduledRefresh,
   );
 };

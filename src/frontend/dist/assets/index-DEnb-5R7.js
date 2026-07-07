@@ -37970,6 +37970,38 @@ function useGetMarketData() {
     staleTime: 6e4
   });
 }
+function useFetchMarketData() {
+  const { actor } = useActor();
+  const queryClient2 = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend connection not available");
+      return actor.fetchMarketData();
+    },
+    onSuccess: () => {
+      queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+    },
+    onError: (error) => {
+      console.error("Error fetching market data:", error);
+    }
+  });
+}
+function useFetchPriorityAssetPrices() {
+  const { actor } = useActor();
+  const queryClient2 = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend connection not available");
+      return actor.fetchPriorityAssetPrices();
+    },
+    onSuccess: () => {
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error fetching priority asset prices:", error);
+    }
+  });
+}
 function useGetPriorityAssets() {
   const { actor, isFetching: actorFetching } = useActor();
   return useQuery({
@@ -73574,7 +73606,10 @@ const translations$3 = {
     debugLoading: "Ładowanie danych debugowania...",
     debugBlockMarketData: "Dane rynkowe (top 250 monet)",
     debugBlockPriorityAssets: "Priorytetowe aktywa ICP",
-    debugBlockTechnicalData: "Dane techniczne"
+    debugBlockTechnicalData: "Dane techniczne",
+    refreshPrices: "Odśwież ceny",
+    refreshPricesLoading: "Odświeżanie...",
+    refreshPricesError: "Błąd odświeżania cen"
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -73591,7 +73626,10 @@ const translations$3 = {
     debugLoading: "Loading debug data...",
     debugBlockMarketData: "Market data (top 250 coins)",
     debugBlockPriorityAssets: "Priority ICP assets",
-    debugBlockTechnicalData: "Technical data"
+    debugBlockTechnicalData: "Technical data",
+    refreshPrices: "Refresh prices",
+    refreshPricesLoading: "Refreshing...",
+    refreshPricesError: "Error refreshing prices"
   }
 };
 function MarketDataStatusPanel({
@@ -73605,9 +73643,25 @@ function MarketDataStatusPanel({
   const t2 = translations$3[language];
   const [currentTime, setCurrentTime] = reactExports.useState(/* @__PURE__ */ new Date());
   const [debugOpen, setDebugOpen] = reactExports.useState(false);
+  const [refreshError, setRefreshError] = reactExports.useState(false);
   const lastFetchErrorQuery = useGetLastFetchError();
   const isAdminQuery = useGetIsAdmin();
   const showDebug = isAdmin || isAdminQuery;
+  const fetchMarketDataMutation = useFetchMarketData();
+  const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
+  const isRefreshing = fetchMarketDataMutation.isPending || fetchPriorityAssetPricesMutation.isPending;
+  const handleRefreshPrices = async () => {
+    setRefreshError(false);
+    try {
+      await Promise.all([
+        fetchMarketDataMutation.mutateAsync(),
+        fetchPriorityAssetPricesMutation.mutateAsync()
+      ]);
+    } catch (error) {
+      console.error("Error refreshing prices:", error);
+      setRefreshError(true);
+    }
+  };
   reactExports.useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(/* @__PURE__ */ new Date());
@@ -73718,6 +73772,33 @@ function MarketDataStatusPanel({
             ":"
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-semibold", children: trackedAssetsCount })
+        ] }),
+        showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button$1,
+            {
+              variant: "outline",
+              size: "sm",
+              onClick: handleRefreshPrices,
+              disabled: isRefreshing,
+              "data-ocid": "market_data_status.refresh_prices_button",
+              children: isRefreshing ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+                t2.refreshPricesLoading
+              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5" }),
+                t2.refreshPrices
+              ] })
+            }
+          ),
+          refreshError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "text-xs text-red-600 dark:text-red-400",
+              "data-ocid": "market_data_status.refresh_prices_error",
+              children: t2.refreshPricesError
+            }
+          )
         ] })
       ] })
     ] }),

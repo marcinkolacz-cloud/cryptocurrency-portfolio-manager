@@ -312,6 +312,24 @@ export function useFetchMarketData() {
   });
 }
 
+export function useFetchPriorityAssetPrices() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend connection not available");
+      return actor.fetchPriorityAssetPrices();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error fetching priority asset prices:", error);
+    },
+  });
+}
+
 export function useGetPriorityAssets() {
   const { actor, isFetching: actorFetching } = useActor();
 
