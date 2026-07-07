@@ -1,16 +1,19 @@
-// Explicit migration for the error-tracking refactor.
+// Historical migration module — NOT currently wired into the actor.
 //
-// The previous canister version tracked fetch errors with a single shared
-// pair (lastFetchError / lastFetchErrorTimestamp) that got overwritten
-// between _refreshMarketData() and _refreshPriorityAssetPrices(), silently
-// erasing the market-data error. The new version replaces that pair with
-// three per-function pairs (marketData / priorityAssets / technicalData).
+// This module previously migrated the canister from the shared
+// lastFetchError / lastFetchErrorTimestamp pair to the three per-function
+// error pairs (marketData / priorityAssets / technicalData). That migration
+// has already run in production: the previously deployed stable signature in
+// .old/src/backend/dist/backend.most (the `out` side) already contains the
+// six per-function pairs and no longer contains lastFetchError /
+// lastFetchErrorTimestamp.
 //
-// Removing the two old stable vars triggers [M0169] ("cannot be implicitly
-// discarded") under --default-persistent-actors, so an explicit migration
-// function is required: it absorbs the OLD actor state (with the two old
-// fields present), drops them, and initializes the three new pairs to null.
-// All other stable fields are passed through unchanged.
+// The current main.mo stable signature is identical to that deployed
+// signature, so the upgrade is stable-compatible and no explicit migration
+// is required. The (with migration = Migration.run) annotation has been
+// removed from main.mo; this file is retained as a standalone, self-contained
+// module documenting the historical state transition. It must still compile
+// on its own (mops check compiles every .mo file in the backend directory).
 //
 // Old stable signature source: .old/src/backend/dist/backend.most
 // Migration pattern: https://internetcomputer.org/docs/motoko/fundamentals/actors/compatibility

@@ -1,9 +1,4 @@
-// Version: 3.0.0
-type AccessControlState__45017055 =
-  {
-    var adminAssigned : Bool;
-    userRoles : Map__246123559<Principal, UserRole__1073662873>
-  };
+// Version: 1.0.0
 type Asset__191761896 =
   {
     amount : Float;
@@ -55,95 +50,6 @@ type Nat__920180692 = Nat;
 type Nat__93962160 = Nat__920180692;
 type Node__279997185<K, V> =
   {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
-type OldAsset__349786360 =
-  {
-    amount : Float;
-    averagePrice : Float;
-    averagePurchasePrice : Float;
-    currentPrice : Float;
-    currentValue : Float;
-    name : Text;
-    profitLoss : Float;
-    profitLossPercentage : Float;
-    purchaseValue : Float;
-    realizedProfitLoss : Float;
-    symbol : Text
-  };
-type OldHistoricalProfitLoss__565299099 =
-  {timestamp : Int; totalProfitLoss : Float};
-type OldHistoricalTotalValue__563570126 =
-  {timestamp : Int; totalValue : Float};
-type OldHistoricalUnrealizedProfitLoss__723381998 =
-  {timestamp : Int; unrealizedProfitLoss : Float};
-type OldHistoricalValue__319510576 = {timestamp : Int; totalValue : Float};
-type OldMarketDataStatus__687504402 =
-  {
-    apiHealth : Text;
-    calculationQuality : Float;
-    colorScheme : Text;
-    lastUpdated : Int;
-    status : Text;
-    trackedAssetsCount : Nat
-  };
-type OldMarketData__867733652 =
-  {
-    id : Nat;
-    lastUpdated : Int;
-    marketCap : Float;
-    name : Text;
-    price : Float;
-    symbol : Text
-  };
-type OldPortfolio__390203722 =
-  {
-    assets : [OldAsset__349786360];
-    createdAt : Int;
-    historicalProfitLoss : [OldHistoricalProfitLoss__565299099];
-    historicalTotalValue : [OldHistoricalTotalValue__563570126];
-    historicalUnrealizedProfitLoss :
-      [OldHistoricalUnrealizedProfitLoss__723381998];
-    historicalValues : [OldHistoricalValue__319510576];
-    id : Nat;
-    name : Text;
-    totalProfitLoss : Float;
-    totalPurchaseValue : Float;
-    trackedAssets : [Text];
-    transactions : [OldTransaction__963748675];
-    unrealizedProfitLoss : Float
-  };
-type OldPriorityAsset__971156885 =
-  {
-    id : Text;
-    lastUpdated : Int;
-    marketCap : Float;
-    name : Text;
-    price : Float;
-    symbol : Text
-  };
-type OldTechnicalData__494483551 =
-  {
-    change24h : Float;
-    currentPrice : Float;
-    lastUpdated : Int;
-    marketCap : Float;
-    name : Text;
-    symbol : Text;
-    volume24h : Float
-  };
-type OldTransaction__963748675 =
-  {
-    amount : Float;
-    assetName : Text;
-    assetSymbol : Text;
-    comment : Text;
-    date : Int;
-    id : Nat;
-    price : Float;
-    type_ : Text
-  };
-type OldUserProfile__416069324 =
-  {colorScheme : Text; language : Text; name : Text; theme : Text};
-type OldUserRole__889293160 = UserRole__1073662873;
 type Portfolio__529122221 =
   {
     assets : [Asset__191761896];
@@ -202,27 +108,7 @@ type Tree__4145630<K, V> =
 type UserProfile__491224006 =
   {colorScheme : Text; language : Text; name : Text; theme : Text};
 type UserRole__1073662873 = {#admin; #guest; #user};
-actor ({
-  in var _acAdminAssigned : Bool;
-  in var _acState : AccessControlState__45017055;
-  in var _acUserRoles : [(Principal, OldUserRole__889293160)];
-  in var accessControlState :
-    {
-      var adminAssigned : Bool;
-      var userRoles : Map__334413012<Principal, OldUserRole__889293160>
-    };
-  in var isSystemHealthy : Bool;
-  in var lastFetchError : ?Text;
-  in var lastFetchErrorTimestamp : ?Int;
-  in var lastHealthCheck : Int;
-  in var marketData : Map__334413012<Nat, OldMarketData__867733652>;
-  in var marketDataStatus :
-    Map__334413012<Nat, OldMarketDataStatus__687504402>;
-  in var portfolios : Map__334413012<Principal, [OldPortfolio__390203722]>;
-  in var priorityAssets : Map__334413012<Nat, OldPriorityAsset__971156885>;
-  in var technicalData : Map__334413012<Nat, OldTechnicalData__494483551>;
-  in var userProfiles : Map__334413012<Principal, OldUserProfile__416069324>
-}, {
+actor {
   stable var _acAdminAssigned : Bool;
   stable var _acState :
     {
@@ -261,4 +147,4 @@ actor ({
       root : Tree__4145630<Principal__565152929, UserProfile__491224006>;
       size : Nat
     }
-});
+};

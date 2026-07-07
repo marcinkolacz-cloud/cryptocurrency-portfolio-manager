@@ -14,12 +14,11 @@ import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
-import Migration "migration";
 
-// Explicit migration: absorbs the previous canister's lastFetchError /
-// lastFetchErrorTimestamp stable vars (now retired) and initializes the
-// three new per-function error pairs to null. See migration.mo.
-(with migration = Migration.run)
+// No explicit migration needed: the current stable signature (six per-function
+// error pairs, no lastFetchError/lastFetchErrorTimestamp) is identical to the
+// previously deployed signature in .old/src/backend/dist/backend.most, so the
+// upgrade is stable-compatible and handled by implicit migration.
 actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
    var accessControlState : {
@@ -1020,7 +1019,25 @@ actor {
       };
       // /simple/price or /coins/{id} -> object
       case (#object_(entries)) {
-        if (_hasKey(entries, "market_data")) {
+        // CoinGecko error responses look like {"status": {"error_code": ...,
+        // "error_message": "..."}}. Detect this BEFORE the simple/price branch
+        // so a rate-limit/auth error is not misrouted into _canonicalizeSimplePrice
+        // (which would emit garbage like {"status":{"usd":0.0}}).
+        if (_hasKey(entries, "status")) {
+          // Extract error_message first, fall back to error_code, then a generic
+          // message if neither is present.
+          let errMsg = switch (Json.get(json, "status.error_message")) {
+            case (?(#string(s))) { s };
+            case _ {
+              switch (Json.get(json, "status.error_code")) {
+                case (?(#number(#int(n)))) { "error_code " # Int.toText(n) };
+                case (?(#number(#float(n)))) { "error_code " # Float.toText(n) };
+                case _ { "unknown CoinGecko error" };
+              };
+            };
+          };
+          #object_([("error", #string(errMsg))]);
+        } else if (_hasKey(entries, "market_data")) {
           // /coins/{id} single coin object
           _canonicalizeCoinDetail(json);
         } else {
@@ -1157,7 +1174,12 @@ actor {
   // Internal refresh for market data — no auth gate, called by the recurring
   // timer and by the admin-only fetchMarketData public function.
   private func _refreshMarketData() : async () {
-    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false";
+    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false";
+    // Note: OutCall.httpGetRequest (caffeineai-http-outcalls 0.1.1) does not
+    // expose a max_response_bytes option — it hardcodes null internally, so the
+    // IC system API default (2MB) applies. That is comfortably larger than a
+    // 100-coin /coins/markets response (~120-200KB), so no truncation is
+    // expected here. The library default is used.
     let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
       // existing marketData map — preserve prior data and record the error.
@@ -1178,9 +1200,51 @@ actor {
       };
       case (#ok(json)) {
         switch (json) {
+          // CoinGecko error shape — transform() canonicalizes rate-limit/auth
+          // errors to {"error": "<message>"}. Detect this BEFORE the #array
+          // branch so the actual CoinGecko error message is surfaced instead
+          // of being misrouted into the empty-array / unexpected-shape paths.
+          case (#object_(entries)) {
+            if (_hasKey(entries, "error")) {
+              let errMsg = switch (Json.get(json, "error")) {
+                case (?(#string(s))) { s };
+                case _ { "(unparseable error message)" };
+              };
+              lastMarketDataError := ?("_refreshMarketData: CoinGecko returned an error: " # errMsg);
+              lastMarketDataErrorTimestamp := ?currentTime;
+              lastHealthCheck := currentTime;
+              return;
+            };
+            // Other object shapes are unexpected for /coins/markets — record
+            // the error, leave prior data intact.
+            lastMarketDataError := ?"_refreshMarketData: unexpected JSON shape (not an array)";
+            lastMarketDataErrorTimestamp := ?currentTime;
+            lastHealthCheck := currentTime;
+            return;
+          };
           case (#array(coins)) {
+            // Empty array — CoinGecko returned no coins (rate-limit shadow
+            // response, malformed payload, etc.). Surface the raw response so
+            // the cause is diagnosable instead of looking like a silent
+            // success. Do NOT clear the marketData map; preserve prior data.
+            if (coins.size() == 0) {
+              let rawLen = response.size();
+              // mo:base/Text@0.16.0 has no substr(); use Text.toIter +
+              // Iter.take (mo:core/Iter) + Text.fromIter to extract the
+              // first 300 characters of the raw response for diagnostics.
+              let snippet = Text.fromIter(Text.toIter(response).take(300));
+              lastMarketDataError := ?(
+                "_refreshMarketData: Parsed successfully but array was empty. Raw response length: "
+                # Int.toText(rawLen)
+                # " chars, first 300 chars: "
+                # snippet
+              );
+              lastMarketDataErrorTimestamp := ?currentTime;
+              lastHealthCheck := currentTime;
+              return;
+            };
             // Clear the existing marketData map before inserting fresh entries
-            // (only once we know the parse succeeded and we have an array).
+            // (only once we know the parse succeeded and we have a non-empty array).
             marketData := natMap.empty<MarketData>();
             var index : Nat = 0;
             for (coin in coins.vals()) {
