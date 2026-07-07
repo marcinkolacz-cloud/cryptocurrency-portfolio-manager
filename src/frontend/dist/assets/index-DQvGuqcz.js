@@ -36746,6 +36746,11 @@ Service({
   "getCallerUserProfile": Func([], [Opt(UserProfile)], ["query"]),
   "getCallerUserProfileWithStatus": Func([], [AuthResult_1], ["query"]),
   "getCallerUserRole": Func([], [UserRole], ["query"]),
+  "getLastFetchError": Func(
+    [],
+    [Opt(Record({ "error": Text$1, "timestamp": Int }))],
+    ["query"]
+  ),
   "getMarketData": Func([], [Vec(MarketData)], ["query"]),
   "getMarketDataStatus": Func([], [Opt(MarketDataStatus)], ["query"]),
   "getPortfolioAssets": Func([Nat], [Vec(Asset)], ["query"]),
@@ -36969,6 +36974,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getCallerUserProfile": IDL2.Func([], [IDL2.Opt(UserProfile2)], ["query"]),
     "getCallerUserProfileWithStatus": IDL2.Func([], [AuthResult_12], ["query"]),
     "getCallerUserRole": IDL2.Func([], [UserRole2], ["query"]),
+    "getLastFetchError": IDL2.Func(
+      [],
+      [IDL2.Opt(IDL2.Record({ "error": IDL2.Text, "timestamp": IDL2.Int }))],
+      ["query"]
+    ),
     "getMarketData": IDL2.Func([], [IDL2.Vec(MarketData2)], ["query"]),
     "getMarketDataStatus": IDL2.Func(
       [],
@@ -37274,6 +37284,20 @@ class Backend {
       return from_candid_UserRole_n6(this._uploadFile, this._downloadFile, result);
     }
   }
+  async getLastFetchError() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getLastFetchError();
+        return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getLastFetchError();
+      return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async getMarketData() {
     if (this.processError) {
       try {
@@ -37292,14 +37316,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMarketDataStatus();
-        return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMarketDataStatus();
-      return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioAssets(arg0) {
@@ -37376,14 +37400,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfolioSummary(arg0);
-        return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfolioSummary(arg0);
-      return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioTrackedAssets(arg0) {
@@ -37432,14 +37456,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfoliosWithStatus();
-        return from_candid_AuthResult_n10(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfoliosWithStatus();
-      return from_candid_AuthResult_n10(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPriorityAssets() {
@@ -37474,14 +37498,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getTechnicalData(arg0);
-        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getTechnicalData(arg0);
-      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
@@ -37600,13 +37624,16 @@ class Backend {
 function from_candid_AuthResult_1_n4(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuthResult_n10(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n11(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_n11(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n6(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n7(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n12(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n10(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n13(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n3(_uploadFile, _downloadFile, value) {
@@ -37618,7 +37645,7 @@ function from_candid_opt_n8(_uploadFile, _downloadFile, value) {
 function from_candid_opt_n9(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n12(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok

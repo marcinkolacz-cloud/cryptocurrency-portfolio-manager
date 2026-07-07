@@ -122,6 +122,8 @@ actor {
       var userRoles : Map__334413012<Principal, UserRole__1073662873>
     };
   stable var isSystemHealthy : Bool;
+  stable var lastFetchError : ?Text;
+  stable var lastFetchErrorTimestamp : ?Int;
   stable var lastHealthCheck : Int;
   stable var marketData :
     {root : Tree__4145630<Nat, MarketData__386355075>; size : Nat};

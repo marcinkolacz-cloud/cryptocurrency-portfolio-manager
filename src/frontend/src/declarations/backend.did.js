@@ -151,6 +151,11 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserProfileWithStatus' : IDL.Func([], [AuthResult_1], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getLastFetchError' : IDL.Func(
+      [],
+      [IDL.Opt(IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int }))],
+      ['query'],
+    ),
   'getMarketData' : IDL.Func([], [IDL.Vec(MarketData)], ['query']),
   'getMarketDataStatus' : IDL.Func([], [IDL.Opt(MarketDataStatus)], ['query']),
   'getPortfolioAssets' : IDL.Func([IDL.Nat], [IDL.Vec(Asset)], ['query']),
@@ -378,6 +383,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserProfileWithStatus' : IDL.Func([], [AuthResult_1], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getLastFetchError' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Record({ 'error' : IDL.Text, 'timestamp' : IDL.Int }))],
+        ['query'],
+      ),
     'getMarketData' : IDL.Func([], [IDL.Vec(MarketData)], ['query']),
     'getMarketDataStatus' : IDL.Func(
         [],

@@ -140,6 +140,10 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserProfileWithStatus' : ActorMethod<[], AuthResult_1>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getLastFetchError' : ActorMethod<
+    [],
+    [] | [{ 'error' : string, 'timestamp' : bigint }]
+  >,
   'getMarketData' : ActorMethod<[], Array<MarketData>>,
   'getMarketDataStatus' : ActorMethod<[], [] | [MarketDataStatus]>,
   'getPortfolioAssets' : ActorMethod<[bigint], Array<Asset>>,

@@ -13,6 +13,7 @@ import Map "mo:core/Map";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
+import Error "mo:core/Error";
 
 actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
@@ -61,6 +62,25 @@ actor {
       isHealthy = isSystemHealthy;
       lastCheck = lastHealthCheck;
       currentTime = Time.now();
+    };
+  };
+
+  // Admin-only query to inspect the last fetch error from a refresh/outcall.
+  // Mirrors the getSystemHealth admin-gating pattern. Returns null when no
+  // error is recorded, or ?{ error; timestamp } when one is.
+  public query ({ caller }) func getLastFetchError() : async ?{
+    error : Text;
+    timestamp : Int;
+  } {
+    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only administrators can check fetch errors");
+    };
+
+    switch (lastFetchError, lastFetchErrorTimestamp) {
+      case (?e, ?t) { ?{ error = e; timestamp = t } };
+      case (?e, null) { ?{ error = e; timestamp = 0 } };
+      case (null, ?t) { ?{ error = ""; timestamp = t } };
+      case (null, null) { null };
     };
   };
 
@@ -227,6 +247,13 @@ actor {
   var priorityAssets = natMap.empty<PriorityAsset>();
   var technicalData = natMap.empty<TechnicalData>();
   var marketDataStatus = natMap.empty<MarketDataStatus>();
+
+  // Last fetch error tracking — set when an HTTP outcall traps or Json.parse
+  // fails inside a refresh function, cleared on the next successful refresh.
+  // Implicitly stable under --default-persistent-actors (matches the existing
+  // state-var pattern above).
+  var lastFetchError : ?Text = null;
+  var lastFetchErrorTimestamp : ?Int = null;
 
   // JSON helper: walk a dot/bracket path (e.g. "market_data.current_price.usd")
   // via Json.get and return the #string value, or "" if absent/wrong type.
@@ -931,7 +958,163 @@ actor {
   // does not expose sensitive data or perform privileged operations - it only transforms
   // HTTP response data according to the IC's requirements.
   public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
+    // Canonicalize the CoinGecko response body so every replica produces a
+    // byte-identical output for IC consensus. We keep ONLY the fields we need,
+    // round every float to 8 decimal places, and drop every volatile/unused
+    // field (last_updated_at, image, ath, sparkline, etc.). If the body is not
+    // valid JSON or does not match any expected shape, fall back to the library
+    // default transform so we don't break the consensus contract.
+    let response = input.response;
+    let bodyText = switch (response.body.decodeUtf8()) {
+      case null { return OutCall.transform(input) };
+      case (?t) { t };
+    };
+
+    let parsed = Json.parse(bodyText);
+    let json = switch (parsed) {
+      case (#err(_)) { return OutCall.transform(input) };
+      case (#ok(j)) { j };
+    };
+
+    // Detect the response shape and build the canonical Json.
+    let canonical : Json.Json = switch (json) {
+      // /coins/markets -> array of objects
+      case (#array(coins)) {
+        let canonicalCoins = Array.map(
+          coins,
+          func(coin) {
+            switch (coin) {
+              case (#object_(_)) { _canonicalizeMarketCoin(coin) };
+              case _ { coin };
+            };
+          },
+        );
+        #array(canonicalCoins);
+      };
+      // /simple/price or /coins/{id} -> object
+      case (#object_(entries)) {
+        if (_hasKey(entries, "market_data")) {
+          // /coins/{id} single coin object
+          _canonicalizeCoinDetail(json);
+        } else {
+          // /simple/price: object keyed by coin id, each value { "usd": <price> }
+          _canonicalizeSimplePrice(entries);
+        };
+      };
+      case _ { return OutCall.transform(input) };
+    };
+
+    let canonicalText = Json.stringify(canonical, null);
+    {
+      response with
+      body = Text.encodeUtf8(canonicalText);
+    };
+  };
+
+  // Does a Json object's entry list contain a given key?
+  private func _hasKey(entries : [(Text, Json.Json)], key : Text) : Bool {
+    for ((k, _) in entries.vals()) {
+      if (k == key) { return true };
+    };
+    false;
+  };
+
+  // Round a Float to 8 decimal places and return it as a Json #number #float.
+  private func _round8(n : Float) : Json.Json {
+    let rounded = Float.nearest(n * 1e8) / 1e8;
+    #number(#float(rounded));
+  };
+
+  // Read a numeric field from a coin object as Float (int promoted to Float),
+  // or 0.0 if absent/wrong type. Used by the canonicalizers below.
+  private func _getFieldFloat(json : Json.Json, key : Text) : Float {
+    switch (Json.get(json, key)) {
+      case (?(#number(#float(n)))) { n };
+      case (?(#number(#int(n)))) { Float.fromInt(n) };
+      case _ { 0.0 };
+    };
+  };
+
+  // /coins/markets element: keep only id, symbol, name, current_price,
+  // market_cap (all floats rounded to 8 decimals).
+  private func _canonicalizeMarketCoin(coin : Json.Json) : Json.Json {
+    let id = switch (Json.get(coin, "id")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let symbol = switch (Json.get(coin, "symbol")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let name = switch (Json.get(coin, "name")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let currentPrice = _getFieldFloat(coin, "current_price");
+    let marketCap = _getFieldFloat(coin, "market_cap");
+    #object_([
+      ("id", #string(id)),
+      ("symbol", #string(symbol)),
+      ("name", #string(name)),
+      ("current_price", _round8(currentPrice)),
+      ("market_cap", _round8(marketCap)),
+    ]);
+  };
+
+  // /simple/price: object keyed by coin id, each value { "usd": <price> }.
+  // Keep only the usd price per coin id, rounded to 8 decimals.
+  private func _canonicalizeSimplePrice(entries : [(Text, Json.Json)]) : Json.Json {
+    let canonicalEntries = Array.map<(Text, Json.Json), (Text, Json.Json)>(
+      entries,
+      func((id, value)) {
+        let usd = switch (value) {
+          case (#object_(inner)) {
+            switch (Json.get(#object_(inner), "usd")) {
+              case (?(#number(#float(n)))) { n };
+              case (?(#number(#int(n)))) { Float.fromInt(n) };
+              case _ { 0.0 };
+            };
+          };
+          case _ { 0.0 };
+        };
+        (id, #object_([("usd", _round8(usd))]));
+      },
+    );
+    #object_(canonicalEntries);
+  };
+
+  // /coins/{id}: keep id, symbol, name, and a market_data object containing
+  // only price (from current_price.usd), market_cap, change_24h (from
+  // price_change_percentage_24h), volume_24h (from total_volume), all rounded
+  // to 8 decimals.
+  private func _canonicalizeCoinDetail(coin : Json.Json) : Json.Json {
+    let id = switch (Json.get(coin, "id")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let symbol = switch (Json.get(coin, "symbol")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let name = switch (Json.get(coin, "name")) {
+      case (?(#string(s))) { s };
+      case _ { "" };
+    };
+    let price = _getFloat(coin, "market_data.current_price.usd");
+    let marketCap = _getFloat(coin, "market_data.market_cap.usd");
+    let change24h = _getFloat(coin, "market_data.price_change_percentage_24h");
+    let volume24h = _getFloat(coin, "market_data.total_volume.usd");
+    #object_([
+      ("id", #string(id)),
+      ("symbol", #string(symbol)),
+      ("name", #string(name)),
+      ("market_data", #object_([
+        ("price", _round8(price)),
+        ("market_cap", _round8(marketCap)),
+        ("change_24h", _round8(change24h)),
+        ("volume_24h", _round8(volume24h)),
+      ])),
+    ]);
   };
 
   // Admin-only function to fetch market data for all assets
@@ -948,20 +1131,30 @@ actor {
   // timer and by the admin-only fetchMarketData public function.
   private func _refreshMarketData() : async () {
     let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false";
-    let response = await OutCall.httpGetRequest(url, [], transform);
+    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+      // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
+      // existing marketData map — preserve prior data and record the error.
+      lastFetchError := ?("_refreshMarketData: " # err.message());
+      lastFetchErrorTimestamp := ?Time.now();
+      return;
+    };
 
     let currentTime = Time.now();
-    // Clear the existing marketData map before inserting fresh entries
-    marketData := natMap.empty<MarketData>();
 
     switch (Json.parse(response)) {
-      case (#err(_)) {
-        // Parse failed — leave marketData empty and update health timestamp
+      case (#err(e)) {
+        // Parse failed — leave marketData untouched and record the error.
+        lastFetchError := ?("_refreshMarketData: JSON parse failed: " # Json.errToText(e));
+        lastFetchErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
+        return;
       };
       case (#ok(json)) {
         switch (json) {
           case (#array(coins)) {
+            // Clear the existing marketData map before inserting fresh entries
+            // (only once we know the parse succeeded and we have an array).
+            marketData := natMap.empty<MarketData>();
             var index : Nat = 0;
             for (coin in coins.vals()) {
               let idText = _getText(coin, "id");
@@ -983,8 +1176,15 @@ actor {
               );
               index := index + 1;
             };
+            // Successful refresh — clear any prior fetch error.
+            lastFetchError := null;
+            lastFetchErrorTimestamp := null;
           };
-          case _ {};
+          case _ {
+            // Unexpected shape — record the error, leave prior data intact.
+            lastFetchError := ?"_refreshMarketData: unexpected JSON shape (not an array)";
+            lastFetchErrorTimestamp := ?currentTime;
+          };
         };
         lastHealthCheck := currentTime;
       };
@@ -1027,22 +1227,30 @@ actor {
     );
 
     let url = "https://api.coingecko.com/api/v3/simple/price?ids=" # idsParam # "&vs_currencies=usd";
-    let response = await OutCall.httpGetRequest(url, [], transform);
+    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+      // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
+      // existing priorityAssets map — preserve prior data and record the error.
+      lastFetchError := ?("_refreshPriorityAssetPrices: " # err.message());
+      lastFetchErrorTimestamp := ?Time.now();
+      return;
+    };
 
     let currentTime = Time.now();
-    // Clear the existing priorityAssets map before inserting fresh entries
-    priorityAssets := natMap.empty<PriorityAsset>();
 
     switch (Json.parse(response)) {
-      case (#err(_)) {
-        // Parse failed — leave priorityAssets empty and update health timestamp
+      case (#err(e)) {
+        // Parse failed — leave priorityAssets untouched and record the error.
+        lastFetchError := ?("_refreshPriorityAssetPrices: JSON parse failed: " # Json.errToText(e));
+        lastFetchErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
+        return;
       };
       case (#ok(json)) {
         // The simple/price response is an object keyed by priority id, each
         // value being { "usd": <price> }. Insert each asset under its OWN unique
         // incrementing Nat key (fixes the previous overwrite bug where every
         // asset was written with key 0).
+        priorityAssets := natMap.empty<PriorityAsset>();
         var index : Nat = 0;
         for (id in priorityAssetIds.vals()) {
           // Path "id.usd" resolves to the USD price for this priority id.
@@ -1061,6 +1269,9 @@ actor {
           );
           index := index + 1;
         };
+        // Successful refresh — clear any prior fetch error.
+        lastFetchError := null;
+        lastFetchErrorTimestamp := null;
         lastHealthCheck := currentTime;
       };
     };
@@ -1461,7 +1672,13 @@ actor {
     };
 
     let url = "https://api.coingecko.com/api/v3/coins/" # assetId;
-    let response = await OutCall.httpGetRequest(url, [], transform);
+    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+      // Outcall trapped (likely IC consensus / SysTransient). Do NOT overwrite
+      // existing technicalData — preserve prior data and record the error.
+      lastFetchError := ?("fetchTechnicalData(" # assetId # "): " # err.message());
+      lastFetchErrorTimestamp := ?Time.now();
+      return;
+    };
 
     // Parse the CoinGecko coin response and store real values instead of
     // hardcoded zeros. The coin object exposes:
@@ -1478,9 +1695,13 @@ actor {
     var name : Text = assetId;
 
     switch (Json.parse(response)) {
-      case (#err(_)) {
-        // Parse failed — keep the zero defaults and update health timestamp
+      case (#err(e)) {
+        // Parse failed — record the error and keep the zero defaults. Do NOT
+        // overwrite technicalData with zeros; leave prior data intact.
+        lastFetchError := ?("fetchTechnicalData(" # assetId # "): JSON parse failed: " # Json.errToText(e));
+        lastFetchErrorTimestamp := ?currentTime;
         lastHealthCheck := currentTime;
+        return;
       };
       case (#ok(json)) {
         currentPrice := _getFloat(json, "market_data.current_price.usd");
