@@ -13,7 +13,7 @@ main = "src/backend/main.mo"
 path = ".old/src/backend/dist/backend.most"
 
 [toolchain]
-moc = "1.8.2"
+moc = "1.10.1"
 lintoko = "0.10.0"
 
 [lint]
@@ -23,7 +23,8 @@ extends = true
 args = [ "--default-persistent-actors", "--actor-idl=src/backend/system-idl", "--implicit-package=core", "-no-check-ir", "-E=M0236,M0235,M0223,M0237", "-A=M0198" ]
 
 [dependencies]
-core = "2.2.0"
+core = "2.6.0"
 base = "0.16.0"
 caffeineai-authorization = "0.1.1"
 caffeineai-http-outcalls = "0.1.1"
+json = "1.4.0"

@@ -13,22 +13,21 @@ type Asset__191761896 =
     realizedProfitLoss : Float;
     symbol : Text
   };
-type Data__791452850<K, V> =
-  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type Data__552063367<K, V> = {var count : Nat__93962160; kvs : [var ?(K, V)]};
 type HistoricalProfitLoss__827809591 =
   {timestamp : Int; totalProfitLoss : Float};
 type HistoricalTotalValue__237814692 = {timestamp : Int; totalValue : Float};
 type HistoricalUnrealizedProfitLoss__766859379 =
   {timestamp : Int; unrealizedProfitLoss : Float};
 type HistoricalValue__461698983 = {timestamp : Int; totalValue : Float};
-type Internal__8484328<K, V> =
-  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
-type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
-type Map__158565046<K, V> = Map__297112838<K, V>;
-type Map__297112838<K, V> =
-  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Internal__455405067<K, V> =
+  {children : [var ?Node__279997185<K, V>]; data : Data__552063367<K, V>};
+type Leaf__114713147<K, V> = {data : Data__552063367<K, V>};
+type Map__190625089<K, V> = Map__719753394<K, V>;
+type Map__246123559<K, V> = Map__190625089<K, V>;
 type Map__334413012<K, V> = {root : Tree__4145630<K, V>; size : Nat};
-type Map__605269027<K, V> = Map__158565046<K, V>;
+type Map__719753394<K, V> =
+  {var root : Node__279997185<K, V>; var size : Nat__93962160};
 type MarketDataStatus__1069269376 =
   {
     apiHealth : Text;
@@ -47,10 +46,10 @@ type MarketData__386355075 =
     price : Float;
     symbol : Text
   };
-type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
-type Node__46230540<K, V> =
-  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Nat__93962160 = Nat__920180692;
+type Node__279997185<K, V> =
+  {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
 type Portfolio__529122221 =
   {
     assets : [Asset__191761896];
@@ -114,7 +113,7 @@ actor {
   stable var _acState :
     {
       var adminAssigned : Bool;
-      userRoles : Map__605269027<Principal, UserRole__1073662873>
+      userRoles : Map__246123559<Principal, UserRole__1073662873>
     };
   stable var _acUserRoles : [(Principal, UserRole__1073662873)];
   stable var accessControlState :

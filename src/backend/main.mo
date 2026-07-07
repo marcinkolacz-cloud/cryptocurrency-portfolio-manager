@@ -8,22 +8,25 @@ import Time "mo:base/Time";
 import Text "mo:base/Text";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
+import Float "mo:base/Float";
 import Map "mo:core/Map";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import Json "mo:json";
+import Timer "mo:base/Timer";
 
 actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
-  stable var accessControlState : {
+   var accessControlState : {
     var adminAssigned : Bool;
     var userRoles : OrderedMap.Map<Principal, AccessControl.UserRole>;
   } = {
     var adminAssigned = false;
-    var userRoles = OrderedMap.Make<Principal>(Principal.compare).empty();
+    var userRoles = OrderedMap.Make(Principal.compare).empty();
   };
 
   // Stable flat arrays - compatible with mo:base -> mo:core upgrade
-  stable var _acAdminAssigned : Bool = false;
-  stable var _acUserRoles : [(Principal, AccessControl.UserRole)] = [];
+   var _acAdminAssigned : Bool = false;
+   var _acUserRoles : [(Principal, AccessControl.UserRole)] = [];
 
   // Working copy used by all AccessControl library calls
   var _acState : AccessControl.AccessControlState = AccessControl.initState();
@@ -224,6 +227,25 @@ actor {
   var priorityAssets = natMap.empty<PriorityAsset>();
   var technicalData = natMap.empty<TechnicalData>();
   var marketDataStatus = natMap.empty<MarketDataStatus>();
+
+  // JSON helper: walk a dot/bracket path (e.g. "market_data.current_price.usd")
+  // via Json.get and return the #string value, or "" if absent/wrong type.
+  private func _getText(json : Json.Json, path : Text) : Text {
+    switch (Json.get(json, path)) {
+      case (?(#string(text))) { text };
+      case _ { "" };
+    };
+  };
+
+  // JSON helper: walk a dot/bracket path via Json.get and return the #number
+  // value as Float (int values are promoted to Float), or 0.0 if absent/wrong type.
+  private func _getFloat(json : Json.Json, path : Text) : Float {
+    switch (Json.get(json, path)) {
+      case (?(#number(#float(n)))) { n };
+      case (?(#number(#int(n)))) { Float.fromInt(n) };
+      case _ { 0.0 };
+    };
+  };
 
   // Helper function to verify portfolio ownership for update operations (can trap)
   private func verifyPortfolioOwnership(caller : Principal, portfolioId : Nat) : [Portfolio] {
@@ -755,13 +777,13 @@ actor {
           currentAvgPrice;
         };
 
-        assetAveragePrices := Array.filter<(Text, Float)>(
+        assetAveragePrices := Array.filter(
           assetAveragePrices,
           func(pair) { pair.0 != transaction.assetSymbol },
         );
         assetAveragePrices := Array.append(assetAveragePrices, [(transaction.assetSymbol, newAvgPrice)]);
 
-        assetAmounts := Array.filter<(Text, Float)>(
+        assetAmounts := Array.filter(
           assetAmounts,
           func(pair) { pair.0 != transaction.assetSymbol },
         );
@@ -771,7 +793,7 @@ actor {
         realizedPL := realizedPL + sellPL;
 
         let newAmount = currentAmount - transaction.amount;
-        assetAmounts := Array.filter<(Text, Float)>(
+        assetAmounts := Array.filter(
           assetAmounts,
           func(pair) { pair.0 != transaction.assetSymbol },
         );
@@ -919,24 +941,54 @@ actor {
     if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
       Debug.trap("Unauthorized: Only administrators can fetch market data for all assets. This is an expensive operation reserved for system maintenance.");
     };
+    await _refreshMarketData();
+  };
 
-    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=2000&page=1&sparkline=false";
+  // Internal refresh for market data — no auth gate, called by the recurring
+  // timer and by the admin-only fetchMarketData public function.
+  private func _refreshMarketData() : async () {
+    let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false";
     let response = await OutCall.httpGetRequest(url, [], transform);
 
     let currentTime = Time.now();
-    marketData := natMap.put(
-      marketData,
-      0,
-      {
-        id = 0;
-        symbol = "BTC";
-        name = "Bitcoin";
-        price = 0.0;
-        marketCap = 0.0;
-        lastUpdated = currentTime;
-      },
-    );
-    lastHealthCheck := currentTime;
+    // Clear the existing marketData map before inserting fresh entries
+    marketData := natMap.empty<MarketData>();
+
+    switch (Json.parse(response)) {
+      case (#err(_)) {
+        // Parse failed — leave marketData empty and update health timestamp
+        lastHealthCheck := currentTime;
+      };
+      case (#ok(json)) {
+        switch (json) {
+          case (#array(coins)) {
+            var index : Nat = 0;
+            for (coin in coins.vals()) {
+              let idText = _getText(coin, "id");
+              let symbol = _getText(coin, "symbol");
+              let name = _getText(coin, "name");
+              let price = _getFloat(coin, "current_price");
+              let marketCap = _getFloat(coin, "market_cap");
+              marketData := natMap.put(
+                marketData,
+                index,
+                {
+                  id = index;
+                  symbol;
+                  name;
+                  price;
+                  marketCap;
+                  lastUpdated = currentTime;
+                },
+              );
+              index := index + 1;
+            };
+          };
+          case _ {};
+        };
+        lastHealthCheck := currentTime;
+      };
+    };
   };
 
   // Admin-only function to fetch priority asset prices
@@ -946,7 +998,14 @@ actor {
     if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
       Debug.trap("Unauthorized: Only administrators can fetch priority asset prices. This is an expensive operation reserved for system maintenance.");
     };
+    await _refreshPriorityAssetPrices();
+  };
 
+  // Internal refresh for priority asset prices — no auth gate, called by the
+  // recurring timer and by the admin-only fetchPriorityAssetPrices public
+  // function. Uses the free api.coingecko.com simple/price endpoint (the
+  // pro-api.coingecko.com host requires paid auth we do not have).
+  private func _refreshPriorityAssetPrices() : async () {
     let priorityAssetIds : [Text] = [
       "folks",
       "waterneuron",
@@ -967,25 +1026,44 @@ actor {
       },
     );
 
-    let url = "https://pro-api.coingecko.com/api/v3/simple/price?ids=" # idsParam # "&vs_currencies=usd";
+    let url = "https://api.coingecko.com/api/v3/simple/price?ids=" # idsParam # "&vs_currencies=usd";
     let response = await OutCall.httpGetRequest(url, [], transform);
 
     let currentTime = Time.now();
-    for (id in priorityAssetIds.vals()) {
-      priorityAssets := natMap.put(
-        priorityAssets,
-        0,
-        {
-          id;
-          symbol = id;
-          name = id;
-          price = 0.0;
-          marketCap = 0.0;
-          lastUpdated = currentTime;
-        },
-      );
+    // Clear the existing priorityAssets map before inserting fresh entries
+    priorityAssets := natMap.empty<PriorityAsset>();
+
+    switch (Json.parse(response)) {
+      case (#err(_)) {
+        // Parse failed — leave priorityAssets empty and update health timestamp
+        lastHealthCheck := currentTime;
+      };
+      case (#ok(json)) {
+        // The simple/price response is an object keyed by priority id, each
+        // value being { "usd": <price> }. Insert each asset under its OWN unique
+        // incrementing Nat key (fixes the previous overwrite bug where every
+        // asset was written with key 0).
+        var index : Nat = 0;
+        for (id in priorityAssetIds.vals()) {
+          // Path "id.usd" resolves to the USD price for this priority id.
+          let price = _getFloat(json, id # ".usd");
+          priorityAssets := natMap.put(
+            priorityAssets,
+            index,
+            {
+              id;
+              symbol = id;
+              name = id;
+              price;
+              marketCap = 0.0; // simple/price endpoint does not return market cap
+              lastUpdated = currentTime;
+            },
+          );
+          index := index + 1;
+        };
+        lastHealthCheck := currentTime;
+      };
     };
-    lastHealthCheck := Time.now();
   };
 
   public query ({ caller }) func getMarketData() : async [MarketData] {
@@ -1385,22 +1463,51 @@ actor {
     let url = "https://api.coingecko.com/api/v3/coins/" # assetId;
     let response = await OutCall.httpGetRequest(url, [], transform);
 
-    // Parse the response and update the technicalData map
+    // Parse the CoinGecko coin response and store real values instead of
+    // hardcoded zeros. The coin object exposes:
+    //   market_data.current_price.usd
+    //   market_data.market_cap.usd
+    //   market_data.price_change_percentage_24h
+    //   market_data.total_volume.usd
     let currentTime = Time.now();
+    var currentPrice : Float = 0.0;
+    var marketCap : Float = 0.0;
+    var change24h : Float = 0.0;
+    var volume24h : Float = 0.0;
+    var symbol : Text = assetId;
+    var name : Text = assetId;
+
+    switch (Json.parse(response)) {
+      case (#err(_)) {
+        // Parse failed — keep the zero defaults and update health timestamp
+        lastHealthCheck := currentTime;
+      };
+      case (#ok(json)) {
+        currentPrice := _getFloat(json, "market_data.current_price.usd");
+        marketCap := _getFloat(json, "market_data.market_cap.usd");
+        change24h := _getFloat(json, "market_data.price_change_percentage_24h");
+        volume24h := _getFloat(json, "market_data.total_volume.usd");
+        let symbolText = _getText(json, "symbol");
+        let nameText = _getText(json, "name");
+        if (Text.size(symbolText) > 0) { symbol := symbolText };
+        if (Text.size(nameText) > 0) { name := nameText };
+        lastHealthCheck := currentTime;
+      };
+    };
+
     technicalData := natMap.put(
       technicalData,
       0,
       {
-        symbol = assetId;
-        name = assetId;
-        currentPrice = 0.0;
-        marketCap = 0.0;
-        change24h = 0.0;
-        volume24h = 0.0;
+        symbol;
+        name;
+        currentPrice;
+        marketCap;
+        change24h;
+        volume24h;
         lastUpdated = currentTime;
       },
     );
-    lastHealthCheck := currentTime;
   };
 
   public query ({ caller }) func getTechnicalData(assetId : Text) : async ?TechnicalData {
@@ -1410,7 +1517,7 @@ actor {
     };
 
     let technicalDataArray = natMap.vals(technicalData).toArray();
-    Array.find<TechnicalData>(
+    Array.find(
       technicalDataArray,
       func(td) { Text.equal(td.symbol, assetId) },
     );
@@ -1443,5 +1550,22 @@ actor {
     marketDataStatus := natMap.put(marketDataStatus, 0, status);
     lastHealthCheck := Time.now();
   };
+
+  // Scheduled background refresh — called by the recurring timer below.
+  // Awaits the internal (no-auth-gate) refresh helpers for market data and
+  // priority asset prices so the canister stays warm without an admin trigger.
+  private func _scheduledRefresh() : async () {
+    await _refreshMarketData();
+    await _refreshPriorityAssetPrices();
+  };
+
+  // Recurring timer: refresh market data and priority asset prices every 4
+  // minutes (240_000_000_000 nanoseconds) in the background. The timer ID is
+  // transient state — timer IDs are not stable across upgrades, so the timer is
+  // re-registered on every (re)start.
+  transient let _refreshTimerId : Timer.TimerId = Timer.recurringTimer(
+    #nanoseconds(240_000_000_000),
+    _scheduledRefresh,
+  );
 };
 
