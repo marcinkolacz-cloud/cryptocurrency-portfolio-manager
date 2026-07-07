@@ -1,6 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Activity, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useGetIsAdmin, useGetLastFetchError } from "@/hooks/useQueries";
+import { Activity, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface MarketDataStatusPanelProps {
@@ -9,6 +15,7 @@ interface MarketDataStatusPanelProps {
   trackedAssetsCount: number;
   lastUpdated: Date | null;
   calculationQuality: number;
+  isAdmin?: boolean;
 }
 
 const translations = {
@@ -19,6 +26,12 @@ const translations = {
     lastUpdated: "Ostatnia aktualizacja",
     calculationQuality: "Jakość obliczeń",
     trackedAssets: "Śledzone aktywa",
+    debugTitle: "Debug: ostatni błąd pobierania",
+    debugOpen: "Pokaż",
+    debugNoError: "Brak błędu — ostatnie odświeżanie zakończone sukcesem.",
+    debugErrorLabel: "Błąd:",
+    debugTimestampLabel: "Czas błędu:",
+    debugLoading: "Ładowanie danych debugowania...",
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -27,6 +40,12 @@ const translations = {
     lastUpdated: "Last updated",
     calculationQuality: "Calculation Quality",
     trackedAssets: "Tracked Assets",
+    debugTitle: "Debug: last fetch error",
+    debugOpen: "Show",
+    debugNoError: "No error — last refresh succeeded.",
+    debugErrorLabel: "Error:",
+    debugTimestampLabel: "Error time:",
+    debugLoading: "Loading debug data...",
   },
 };
 
@@ -36,9 +55,15 @@ export default function MarketDataStatusPanel({
   trackedAssetsCount,
   lastUpdated,
   calculationQuality,
+  isAdmin = false,
 }: MarketDataStatusPanelProps) {
   const t = translations[language];
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [debugOpen, setDebugOpen] = useState(false);
+
+  const lastFetchErrorQuery = useGetLastFetchError();
+  const isAdminQuery = useGetIsAdmin();
+  const showDebug = isAdmin || isAdminQuery;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -54,6 +79,48 @@ export default function MarketDataStatusPanel({
       minute: "2-digit",
       second: "2-digit",
     });
+  };
+
+  const formatDateTime = (date: Date) => {
+    return date.toLocaleString(language === "pl" ? "pl-PL" : "en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  const renderDebugContent = () => {
+    if (lastFetchErrorQuery.isLoading) {
+      return <p className="text-sm text-muted-foreground">{t.debugLoading}</p>;
+    }
+
+    const data = lastFetchErrorQuery.data ?? null;
+
+    if (data === null) {
+      return <p className="text-sm text-muted-foreground">{t.debugNoError}</p>;
+    }
+
+    const errorDate = new Date(Number(data.timestamp) / 1_000_000);
+
+    return (
+      <div className="flex flex-col gap-1">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {t.debugErrorLabel}
+          </span>{" "}
+          {data.error}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {t.debugTimestampLabel}
+          </span>{" "}
+          {formatDateTime(errorDate)}
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -134,6 +201,30 @@ export default function MarketDataStatusPanel({
             </div>
           </div>
         </div>
+
+        {showDebug && (
+          <Collapsible
+            open={debugOpen}
+            onOpenChange={setDebugOpen}
+            className="mt-4 border-t pt-3"
+            data-ocid="market_data_status.debug_section"
+          >
+            <CollapsibleTrigger
+              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+              data-ocid="market_data_status.debug_toggle"
+            >
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${
+                  debugOpen ? "rotate-180" : ""
+                }`}
+              />
+              {t.debugTitle}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              {renderDebugContent()}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
     </Card>
   );

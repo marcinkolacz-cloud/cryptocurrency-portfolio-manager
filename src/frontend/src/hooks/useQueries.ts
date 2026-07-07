@@ -332,6 +332,51 @@ export function useGetPriorityAssets() {
   });
 }
 
+export interface LastFetchError {
+  error: string;
+  timestamp: bigint;
+}
+
+export function useGetLastFetchError() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<LastFetchError | null>({
+    queryKey: ["lastFetchError"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        const result = await actor.getLastFetchError();
+        return result ?? null;
+      } catch (error) {
+        console.error("Error fetching last fetch error:", error);
+        return null;
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 30000,
+  });
+}
+
+export function useGetIsAdmin() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      if (!actor) return false;
+      try {
+        const isAdmin = await actor.isCallerAdmin();
+        return isAdmin === true;
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        return false;
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 60000,
+  });
+}
+
 export interface CoinTechnicalData {
   symbol: string;
   name: string;
