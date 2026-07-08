@@ -16,7 +16,7 @@ import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
 import Types "types";
-import Migration "migration";
+
 import OQL "mo:caffeineai-oql";
 import Expose "mo:caffeineai-oql/Expose";
 
@@ -25,7 +25,7 @@ import Expose "mo:caffeineai-oql/Expose";
 // (OldActor/NewActor/OldPortfolio + the Historical* types it references)
 // lives in the imported `Migration` module. The migration drops the four
 // dead historical* arrays from each Portfolio — see migration.mo.
-(with migration = Migration.run) actor {
+ actor {
   // Re-export the domain types from the imported Types module. This does two
   // things: (1) brings the bare names into scope so the rest of the actor can
   // reference them unqualified, and (2) keeps them in the Candid interface

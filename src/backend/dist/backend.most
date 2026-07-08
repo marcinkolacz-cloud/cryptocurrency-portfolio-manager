@@ -1,9 +1,4 @@
-// Version: 3.0.0
-type AccessControlState__45017055 =
-  {
-    var adminAssigned : Bool;
-    userRoles : Map__246123559<Principal, UserRole__1073662873>
-  };
+// Version: 1.0.0
 type Asset__930360235 =
   {
     amount : Float;
@@ -21,12 +16,6 @@ type Asset__930360235 =
     totalSoldCost : Float
   };
 type Data__552063367<K, V> = {var count : Nat__93962160; kvs : [var ?(K, V)]};
-type HistoricalProfitLoss__724935486 =
-  {timestamp : Int; totalProfitLoss : Float};
-type HistoricalTotalValue__468574262 = {timestamp : Int; totalValue : Float};
-type HistoricalUnrealizedProfitLoss__636726434 =
-  {timestamp : Int; unrealizedProfitLoss : Float};
-type HistoricalValue__287040137 = {timestamp : Int; totalValue : Float};
 type Internal__455405067<K, V> =
   {children : [var ?Node__279997185<K, V>]; data : Data__552063367<K, V>};
 type Leaf__114713147<K, V> = {data : Data__552063367<K, V>};
@@ -59,25 +48,6 @@ type Nat__920180692 = Nat;
 type Nat__93962160 = Nat__920180692;
 type Node__279997185<K, V> =
   {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
-type OldAsset__349786360 = Asset__930360235;
-type OldPortfolio__390203722 =
-  {
-    assets : [OldAsset__349786360];
-    createdAt : Int;
-    historicalProfitLoss : [HistoricalProfitLoss__724935486];
-    historicalTotalValue : [HistoricalTotalValue__468574262];
-    historicalUnrealizedProfitLoss :
-      [HistoricalUnrealizedProfitLoss__636726434];
-    historicalValues : [HistoricalValue__287040137];
-    id : Nat;
-    name : Text;
-    totalProfitLoss : Float;
-    totalPurchaseValue : Float;
-    trackedAssets : [Text];
-    transactions : [OldTransaction__963748675];
-    unrealizedProfitLoss : Float
-  };
-type OldTransaction__963748675 = Transaction__339151490;
 type Portfolio__529122221 = Portfolio__934865953;
 type Portfolio__934865953 =
   {
@@ -135,33 +105,7 @@ type UserProfile__491224006 = UserProfile__686917189;
 type UserProfile__686917189 =
   {colorScheme : Text; language : Text; name : Text; theme : Text};
 type UserRole__1073662873 = {#admin; #guest; #user};
-actor ({
-  in _acAdminAssigned : Bool;
-  in _acState : AccessControlState__45017055;
-  in _acUserRoles : [(Principal, UserRole__1073662873)];
-  in accessControlState :
-    {
-      var adminAssigned : Bool;
-      var userRoles : Map__334413012<Principal, UserRole__1073662873>
-    };
-  in customPriorityAssetIds : [Text];
-  in customTickerMap : [(Text, Text)];
-  in isSystemHealthy : Bool;
-  in lastHealthCheck : Int;
-  in lastMarketDataError : ?Text;
-  in lastMarketDataErrorTimestamp : ?Int;
-  in lastPriorityAssetsError : ?Text;
-  in lastPriorityAssetsErrorTimestamp : ?Int;
-  in lastTechnicalDataError : ?Text;
-  in lastTechnicalDataErrorTimestamp : ?Int;
-  in marketData : Map__334413012<Nat, MarketData__830262390>;
-  in marketDataStatus : Map__334413012<Nat, MarketDataStatus__869390846>;
-  in migrationVersion : Nat;
-  in portfolios : Map__334413012<Principal, [OldPortfolio__390203722]>;
-  in priorityAssets : Map__334413012<Nat, PriorityAsset__413329521>;
-  in technicalData : Map__334413012<Nat, TechnicalData__785922366>;
-  in userProfiles : Map__334413012<Principal, UserProfile__686917189>
-}, {
+actor {
   stable var _acAdminAssigned : Bool;
   stable var _acState :
     {
@@ -203,4 +147,4 @@ actor ({
       root : Tree__4145630<Principal__565152929, UserProfile__491224006>;
       size : Nat
     }
-});
+};

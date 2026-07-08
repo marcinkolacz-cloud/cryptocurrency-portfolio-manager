@@ -3,15 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
   Cell,
   Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 import type { Portfolio } from "../backend";
 
@@ -74,25 +71,20 @@ const LIGHT_COLORS = [
 
 interface AllocationPalette {
   colors: string[];
-  axisStroke: string;
-  tickFill: string;
+  labelFill: string;
 }
 
 function useAllocationPalette(): AllocationPalette {
   const { resolvedTheme } = useTheme();
   if (resolvedTheme === "light") {
-    return {
-      colors: LIGHT_COLORS,
-      axisStroke: "#9ca3af",
-      tickFill: "#6b7280",
-    };
+    return { colors: LIGHT_COLORS, labelFill: "#1a1a1a" };
   }
-  return {
-    colors: DARK_COLORS,
-    axisStroke: "rgba(0,255,136,0.45)",
-    tickFill: "rgba(0,255,136,0.75)",
-  };
+  return { colors: DARK_COLORS, labelFill: "rgba(255,255,255,0.92)" };
 }
+
+// Slices below this percentage get no inline label — they are too small to read
+// and would clutter the chart. Exact values remain available in the list below.
+const INLINE_LABEL_MIN_PERCENT = 5;
 
 export default function AssetAllocationChart({
   portfolio,
@@ -145,22 +137,22 @@ export default function AssetAllocationChart({
 
   const formatPercent = (value: number) => {
     return `${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     }).format(value)}%`;
   };
 
   const hasData = chartData.length > 0;
 
-  // Explicit max with 10% headroom so a dominant asset (e.g. 95% allocation)
-  // does not fill 100% of the chart height — smaller assets stay visible.
-  const maxValue = useMemo(() => {
-    if (chartData.length === 0) return 0;
-    return Math.max(...chartData.map((d) => d.displayValue));
-  }, [chartData]);
-  const yAxisDomain: [number, number] = [0, maxValue * 1.1];
-
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: { name: string; value: number; percentage: number };
+    }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -184,26 +176,21 @@ export default function AssetAllocationChart({
     return null;
   };
 
-  const CustomYAxisTick = ({ x, y, payload }: any) => {
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text
-          x={0}
-          y={0}
-          dy={4}
-          textAnchor="end"
-          fill={palette.tickFill}
-          className="font-terminal text-xs"
-          style={{ fontFamily: "var(--font-mono-terminal)" }}
-        >
-          {showPercentage ? `${payload.value}%` : formatCurrency(payload.value)}
-        </text>
-      </g>
-    );
+  // Inline label rendered next to each slice. Only shown for slices large
+  // enough to read (>= INLINE_LABEL_MIN_PERCENT). Honors the $/% toggle.
+  const renderInlineLabel = (entry: {
+    name: string;
+    value: number;
+    percentage: number;
+  }) => {
+    if (entry.percentage < INLINE_LABEL_MIN_PERCENT) return "";
+    return showPercentage
+      ? formatPercent(entry.percentage)
+      : formatCurrency(entry.value);
   };
 
   return (
-    <Card className="rounded-terminal border border-terminal bg-terminal-card p-3">
+    <Card className="flex h-full flex-col rounded-terminal border border-terminal bg-terminal-card p-3">
       <CardHeader className="gap-2 p-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold text-terminal">
@@ -214,6 +201,7 @@ export default function AssetAllocationChart({
               variant={showPercentage ? "outline" : "default"}
               size="sm"
               onClick={() => setShowPercentage(false)}
+              data-ocid="allocation.show_dollar.toggle"
               className="rounded-terminal font-terminal"
             >
               {t.showDollar}
@@ -222,6 +210,7 @@ export default function AssetAllocationChart({
               variant={showPercentage ? "default" : "outline"}
               size="sm"
               onClick={() => setShowPercentage(true)}
+              data-ocid="allocation.show_percentage.toggle"
               className="rounded-terminal font-terminal"
             >
               {t.showPercentage}
@@ -229,9 +218,9 @@ export default function AssetAllocationChart({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-2">
+      <CardContent className="flex flex-1 flex-col gap-2 p-2">
         {!hasData ? (
-          <div className="h-[400px] flex flex-col items-center justify-center text-center bg-terminal">
+          <div className="flex h-[400px] flex-col items-center justify-center text-center bg-terminal">
             <p className="text-terminal-muted font-terminal text-sm">
               {t.noAssets}
             </p>
@@ -240,61 +229,84 @@ export default function AssetAllocationChart({
             </p>
           </div>
         ) : (
-          <div className="h-[500px] w-full bg-terminal">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid
-                  stroke="var(--terminal-grid)"
-                  strokeWidth={1}
-                  strokeDasharray="2 2"
-                  horizontal={true}
-                  vertical={true}
-                />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  interval={0}
-                  stroke={palette.axisStroke}
-                  tick={{
-                    fill: palette.tickFill,
-                    fontSize: 11,
-                    fontFamily: "var(--font-mono-terminal)",
-                  }}
-                />
-                <YAxis
-                  tick={<CustomYAxisTick />}
-                  width={showPercentage ? 60 : 100}
-                  stroke={palette.axisStroke}
-                  domain={yAxisDomain}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{ paddingTop: "8px" }}
-                  formatter={(value) => (
-                    <span className="font-terminal text-xs">{value}</span>
-                  )}
-                />
-                <Bar
-                  dataKey="displayValue"
-                  name={showPercentage ? t.percentage : t.value}
-                  barSize={40}
-                  radius={[2, 2, 0, 0]}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${entry.name}`}
-                      fill={palette.colors[index % palette.colors.length]}
+          <>
+            {/* Donut chart — fixed comfortable height; list below fills the rest */}
+            <div className="h-[280px] w-full bg-terminal">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "4px", fontSize: "11px" }}
+                    formatter={(value) => (
+                      <span className="font-terminal text-xs text-terminal">
+                        {value}
+                      </span>
+                    )}
+                  />
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="55%"
+                    outerRadius="85%"
+                    paddingAngle={1}
+                    stroke="var(--terminal-card)"
+                    strokeWidth={1}
+                    isAnimationActive={false}
+                    label={renderInlineLabel}
+                    labelLine={{
+                      stroke: palette.labelFill,
+                      strokeWidth: 1,
+                    }}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${entry.name}`}
+                        fill={palette.colors[index % palette.colors.length]}
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Compact asset list — fills remaining vertical space naturally.
+                Grows with available height; scrolls only if many assets overflow. */}
+            <div
+              className="flex-1 overflow-y-auto border border-terminal bg-terminal"
+              data-ocid="allocation.list"
+            >
+              <div className="flex flex-col">
+                {chartData.map((entry, index) => (
+                  <div
+                    key={entry.name}
+                    data-ocid={`allocation.list.item.${index + 1}`}
+                    className="flex items-center gap-2 border-b border-terminal px-2 py-1 last:border-b-0 hover:bg-terminal-hover"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-terminal"
+                      style={{
+                        backgroundColor:
+                          palette.colors[index % palette.colors.length],
+                      }}
+                      aria-hidden="true"
                     />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+                    <span className="font-terminal text-xs font-bold text-terminal w-16 shrink-0 truncate">
+                      {entry.name}
+                    </span>
+                    <span className="font-terminal text-xs text-terminal flex-1 text-right tabular-nums truncate">
+                      {formatCurrency(entry.value)}
+                    </span>
+                    <span className="font-terminal text-xs text-terminal-muted w-16 shrink-0 text-right tabular-nums">
+                      {formatPercent(entry.percentage)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
