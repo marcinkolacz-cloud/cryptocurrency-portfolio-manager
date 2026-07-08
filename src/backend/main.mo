@@ -14,7 +14,7 @@ import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
-import Migration "migration";
+
 
 // An explicit migration is required for the Asset type change: the Asset
 // record gained two new fields (totalSoldCost and realizedProfitLossPercentage)
@@ -24,7 +24,7 @@ import Migration "migration";
 // upgrade. recalculateAssets (next edit/delete) recomputes correct values, and
 // updateAssets accumulates correctly on subsequent sells, so the 0.0 defaults
 // are safe.
-(with migration = Migration.run) actor {
+ actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
    var accessControlState : {
     var adminAssigned : Bool;
@@ -491,7 +491,7 @@ import Migration "migration";
         if (p.id == portfolioId) {
           var updatedTransactions = Array.append(p.transactions, [transaction]);
           var updatedAssets = updateAssets(p.assets, transaction, p.transactions);
-          var totalProfitLoss = calculateTotalProfitLoss(updatedTransactions, updatedAssets);
+          var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
           var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
           var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
@@ -560,7 +560,7 @@ import Migration "migration";
                 },
               );
               var updatedAssets = recalculateAssets(updatedTransactions);
-              var totalProfitLoss = calculateTotalProfitLoss(updatedTransactions, updatedAssets);
+              var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
               var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
               var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
@@ -620,7 +620,7 @@ import Migration "migration";
                 func(t) { t.id != transactionId },
               );
               var updatedAssets = recalculateAssets(updatedTransactions);
-              var totalProfitLoss = calculateTotalProfitLoss(updatedTransactions, updatedAssets);
+              var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
               var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
               var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
@@ -825,75 +825,12 @@ import Migration "migration";
     };
   };
 
-  func calculateTotalProfitLoss(transactions : [Transaction], assets : [Asset]) : Float {
-    var realizedPL : Float = 0.0;
-
-    var assetAveragePrices : [(Text, Float)] = [];
-    var assetAmounts : [(Text, Float)] = [];
-
-    for (transaction in transactions.vals()) {
-      let existingAvgPrice = Array.find(
-        assetAveragePrices,
-        func(pair) { pair.0 == transaction.assetSymbol },
-      );
-
-      let existingAmount = Array.find(
-        assetAmounts,
-        func(pair) { pair.0 == transaction.assetSymbol },
-      );
-
-      let currentAvgPrice = switch (existingAvgPrice) {
-        case null { 0.0 };
-        case (?(_, price)) { price };
-      };
-
-      let currentAmount = switch (existingAmount) {
-        case null { 0.0 };
-        case (?(_, amount)) { amount };
-      };
-
-      if (transaction.type_ == "buy") {
-        let newAmount = currentAmount + transaction.amount;
-        let newAvgPrice = if (newAmount > 0.0) {
-          ((currentAmount * currentAvgPrice) + (transaction.amount * transaction.price)) / newAmount;
-        } else {
-          currentAvgPrice;
-        };
-
-        assetAveragePrices := Array.filter(
-          assetAveragePrices,
-          func(pair) { pair.0 != transaction.assetSymbol },
-        );
-        assetAveragePrices := Array.append(assetAveragePrices, [(transaction.assetSymbol, newAvgPrice)]);
-
-        assetAmounts := Array.filter(
-          assetAmounts,
-          func(pair) { pair.0 != transaction.assetSymbol },
-        );
-        assetAmounts := Array.append(assetAmounts, [(transaction.assetSymbol, newAmount)]);
-      } else if (transaction.type_ == "sell") {
-        let sellPL = (transaction.price - currentAvgPrice) * transaction.amount;
-        realizedPL := realizedPL + sellPL;
-
-        let newAmount = currentAmount - transaction.amount;
-        assetAmounts := Array.filter(
-          assetAmounts,
-          func(pair) { pair.0 != transaction.assetSymbol },
-        );
-        if (newAmount > 0.0) {
-          assetAmounts := Array.append(assetAmounts, [(transaction.assetSymbol, newAmount)]);
-        };
-      };
-    };
-
-    var unrealizedPL : Float = 0.0;
-    for (asset in assets.vals()) {
-      if (asset.amount > 0.0) {
-        unrealizedPL := unrealizedPL + ((asset.currentPrice - asset.averagePrice) * asset.amount);
-      };
-    };
-
-    realizedPL + unrealizedPL;
+  func calculateTotalProfitLoss(assets : [Asset]) : Float {
+    Array.foldLeft(
+      assets,
+      0.0,
+      func(acc, asset) { acc + asset.profitLoss },
+    );
   };
 
   func calculateUnrealizedProfitLoss(assets : [Asset]) : Float {
@@ -1576,7 +1513,7 @@ import Migration "migration";
             },
           );
 
-          let totalProfitLoss = calculateTotalProfitLoss(p.transactions, updatedAssets);
+          let totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           let unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
           let historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
           let historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
