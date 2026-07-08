@@ -146,6 +146,10 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    addCustomPriorityAsset(coinGeckoId: string, tickerSymbol: string): Promise<{
+        error?: string;
+        success: boolean;
+    }>;
     addTransaction(portfolioId: bigint, transaction: Transaction): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createPortfolio(name: string): Promise<bigint>;
@@ -160,6 +164,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserProfileWithStatus(): Promise<AuthResult_1>;
     getCallerUserRole(): Promise<UserRole>;
+    getCustomPriorityAssets(): Promise<Array<[string, string]>>;
     getLastFetchError(): Promise<{
         marketData?: {
             error: string;
@@ -203,6 +208,14 @@ export interface backendInterface {
     isAuthenticated(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    searchCoinGeckoTokens(searchQuery: string): Promise<{
+        results: Array<{
+            id: string;
+            name: string;
+            symbol: string;
+        }>;
+        error?: string;
+    }>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateAssetPrices(portfolioId: bigint): Promise<void>;
     updateMarketDataStatus(status: MarketDataStatus): Promise<void>;

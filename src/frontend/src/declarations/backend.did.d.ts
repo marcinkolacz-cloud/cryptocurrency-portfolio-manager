@@ -128,6 +128,10 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
+  'addCustomPriorityAsset' : ActorMethod<
+    [string, string],
+    { 'error' : [] | [string], 'success' : boolean }
+  >,
   'addTransaction' : ActorMethod<[bigint, Transaction], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createPortfolio' : ActorMethod<[string], bigint>,
@@ -142,6 +146,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserProfileWithStatus' : ActorMethod<[], AuthResult_1>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCustomPriorityAssets' : ActorMethod<[], Array<[string, string]>>,
   'getLastFetchError' : ActorMethod<
     [],
     {
@@ -195,6 +200,13 @@ export interface _SERVICE {
   'isAuthenticated' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'searchCoinGeckoTokens' : ActorMethod<
+    [string],
+    {
+      'results' : Array<{ 'id' : string, 'name' : string, 'symbol' : string }>,
+      'error' : [] | [string],
+    }
+  >,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateAssetPrices' : ActorMethod<[bigint], undefined>,
   'updateMarketDataStatus' : ActorMethod<[MarketDataStatus], undefined>,

@@ -9,6 +9,7 @@ import Text "mo:base/Text";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
 import Float "mo:base/Float";
+import Char "mo:base/Char";
 import Map "mo:core/Map";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
@@ -289,6 +290,15 @@ import Error "mo:core/Error";
   var lastTechnicalDataError : ?Text = null;
   var lastTechnicalDataErrorTimestamp : ?Int = null;
 
+  // Admin-managed extension of the hardcoded base priority asset list. The base
+  // 10 ids live inside _refreshPriorityAssetPrices; customPriorityAssetIds
+  // holds admin-added CoinGecko ids appended at refresh time. customTickerMap
+  // stores (coinGeckoId, tickerSymbol) pairs for those custom ids so tickerFor
+  // can resolve them. Both are implicitly stable under
+  // --default-persistent-actors (same pattern as the state vars above).
+  var customPriorityAssetIds : [Text] = [];
+  var customTickerMap : [(Text, Text)] = [];
+
   // JSON helper: walk a dot/bracket path (e.g. "market_data.current_price.usd")
   // via Json.get and return the #string value, or "" if absent/wrong type.
   private func _getText(json : Json.Json, path : Text) : Text {
@@ -305,6 +315,36 @@ import Error "mo:core/Error";
       case (?(#number(#float(n)))) { n };
       case (?(#number(#int(n)))) { Float.fromInt(n) };
       case _ { 0.0 };
+    };
+  };
+
+  // Case-insensitive Text equality. mo:base/Char has no toLower, so we
+  // lowercase ASCII manually: for chars in the uppercase range (65-90), add 32
+  // to get the lowercase code point; otherwise keep as-is. Used for duplicate
+  // CoinGecko id checks and customTickerMap lookups.
+  private func _toLowerAscii(c : Char) : Char {
+    let n = Char.toNat32(c);
+    if (n >= 65 and n <= 90) {
+      Char.fromNat32(n + 32);
+    } else {
+      c;
+    };
+  };
+
+  private func _textEqualIgnoreCase(a : Text, b : Text) : Bool {
+    let aChars = Text.toIter(a);
+    let bChars = Text.toIter(b);
+    loop {
+      let aOpt = aChars.next();
+      let bOpt = bChars.next();
+      switch (aOpt, bOpt) {
+        case (null, null) { return true };
+        case (null, ?_) { return false };
+        case (?_, null) { return false };
+        case (?ac, ?bc) {
+          if (_toLowerAscii(ac) != _toLowerAscii(bc)) { return false };
+        };
+      };
     };
   };
 
@@ -1020,6 +1060,10 @@ import Error "mo:core/Error";
         } else if (_hasKey(entries, "market_data")) {
           // /coins/{id} single coin object
           _canonicalizeCoinDetail(json);
+        } else if (_hasKey(entries, "coins")) {
+          // /api/v3/search response: { "coins": [ { "id", "symbol", "name", ... }, ... ], ... }
+          // Canonicalize to keep only id/symbol/name per coin (strings only, no floats).
+          _canonicalizeSearchResponse(json);
         } else {
           // /simple/price: object keyed by coin id, each value { "usd": <price> }
           _canonicalizeSimplePrice(entries);
@@ -1171,6 +1215,64 @@ import Error "mo:core/Error";
         ("volume_24h", _round8(volume24h)),
       ])),
     ]);
+  };
+
+  // /api/v3/search element: keep only id, symbol, name (all strings). No
+  // floats to round here — the search response only carries string fields we
+  // care about. Single-pass extraction over the coin's #object_ entries.
+  private func _canonicalizeSearchCoin(coin : Json.Json) : Json.Json {
+    var id : Text = "";
+    var symbol : Text = "";
+    var name : Text = "";
+    switch (coin) {
+      case (#object_(entries)) {
+        for ((k, v) in entries.vals()) {
+          if (k == "id") {
+            switch (v) {
+              case (#string(s)) { id := s };
+              case _ {};
+            };
+          } else if (k == "symbol") {
+            switch (v) {
+              case (#string(s)) { symbol := s };
+              case _ {};
+            };
+          } else if (k == "name") {
+            switch (v) {
+              case (#string(s)) { name := s };
+              case _ {};
+            };
+          };
+        };
+      };
+      case _ {};
+    };
+    #object_([
+      ("id", #string(id)),
+      ("symbol", #string(symbol)),
+      ("name", #string(name)),
+    ]);
+  };
+
+  // /api/v3/search response: { "coins": [ { "id", "symbol", "name", ... }, ... ], ... }.
+  // Canonicalize to {"coins": [{"id":<text>,"symbol":<text>,"name":<text>}, ...]}
+  // keeping only id/symbol/name per coin. Other top-level keys (exchanges,
+  // categories, nfts, etc.) are dropped.
+  private func _canonicalizeSearchResponse(json : Json.Json) : Json.Json {
+    let coins = switch (Json.get(json, "coins")) {
+      case (?(#array(arr))) { arr };
+      case _ { [] };
+    };
+    let canonicalCoins = Array.map(
+      coins,
+      func(coin) {
+        switch (coin) {
+          case (#object_(_)) { _canonicalizeSearchCoin(coin) };
+          case _ { coin };
+        };
+      },
+    );
+    #object_([("coins", #array(canonicalCoins))]);
   };
 
   // Admin-only function to fetch market data for all assets
@@ -1351,7 +1453,7 @@ import Error "mo:core/Error";
   // function. Uses the free api.coingecko.com simple/price endpoint (the
   // pro-api.coingecko.com host requires paid auth we do not have).
   private func _refreshPriorityAssetPrices() : async () {
-    let priorityAssetIds : [Text] = [
+    let baseAssetIds : [Text] = [
       "waterneuron",
       "rujira",
       "gold-dao",
@@ -1364,11 +1466,22 @@ import Error "mo:core/Error";
       "injective-protocol",
     ];
 
+    // Concatenate the hardcoded base list with admin-added custom ids so the
+    // priority rotation can grow beyond the fixed 10 tokens without touching
+    // per_page on the markets endpoint.
+    let allAssetIds : [Text] = Array.append(baseAssetIds, customPriorityAssetIds);
+
     // Maps each CoinGecko id (lowercase slug) to its proper uppercase ticker
     // symbol, matching how portfolios/transactions reference assets. The `id`
     // field stays the lowercase slug (used as the CoinGecko URL ids param and
     // the JSON path key "id.usd"); only the stored `symbol` uses the ticker.
+    // Custom ids are resolved via customTickerMap (case-insensitive) before
+    // falling back to the hardcoded switch, then to the id unchanged.
     let tickerFor : Text -> Text = func(id) {
+      // Check customTickerMap first (case-insensitive linear scan).
+      for ((cgId, ticker) in customTickerMap.vals()) {
+        if (_textEqualIgnoreCase(cgId, id)) { return ticker };
+      };
       switch (id) {
         case ("waterneuron") "WTN";
         case ("rujira") "RUJIRA";
@@ -1385,7 +1498,7 @@ import Error "mo:core/Error";
     };
 
     let idsParam = Array.foldLeft(
-      priorityAssetIds,
+      allAssetIds,
       "",
       func(acc, id) {
         if (Text.size(acc) == 0) { id } else { acc # "," # id };
@@ -1418,7 +1531,7 @@ import Error "mo:core/Error";
         // asset was written with key 0).
         priorityAssets := natMap.empty<PriorityAsset>();
         var index : Nat = 0;
-        for (id in priorityAssetIds.vals()) {
+        for (id in allAssetIds.vals()) {
           // Path "id.usd" resolves to the USD price for this priority id.
           let price = _getFloat(json, id # ".usd");
           priorityAssets := natMap.put(
@@ -1457,6 +1570,154 @@ import Error "mo:core/Error";
       return [];
     };
     natMap.vals(priorityAssets).toArray();
+  };
+
+  // Admin-only: search CoinGecko's /api/v3/search endpoint for tokens matching
+  // the given query. Returns up to 10 {id, symbol, name} matches. On outcall
+  // failure or parse failure, returns {results = []; error = ?"<message>"} so
+  // the frontend can render a friendly "no results / search failed" state
+  // instead of trapping. The transform() function already canonicalizes the
+  // /search response to {"coins": [{"id":..,"symbol":..,"name":..}, ...]},
+  // so we only need to walk that canonical shape here.
+  public shared ({ caller }) func searchCoinGeckoTokens(searchQuery : Text) : async {
+    results : [{ id : Text; symbol : Text; name : Text }];
+    error : ?Text;
+  } {
+    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
+      return { results = []; error = ?"Unauthorized: admin permission required" };
+    };
+    if (Text.size(searchQuery) == 0) {
+      return { results = []; error = ?"Query must not be empty" };
+    };
+    let url = "https://api.coingecko.com/api/v3/search?query=" # searchQuery;
+    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+      return { results = []; error = ?("searchCoinGeckoTokens: outcall failed: " # err.message()) };
+    };
+    let json = switch (Json.parse(response)) {
+      case (#err(e)) {
+        return { results = []; error = ?("searchCoinGeckoTokens: JSON parse failed: " # Json.errToText(e)) };
+      };
+      case (#ok(j)) { j };
+    };
+    // transform() canonicalizes /search to {"coins": [{id,symbol,name}, ...]}.
+    // Other top-level keys (exchanges, categories, nfts) are dropped.
+    let coins = switch (Json.get(json, "coins")) {
+      case (?(#array(arr))) { arr };
+      case _ { return { results = []; error = null } };
+    };
+    let results = Array.map(
+      coins,
+      func(coin) : { id : Text; symbol : Text; name : Text } {
+        var id : Text = "";
+        var symbol : Text = "";
+        var name : Text = "";
+        switch (coin) {
+          case (#object_(entries)) {
+            for ((k, v) in entries.vals()) {
+              if (k == "id") {
+                switch (v) { case (#string(s)) { id := s }; case _ {} };
+              } else if (k == "symbol") {
+                switch (v) { case (#string(s)) { symbol := s }; case _ {} };
+              } else if (k == "name") {
+                switch (v) { case (#string(s)) { name := s }; case _ {} };
+              };
+            };
+          };
+          case _ {};
+        };
+        { id; symbol; name };
+      },
+    );
+    // Return up to the first 10 matches.
+    let limit : Nat = 10;
+    let count = if (results.size() < limit) { results.size() } else { limit };
+    var trimmed = Array.init<{ id : Text; symbol : Text; name : Text }>(count, { id = ""; symbol = ""; name = "" });
+    var i : Nat = 0;
+    while (i < count) {
+      trimmed[i] := results[i];
+      i += 1;
+    };
+    { results = Array.freeze(trimmed); error = null };
+  };
+
+  // Admin-only: permanently add a CoinGecko token id to the priorityAssets
+  // rotation. Validates inputs are non-empty, rejects duplicates (case-
+  // insensitive on the id) against the 10 hardcoded base ids and the existing
+  // customPriorityAssetIds, appends to customPriorityAssetIds and stores the
+  // (coinGeckoId, tickerSymbol) pair in customTickerMap, then triggers an
+  // immediate _refreshPriorityAssetPrices() so the new token's price is
+  // fetched right away. Returns {success=true; error=null} on success, or
+  // {success=false; error=?"<reason>"} on validation failure or duplicate.
+  public shared ({ caller }) func addCustomPriorityAsset(coinGeckoId : Text, tickerSymbol : Text) : async {
+    success : Bool;
+    error : ?Text;
+  } {
+    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
+      return { success = false; error = ?"Unauthorized: admin permission required" };
+    };
+    if (Text.size(coinGeckoId) == 0) {
+      return { success = false; error = ?"coinGeckoId must not be empty" };
+    };
+    if (Text.size(tickerSymbol) == 0) {
+      return { success = false; error = ?"tickerSymbol must not be empty" };
+    };
+    // Reject duplicates against the hardcoded base list (case-insensitive).
+    let baseAssetIds : [Text] = [
+      "waterneuron",
+      "rujira",
+      "gold-dao",
+      "openchat",
+      "icpswap-token",
+      "iclighthouse-dao",
+      "origyn-foundation",
+      "sonic-2",
+      "internet-computer",
+      "injective-protocol",
+    ];
+    for (baseId in baseAssetIds.vals()) {
+      if (_textEqualIgnoreCase(baseId, coinGeckoId)) {
+        return { success = false; error = ?"coinGeckoId already in the base priority list" };
+      };
+    };
+    // Reject duplicates against existing customPriorityAssetIds (case-insensitive).
+    for (existingId in customPriorityAssetIds.vals()) {
+      if (_textEqualIgnoreCase(existingId, coinGeckoId)) {
+        return { success = false; error = ?"coinGeckoId already in customPriorityAssetIds" };
+      };
+    };
+    // Append to customPriorityAssetIds and store the ticker mapping.
+    customPriorityAssetIds := Array.append(customPriorityAssetIds, [coinGeckoId]);
+    customTickerMap := Array.append(customTickerMap, [(coinGeckoId, tickerSymbol)]);
+    // Trigger an immediate refresh so the new token's price is fetched now.
+    try {
+      await _refreshPriorityAssetPrices();
+    } catch (err) {
+      // The append already succeeded; the refresh failure is non-fatal because
+      // the next scheduled refresh will pick up the new id. Surface the error
+      // but report success since the asset was added.
+      return { success = true; error = ?("Added, but refresh failed: " # err.message()) };
+    };
+    { success = true; error = null };
+  };
+
+  // Admin-only: returns the current customPriorityAssetIds paired with their
+  // ticker (id, ticker) so the frontend can display what's already been added.
+  // The ticker is resolved from customTickerMap (case-insensitive); if no
+  // mapping is found, the id itself is used as the ticker fallback.
+  public query ({ caller }) func getCustomPriorityAssets() : async [(Text, Text)] {
+    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
+      return [];
+    };
+    Array.map(
+      customPriorityAssetIds,
+      func(id) : (Text, Text) {
+        var ticker : Text = id;
+        for ((cgId, t) in customTickerMap.vals()) {
+          if (_textEqualIgnoreCase(cgId, id)) { ticker := t };
+        };
+        (id, ticker);
+      },
+    );
   };
 
   public shared ({ caller }) func updateAssetPrices(portfolioId : Nat) : async () {

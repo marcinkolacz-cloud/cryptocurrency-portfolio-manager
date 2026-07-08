@@ -147,6 +147,11 @@ type Asset =
  };
 service : {
   _initializeAccessControl: () -> ();
+  addCustomPriorityAsset: (coinGeckoId: text, tickerSymbol: text) ->
+   (record {
+      error: opt text;
+      success: bool;
+    });
   addTransaction: (portfolioId: nat, transaction: Transaction) -> ();
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
   createPortfolio: (name: text) -> (nat);
@@ -162,6 +167,10 @@ service : {
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserProfileWithStatus: () -> (AuthResult_1) query;
   getCallerUserRole: () -> (UserRole) query;
+  getCustomPriorityAssets: () -> (vec record {
+                                        text;
+                                        text;
+                                      }) query;
   getLastFetchError: () ->
    (record {
       marketData: opt record {
@@ -213,6 +222,15 @@ service : {
   isAuthenticated: () -> (bool) query;
   isCallerAdmin: () -> (bool) query;
   saveCallerUserProfile: (profile: UserProfile) -> ();
+  searchCoinGeckoTokens: (searchQuery: text) ->
+   (record {
+      error: opt text;
+      results: vec record {
+                     id: text;
+                     name: text;
+                     symbol: text;
+                   };
+    });
   transform: (input: TransformationInput) -> (TransformationOutput) query;
   updateAssetPrices: (portfolioId: nat) -> ();
   updateMarketDataStatus: (status: MarketDataStatus) -> ();

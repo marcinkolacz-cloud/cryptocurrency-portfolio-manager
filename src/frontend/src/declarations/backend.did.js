@@ -136,6 +136,11 @@ export const TransformationOutput = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControl' : IDL.Func([], [], []),
+  'addCustomPriorityAsset' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
+      [],
+    ),
   'addTransaction' : IDL.Func([IDL.Nat, Transaction], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createPortfolio' : IDL.Func([IDL.Text], [IDL.Nat], []),
@@ -150,6 +155,11 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserProfileWithStatus' : IDL.Func([], [AuthResult_1], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCustomPriorityAssets' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+      ['query'],
+    ),
   'getLastFetchError' : IDL.Func(
       [],
       [
@@ -242,6 +252,22 @@ export const idlService = IDL.Service({
   'isAuthenticated' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'searchCoinGeckoTokens' : IDL.Func(
+      [IDL.Text],
+      [
+        IDL.Record({
+          'results' : IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'name' : IDL.Text,
+              'symbol' : IDL.Text,
+            })
+          ),
+          'error' : IDL.Opt(IDL.Text),
+        }),
+      ],
+      [],
+    ),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
@@ -382,6 +408,11 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControl' : IDL.Func([], [], []),
+    'addCustomPriorityAsset' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
+        [],
+      ),
     'addTransaction' : IDL.Func([IDL.Nat, Transaction], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createPortfolio' : IDL.Func([IDL.Text], [IDL.Nat], []),
@@ -396,6 +427,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserProfileWithStatus' : IDL.Func([], [AuthResult_1], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCustomPriorityAssets' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+        ['query'],
+      ),
     'getLastFetchError' : IDL.Func(
         [],
         [
@@ -492,6 +528,22 @@ export const idlFactory = ({ IDL }) => {
     'isAuthenticated' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'searchCoinGeckoTokens' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Record({
+            'results' : IDL.Vec(
+              IDL.Record({
+                'id' : IDL.Text,
+                'name' : IDL.Text,
+                'symbol' : IDL.Text,
+              })
+            ),
+            'error' : IDL.Opt(IDL.Text),
+          }),
+        ],
+        [],
+      ),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],

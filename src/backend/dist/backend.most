@@ -123,6 +123,8 @@ actor {
       var adminAssigned : Bool;
       var userRoles : Map__334413012<Principal, UserRole__1073662873>
     };
+  stable var customPriorityAssetIds : [Text];
+  stable var customTickerMap : [(Text, Text)];
   stable var isSystemHealthy : Bool;
   stable var lastHealthCheck : Int;
   stable var lastMarketDataError : ?Text;

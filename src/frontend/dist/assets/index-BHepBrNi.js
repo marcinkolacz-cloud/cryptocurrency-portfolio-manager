@@ -36957,6 +36957,11 @@ const TransformationOutput = Record({
 });
 Service({
   "_initializeAccessControl": Func([], [], []),
+  "addCustomPriorityAsset": Func(
+    [Text$1, Text$1],
+    [Record({ "error": Opt(Text$1), "success": Bool })],
+    []
+  ),
   "addTransaction": Func([Nat, Transaction], [], []),
   "assignCallerUserRole": Func([Principal2, UserRole], [], []),
   "createPortfolio": Func([Text$1], [Nat], []),
@@ -36971,6 +36976,11 @@ Service({
   "getCallerUserProfile": Func([], [Opt(UserProfile)], ["query"]),
   "getCallerUserProfileWithStatus": Func([], [AuthResult_1], ["query"]),
   "getCallerUserRole": Func([], [UserRole], ["query"]),
+  "getCustomPriorityAssets": Func(
+    [],
+    [Vec(Tuple(Text$1, Text$1))],
+    ["query"]
+  ),
   "getLastFetchError": Func(
     [],
     [
@@ -37063,6 +37073,22 @@ Service({
   "isAuthenticated": Func([], [Bool], ["query"]),
   "isCallerAdmin": Func([], [Bool], ["query"]),
   "saveCallerUserProfile": Func([UserProfile], [], []),
+  "searchCoinGeckoTokens": Func(
+    [Text$1],
+    [
+      Record({
+        "results": Vec(
+          Record({
+            "id": Text$1,
+            "name": Text$1,
+            "symbol": Text$1
+          })
+        ),
+        "error": Opt(Text$1)
+      })
+    ],
+    []
+  ),
   "transform": Func(
     [TransformationInput],
     [TransformationOutput],
@@ -37199,6 +37225,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
   });
   return IDL2.Service({
     "_initializeAccessControl": IDL2.Func([], [], []),
+    "addCustomPriorityAsset": IDL2.Func(
+      [IDL2.Text, IDL2.Text],
+      [IDL2.Record({ "error": IDL2.Opt(IDL2.Text), "success": IDL2.Bool })],
+      []
+    ),
     "addTransaction": IDL2.Func([IDL2.Nat, Transaction2], [], []),
     "assignCallerUserRole": IDL2.Func([IDL2.Principal, UserRole2], [], []),
     "createPortfolio": IDL2.Func([IDL2.Text], [IDL2.Nat], []),
@@ -37213,6 +37244,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getCallerUserProfile": IDL2.Func([], [IDL2.Opt(UserProfile2)], ["query"]),
     "getCallerUserProfileWithStatus": IDL2.Func([], [AuthResult_12], ["query"]),
     "getCallerUserRole": IDL2.Func([], [UserRole2], ["query"]),
+    "getCustomPriorityAssets": IDL2.Func(
+      [],
+      [IDL2.Vec(IDL2.Tuple(IDL2.Text, IDL2.Text))],
+      ["query"]
+    ),
     "getLastFetchError": IDL2.Func(
       [],
       [
@@ -37309,6 +37345,22 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "isAuthenticated": IDL2.Func([], [IDL2.Bool], ["query"]),
     "isCallerAdmin": IDL2.Func([], [IDL2.Bool], ["query"]),
     "saveCallerUserProfile": IDL2.Func([UserProfile2], [], []),
+    "searchCoinGeckoTokens": IDL2.Func(
+      [IDL2.Text],
+      [
+        IDL2.Record({
+          "results": IDL2.Vec(
+            IDL2.Record({
+              "id": IDL2.Text,
+              "name": IDL2.Text,
+              "symbol": IDL2.Text
+            })
+          ),
+          "error": IDL2.Opt(IDL2.Text)
+        })
+      ],
+      []
+    ),
     "transform": IDL2.Func(
       [TransformationInput2],
       [TransformationOutput2],
@@ -37342,6 +37394,20 @@ class Backend {
       return result;
     }
   }
+  async addCustomPriorityAsset(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.addCustomPriorityAsset(arg0, arg1);
+        return from_candid_record_n1(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.addCustomPriorityAsset(arg0, arg1);
+      return from_candid_record_n1(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async addTransaction(arg0, arg1) {
     if (this.processError) {
       try {
@@ -37359,14 +37425,14 @@ class Backend {
   async assignCallerUserRole(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -37500,56 +37566,70 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfile();
-        return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfile();
-      return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserProfileWithStatus() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfileWithStatus();
-        return from_candid_AuthResult_1_n4(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_1_n6(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfileWithStatus();
-      return from_candid_AuthResult_1_n4(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_1_n6(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole_n6(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole_n6(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getCustomPriorityAssets() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getCustomPriorityAssets();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getCustomPriorityAssets();
+      return result;
     }
   }
   async getLastFetchError() {
     if (this.processError) {
       try {
         const result = await this.actor.getLastFetchError();
-        return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getLastFetchError();
-      return from_candid_record_n8(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMarketData() {
@@ -37570,14 +37650,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMarketDataStatus();
-        return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMarketDataStatus();
-      return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioAssets(arg0) {
@@ -37654,14 +37734,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfolioSummary(arg0);
-        return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfolioSummary(arg0);
-      return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioTrackedAssets(arg0) {
@@ -37710,14 +37790,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfoliosWithStatus();
-        return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_n14(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfoliosWithStatus();
-      return from_candid_AuthResult_n12(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_n14(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPriorityAssets() {
@@ -37752,28 +37832,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getTechnicalData(arg0);
-        return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getTechnicalData(arg0);
-      return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserProfile(arg0);
-        return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserProfile(arg0);
-      return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
     }
   }
   async initializeAccessControl() {
@@ -37832,6 +37912,20 @@ class Backend {
       return result;
     }
   }
+  async searchCoinGeckoTokens(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.searchCoinGeckoTokens(arg0);
+        return from_candid_record_n17(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.searchCoinGeckoTokens(arg0);
+      return from_candid_record_n17(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async transform(arg0) {
     if (this.processError) {
       try {
@@ -37875,50 +37969,53 @@ class Backend {
     }
   }
 }
-function from_candid_AuthResult_1_n4(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n5(_uploadFile, _downloadFile, value);
-}
-function from_candid_AuthResult_n12(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n13(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole_n6(_uploadFile, _downloadFile, value) {
+function from_candid_AuthResult_1_n6(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n7(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n10(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
+function from_candid_AuthResult_n14(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n8(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n11(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n14(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n12(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n3(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n13(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n9(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n16(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n8(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n2(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n5(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n1(_uploadFile, _downloadFile, value) {
   return {
-    marketData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.marketData)),
-    priorityAssets: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.priorityAssets)),
-    technicalData: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.technicalData))
+    error: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.error)),
+    success: value.success
   };
 }
-function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "notFound" in value ? {
-    __kind__: "notFound",
-    notFound: value.notFound
-  } : "unauthorized" in value ? {
-    __kind__: "unauthorized",
-    unauthorized: value.unauthorized
-  } : value;
+function from_candid_record_n10(_uploadFile, _downloadFile, value) {
+  return {
+    marketData: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.marketData)),
+    priorityAssets: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.priorityAssets)),
+    technicalData: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.technicalData))
+  };
 }
-function from_candid_variant_n5(_uploadFile, _downloadFile, value) {
+function from_candid_record_n17(_uploadFile, _downloadFile, value) {
+  return {
+    results: value.results,
+    error: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.error))
+  };
+}
+function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -37931,12 +38028,24 @@ function from_candid_variant_n5(_uploadFile, _downloadFile, value) {
   } : value;
 }
 function from_candid_variant_n7(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "notFound" in value ? {
+    __kind__: "notFound",
+    notFound: value.notFound
+  } : "unauthorized" in value ? {
+    __kind__: "unauthorized",
+    unauthorized: value.unauthorized
+  } : value;
+}
+function from_candid_variant_n9(_uploadFile, _downloadFile, value) {
   return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
 }
-function to_candid_UserRole_n1(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+function to_candid_UserRole_n3(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_variant_n2(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n4(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -38339,6 +38448,70 @@ function useFetchCoinTechnicalData(coinId) {
     staleTime: 5 * 60 * 1e3,
     retry: 2,
     retryDelay: 2e3
+  });
+}
+function useSearchCoinGeckoTokens() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (searchQuery) => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Searching CoinGecko tokens:", searchQuery);
+      const result = await actor.searchCoinGeckoTokens(searchQuery);
+      return {
+        results: Array.isArray(result == null ? void 0 : result.results) ? result.results : [],
+        error: result == null ? void 0 : result.error
+      };
+    },
+    onError: (error) => {
+      console.error("Error searching CoinGecko tokens:", error);
+    }
+  });
+}
+function useAddCustomPriorityAsset() {
+  const { actor } = useActor();
+  const queryClient2 = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      coinGeckoId,
+      tickerSymbol
+    }) => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Adding custom priority asset:", coinGeckoId, tickerSymbol);
+      const result = await actor.addCustomPriorityAsset(
+        coinGeckoId,
+        tickerSymbol
+      );
+      return {
+        success: (result == null ? void 0 : result.success) === true,
+        error: result == null ? void 0 : result.error
+      };
+    },
+    onSuccess: () => {
+      console.log("Custom priority asset added successfully");
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
+      queryClient2.invalidateQueries({ queryKey: ["customPriorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error adding custom priority asset:", error);
+    }
+  });
+}
+function useGetCustomPriorityAssets() {
+  const { actor, isFetching: actorFetching } = useActor();
+  return useQuery({
+    queryKey: ["customPriorityAssets"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const data = await actor.getCustomPriorityAssets();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching custom priority assets:", error);
+        return [];
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 3e4
   });
 }
 function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) {
@@ -73916,7 +74089,19 @@ const translations$3 = {
     debugBlockTechnicalData: "Dane techniczne",
     refreshPrices: "Odśwież ceny",
     refreshPricesLoading: "Odświeżanie...",
-    refreshPricesError: "Błąd odświeżania cen"
+    refreshPricesError: "Błąd odświeżania cen",
+    addPriorityAssetTitle: "Dodaj priorytetowe aktywa",
+    searchPlaceholder: "Szukaj monety (np. bitcoin, eth, solana)",
+    searchButton: "Szukaj",
+    searching: "Szukanie...",
+    noResults: "Brak wyników",
+    searchError: "Błąd wyszukiwania",
+    addButton: "Dodaj",
+    adding: "Dodawanie...",
+    added: "Dodano {symbol}",
+    addError: "Błąd dodawania",
+    customAssetsTitle: "Dodane priorytetowe aktywa",
+    noCustomAssets: "Brak dodanych aktywów"
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -73936,7 +74121,19 @@ const translations$3 = {
     debugBlockTechnicalData: "Technical data",
     refreshPrices: "Refresh prices",
     refreshPricesLoading: "Refreshing...",
-    refreshPricesError: "Error refreshing prices"
+    refreshPricesError: "Error refreshing prices",
+    addPriorityAssetTitle: "Add Priority Asset",
+    searchPlaceholder: "Search coin (e.g. bitcoin, eth, solana)",
+    searchButton: "Search",
+    searching: "Searching...",
+    noResults: "No results",
+    searchError: "Search error",
+    addButton: "Add",
+    adding: "Adding...",
+    added: "Added {symbol}",
+    addError: "Error adding",
+    customAssetsTitle: "Added custom assets",
+    noCustomAssets: "No custom assets added"
   }
 };
 function MarketDataStatusPanel({
@@ -73956,6 +74153,15 @@ function MarketDataStatusPanel({
   const showDebug = isAdmin || isAdminQuery;
   const fetchMarketDataMutation = useFetchMarketData();
   const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
+  const [searchQuery, setSearchQuery] = reactExports.useState("");
+  const [searchResults, setSearchResults] = reactExports.useState(
+    []
+  );
+  const [searchError, setSearchError] = reactExports.useState(null);
+  const [addFeedback, setAddFeedback] = reactExports.useState(null);
+  const searchTokensMutation = useSearchCoinGeckoTokens();
+  const addAssetMutation = useAddCustomPriorityAsset();
+  const customAssetsQuery = useGetCustomPriorityAssets();
   const isRefreshing = fetchMarketDataMutation.isPending || fetchPriorityAssetPricesMutation.isPending;
   const handleRefreshPrices = async () => {
     setRefreshError(false);
@@ -73968,6 +74174,62 @@ function MarketDataStatusPanel({
       console.error("Error refreshing prices:", error);
       setRefreshError(true);
     }
+  };
+  const handleSearch = async () => {
+    const query = searchQuery.trim();
+    if (!query) return;
+    setSearchResults([]);
+    setSearchError(null);
+    setAddFeedback(null);
+    try {
+      const response = await searchTokensMutation.mutateAsync(query);
+      if (response.error) {
+        setSearchError(response.error);
+        setSearchResults([]);
+      } else {
+        setSearchResults(response.results.slice(0, 10));
+      }
+    } catch (error) {
+      console.error("Error searching CoinGecko tokens:", error);
+      setSearchError(error instanceof Error ? error.message : t2.searchError);
+      setSearchResults([]);
+    }
+  };
+  const handleAdd = async (coin) => {
+    setAddFeedback(null);
+    try {
+      const ticker2 = coin.symbol.toUpperCase();
+      const response = await addAssetMutation.mutateAsync({
+        coinGeckoId: coin.id,
+        tickerSymbol: ticker2
+      });
+      if (response.success) {
+        setAddFeedback({
+          message: t2.added.replace("{symbol}", ticker2),
+          isError: false
+        });
+        await customAssetsQuery.refetch();
+        setSearchResults([]);
+        setSearchQuery("");
+      } else {
+        setAddFeedback({
+          message: response.error || t2.addError,
+          isError: true
+        });
+      }
+    } catch (error) {
+      console.error("Error adding custom priority asset:", error);
+      setAddFeedback({
+        message: error instanceof Error ? error.message : t2.addError,
+        isError: true
+      });
+    }
+  };
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchError(null);
+    setAddFeedback(null);
   };
   reactExports.useEffect(() => {
     const timer = setInterval(() => {
@@ -74142,6 +74404,185 @@ function MarketDataStatusPanel({
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContent, { className: "mt-2", children: renderDebugContent() })
+        ]
+      }
+    ),
+    showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "mt-4 border-t border-terminal pt-3",
+        "data-ocid": "market_data_status.add_priority_asset.section",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-2 text-sm font-semibold text-terminal", children: t2.addPriorityAssetTitle }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2 sm:flex-row sm:items-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Input,
+              {
+                type: "text",
+                value: searchQuery,
+                onChange: (e3) => setSearchQuery(e3.target.value),
+                onKeyDown: (e3) => {
+                  if (e3.key === "Enter") {
+                    e3.preventDefault();
+                    handleSearch();
+                  }
+                },
+                placeholder: t2.searchPlaceholder,
+                disabled: searchTokensMutation.isPending,
+                className: "rounded-terminal border-terminal bg-terminal-hover font-terminal text-terminal placeholder:text-terminal-muted focus-visible:ring-terminal-green/40",
+                "data-ocid": "market_data_status.add_priority_asset.search_input"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button$1,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  onClick: handleSearch,
+                  disabled: searchTokensMutation.isPending || !searchQuery.trim(),
+                  className: "rounded-terminal font-terminal",
+                  "data-ocid": "market_data_status.add_priority_asset.search_button",
+                  children: searchTokensMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+                    t2.searching
+                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "h-3.5 w-3.5" }),
+                    t2.searchButton
+                  ] })
+                }
+              ),
+              (searchResults.length > 0 || searchQuery || searchError) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button$1,
+                {
+                  variant: "ghost",
+                  size: "sm",
+                  onClick: handleClearSearch,
+                  disabled: searchTokensMutation.isPending,
+                  className: "rounded-terminal font-terminal",
+                  "data-ocid": "market_data_status.add_priority_asset.clear_button",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "h-3.5 w-3.5" })
+                }
+              )
+            ] })
+          ] }),
+          searchError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              className: "mt-2 text-xs text-terminal-red",
+              "data-ocid": "market_data_status.add_priority_asset.search_error",
+              children: searchError
+            }
+          ),
+          searchTokensMutation.isPending && searchResults.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              className: "mt-2 text-xs text-terminal-muted",
+              "data-ocid": "market_data_status.add_priority_asset.searching_state",
+              children: t2.searching
+            }
+          ),
+          !searchTokensMutation.isPending && !searchError && searchResults.length === 0 && searchQuery && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              className: "mt-2 text-xs text-terminal-muted",
+              "data-ocid": "market_data_status.add_priority_asset.empty_state",
+              children: t2.noResults
+            }
+          ),
+          searchResults.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "ul",
+            {
+              className: "mt-2 flex flex-col gap-1",
+              "data-ocid": "market_data_status.add_priority_asset.results_list",
+              children: searchResults.map((coin, index2) => {
+                var _a3, _b3;
+                return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "li",
+                  {
+                    className: "flex items-center justify-between gap-2 rounded-terminal bg-terminal-hover px-2 py-1.5",
+                    "data-ocid": `market_data_status.add_priority_asset.item.${index2 + 1}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-col", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate text-sm font-terminal text-terminal", children: coin.name }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate text-xs text-terminal-muted", children: [
+                          coin.symbol.toUpperCase(),
+                          " · ",
+                          coin.id
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Button$1,
+                        {
+                          variant: "outline",
+                          size: "sm",
+                          onClick: () => handleAdd(coin),
+                          disabled: addAssetMutation.isPending || ((_a3 = addAssetMutation.variables) == null ? void 0 : _a3.coinGeckoId) === coin.id,
+                          className: "shrink-0 rounded-terminal font-terminal",
+                          "data-ocid": `market_data_status.add_priority_asset.add_button.${index2 + 1}`,
+                          children: addAssetMutation.isPending && ((_b3 = addAssetMutation.variables) == null ? void 0 : _b3.coinGeckoId) === coin.id ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+                            t2.adding
+                          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-3.5 w-3.5" }),
+                            t2.addButton
+                          ] })
+                        }
+                      )
+                    ]
+                  },
+                  coin.id
+                );
+              })
+            }
+          ),
+          addFeedback && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              className: `mt-2 text-xs ${addFeedback.isError ? "text-terminal-red" : "text-terminal-green"}`,
+              "data-ocid": addFeedback.isError ? "market_data_status.add_priority_asset.add_error_state" : "market_data_status.add_priority_asset.add_success_state",
+              children: addFeedback.message
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-1.5 text-xs font-semibold text-terminal-muted", children: t2.customAssetsTitle }),
+            customAssetsQuery.isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "p",
+              {
+                className: "text-xs text-terminal-muted",
+                "data-ocid": "market_data_status.add_priority_asset.custom_loading_state",
+                children: t2.debugLoading
+              }
+            ) : customAssetsQuery.data && customAssetsQuery.data.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: "flex flex-wrap gap-1.5",
+                "data-ocid": "market_data_status.add_priority_asset.custom_assets_list",
+                children: customAssetsQuery.data.map(([assetId, ticker2], index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Badge,
+                  {
+                    variant: "outline",
+                    className: "rounded-terminal bg-terminal-green/10 font-terminal text-terminal-green border-terminal-green/20",
+                    "data-ocid": `market_data_status.add_priority_asset.custom_asset.item.${index2 + 1}`,
+                    children: [
+                      assetId,
+                      " (",
+                      ticker2,
+                      ")"
+                    ]
+                  },
+                  `${assetId}-${ticker2}`
+                ))
+              }
+            ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "p",
+              {
+                className: "text-xs text-terminal-muted",
+                "data-ocid": "market_data_status.add_priority_asset.custom_empty_state",
+                children: t2.noCustomAssets
+              }
+            )
+          ] })
         ]
       }
     )

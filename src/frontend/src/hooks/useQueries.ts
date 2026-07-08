@@ -499,6 +499,97 @@ export function useFetchCoinTechnicalData(coinId: string | null) {
   });
 }
 
+export interface CoinGeckoSearchResult {
+  id: string;
+  name: string;
+  symbol: string;
+}
+
+export interface CoinGeckoSearchResponse {
+  results: CoinGeckoSearchResult[];
+  error?: string;
+}
+
+export interface AddCustomPriorityAssetResponse {
+  success: boolean;
+  error?: string;
+}
+
+export function useSearchCoinGeckoTokens() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (
+      searchQuery: string,
+    ): Promise<CoinGeckoSearchResponse> => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Searching CoinGecko tokens:", searchQuery);
+      const result = await actor.searchCoinGeckoTokens(searchQuery);
+      return {
+        results: Array.isArray(result?.results) ? result.results : [],
+        error: result?.error,
+      };
+    },
+    onError: (error) => {
+      console.error("Error searching CoinGecko tokens:", error);
+    },
+  });
+}
+
+export function useAddCustomPriorityAsset() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      coinGeckoId,
+      tickerSymbol,
+    }: {
+      coinGeckoId: string;
+      tickerSymbol: string;
+    }): Promise<AddCustomPriorityAssetResponse> => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Adding custom priority asset:", coinGeckoId, tickerSymbol);
+      const result = await actor.addCustomPriorityAsset(
+        coinGeckoId,
+        tickerSymbol,
+      );
+      return {
+        success: result?.success === true,
+        error: result?.error,
+      };
+    },
+    onSuccess: () => {
+      console.log("Custom priority asset added successfully");
+      queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["customPriorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error adding custom priority asset:", error);
+    },
+  });
+}
+
+export function useGetCustomPriorityAssets() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<[string, string][]>({
+    queryKey: ["customPriorityAssets"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const data = await actor.getCustomPriorityAssets();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching custom priority assets:", error);
+        return [];
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 30000,
+  });
+}
+
 export function updatePortfolioWithMarketPrices(
   portfolio: Portfolio | null | undefined,
   marketData: MarketData[] | null | undefined,
