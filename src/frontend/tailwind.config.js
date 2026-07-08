@@ -27,6 +27,7 @@ export default {
                 terminal: {
                     bg: 'var(--terminal-bg)',
                     card: 'var(--terminal-card)',
+                    hover: 'var(--terminal-hover)',
                     border: 'var(--terminal-border)',
                     green: 'var(--terminal-green)',
                     red: 'var(--terminal-red)',

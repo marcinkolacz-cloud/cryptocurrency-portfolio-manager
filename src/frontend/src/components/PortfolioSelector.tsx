@@ -128,14 +128,21 @@ export default function PortfolioSelector({
           value={selectedPortfolioId?.toString() || ""}
           onValueChange={(value) => onSelectPortfolio(BigInt(value))}
         >
-          <SelectTrigger className="w-full max-w-[300px]">
+          <SelectTrigger
+            className="w-full max-w-[300px] rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover data-[placeholder]:text-terminal-muted"
+            data-ocid="portfolio.select"
+          >
             <SelectValue placeholder={t.selectPortfolio} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent
+            className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal"
+            data-ocid="portfolio.select.dropdown_menu"
+          >
             {portfolios.map((portfolio) => (
               <SelectItem
                 key={portfolio.id.toString()}
                 value={portfolio.id.toString()}
+                className="rounded-terminal font-terminal text-terminal focus:bg-terminal-hover focus:text-terminal-green"
               >
                 {portfolio.name}
               </SelectItem>
@@ -147,6 +154,8 @@ export default function PortfolioSelector({
           onClick={() => setShowCreateDialog(true)}
           disabled={portfolios.length >= 10}
           size="sm"
+          data-ocid="portfolio.new_button"
+          className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-green hover:bg-terminal-hover hover:text-terminal-green"
         >
           <Plus className="mr-2 h-4 w-4" />
           {t.createNew}
@@ -158,6 +167,8 @@ export default function PortfolioSelector({
             size="sm"
             onClick={() => setShowDeleteDialog(true)}
             title={t.delete}
+            data-ocid="portfolio.delete_button"
+            className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-red hover:bg-terminal-hover hover:text-terminal-red"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -165,20 +176,32 @@ export default function PortfolioSelector({
       </div>
 
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
+        <DialogContent
+          className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal"
+          data-ocid="portfolio.create.dialog"
+        >
           <DialogHeader>
-            <DialogTitle>{t.createTitle}</DialogTitle>
-            <DialogDescription>{t.createDescription}</DialogDescription>
+            <DialogTitle className="text-terminal">{t.createTitle}</DialogTitle>
+            <DialogDescription className="text-terminal-muted">
+              {t.createDescription}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="portfolio-name">{t.nameLabel}</Label>
+              <Label
+                htmlFor="portfolio-name"
+                className="text-terminal-muted font-terminal"
+              >
+                {t.nameLabel}
+              </Label>
               <Input
                 id="portfolio-name"
                 value={newPortfolioName}
                 onChange={(e) => setNewPortfolioName(e.target.value)}
                 placeholder={t.namePlaceholder}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                className="rounded-terminal border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted"
+                data-ocid="portfolio.name.input"
               />
             </div>
           </div>
@@ -186,12 +209,16 @@ export default function PortfolioSelector({
             <Button
               variant="outline"
               onClick={() => setShowCreateDialog(false)}
+              data-ocid="portfolio.create.cancel_button"
+              className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover"
             >
               {t.cancel}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!newPortfolioName.trim() || createPortfolio.isPending}
+              data-ocid="portfolio.create.confirm_button"
+              className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-green hover:bg-terminal-hover hover:text-terminal-green"
             >
               {createPortfolio.isPending ? (
                 <>
@@ -207,15 +234,22 @@ export default function PortfolioSelector({
       </Dialog>
 
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent
+          className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal"
+          data-ocid="portfolio.delete.dialog"
+        >
           <DialogHeader>
-            <DialogTitle>{t.deleteTitle}</DialogTitle>
-            <DialogDescription>{t.deleteDescription}</DialogDescription>
+            <DialogTitle className="text-terminal">{t.deleteTitle}</DialogTitle>
+            <DialogDescription className="text-terminal-muted">
+              {t.deleteDescription}
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
+              data-ocid="portfolio.delete.cancel_button"
+              className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover"
             >
               {t.cancel}
             </Button>
@@ -223,6 +257,8 @@ export default function PortfolioSelector({
               variant="destructive"
               onClick={handleDelete}
               disabled={deletePortfolio.isPending}
+              data-ocid="portfolio.delete.confirm_button"
+              className="rounded-terminal font-terminal"
             >
               {deletePortfolio.isPending ? (
                 <>

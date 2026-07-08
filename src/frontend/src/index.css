@@ -18,6 +18,7 @@
       SFMono-Regular, Menlo, monospace;
     --terminal-bg: #0a0a0f;
     --terminal-card: #0d0f12;
+    --terminal-hover: #12141a;
     --terminal-border: #1a1d24;
     --terminal-green: #00ff88;
     --terminal-red: #ff3b30;
@@ -238,6 +239,9 @@
   }
   .bg-terminal-card {
     background-color: var(--terminal-card);
+  }
+  .bg-terminal-hover {
+    background-color: var(--terminal-hover);
   }
   .border-terminal {
     border-color: var(--terminal-border);

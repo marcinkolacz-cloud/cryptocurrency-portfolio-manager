@@ -359,6 +359,7 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
             disabled={!portfolios || portfolios.length === 0}
             title={t.exportPortfolios}
             data-ocid="portfolio.export_button"
+            className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green"
           >
             <Download className="mr-2 h-4 w-4" />
             {t.exportPortfolios}
@@ -369,6 +370,7 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
             onClick={() => setShowImportModal(true)}
             title={t.importPortfolios}
             data-ocid="portfolio.import_button"
+            className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green"
           >
             <Upload className="mr-2 h-4 w-4" />
             {t.importPortfolios}
@@ -379,6 +381,7 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
           size="sm"
           onClick={handleRefreshMarketData}
           disabled={isRefreshing || marketDataLoading || trackedAssetsLoading}
+          className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green"
         >
           {isRefreshing || marketDataLoading || trackedAssetsLoading ? (
             <>

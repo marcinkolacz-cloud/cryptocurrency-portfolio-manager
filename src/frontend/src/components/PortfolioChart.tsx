@@ -348,10 +348,15 @@ export default function PortfolioChart({
           {rangeButtons.map((btn) => (
             <Button
               key={btn.key}
-              variant={dateRange === btn.key ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={() => handleRangeChange(btn.key)}
-              className="rounded-terminal font-terminal"
+              data-ocid={`portfolio.range.${btn.key}.button`}
+              className={`rounded-terminal border-terminal bg-terminal-card font-terminal transition-colors ${
+                dateRange === btn.key
+                  ? "border-terminal-green bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/15 hover:text-terminal-green"
+                  : "text-terminal hover:bg-terminal-hover hover:text-terminal"
+              }`}
             >
               {btn.label}
             </Button>
@@ -361,7 +366,8 @@ export default function PortfolioChart({
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-terminal font-terminal"
+                data-ocid="portfolio.date_picker.open_modal_button"
+                className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {selectedDate ? format(selectedDate, "PPP") : t.selectDate}

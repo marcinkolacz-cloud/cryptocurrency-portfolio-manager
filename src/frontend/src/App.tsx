@@ -182,8 +182,11 @@ function AppContent() {
   }
 
   // Show main application
+  // Dashboard view uses terminal-dark page background (#0a0a0f) so zero
+  // light/white shows through gaps between cards and around the toolbar.
+  // Non-dashboard screens above keep the theme bg-background token.
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-terminal">
       <Header language={language} />
       <main className="pb-8">
         <ErrorBoundary>

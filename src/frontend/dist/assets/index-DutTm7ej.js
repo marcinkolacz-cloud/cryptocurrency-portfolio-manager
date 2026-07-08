@@ -30512,16 +30512,16 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:rounded-terminal",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline: "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline"
+        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 dark:bg-terminal-green dark:text-terminal-bg dark:hover:bg-terminal-green/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 dark:bg-terminal-red dark:text-terminal-bg dark:hover:bg-terminal-red/90",
+        outline: "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-terminal-card dark:border-terminal dark:text-terminal dark:hover:bg-terminal-hover dark:hover:text-terminal-green",
+        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 dark:bg-terminal-hover dark:text-terminal dark:border-terminal dark:border dark:hover:bg-terminal-border",
+        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 dark:hover:bg-terminal-hover dark:hover:text-terminal-green",
+        link: "text-primary underline-offset-4 hover:underline dark:text-terminal-green"
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -30559,7 +30559,7 @@ function Card({ className, ...props }) {
     {
       "data-slot": "card",
       className: cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm dark:bg-terminal-card dark:text-terminal dark:border-terminal dark:rounded-terminal",
         className
       ),
       ...props
@@ -30594,7 +30594,10 @@ function CardDescription({ className, ...props }) {
     "div",
     {
       "data-slot": "card-description",
-      className: cn("text-muted-foreground text-sm", className),
+      className: cn(
+        "text-muted-foreground text-sm dark:text-terminal-muted",
+        className
+      ),
       ...props
     }
   );
@@ -36800,7 +36803,7 @@ function DropdownMenuContent({
       "data-slot": "dropdown-menu-content",
       sideOffset,
       className: cn(
-        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md",
+        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md dark:bg-terminal-card dark:border-terminal dark:rounded-terminal",
         className
       ),
       ...props
@@ -36820,7 +36823,7 @@ function DropdownMenuItem({
       "data-inset": inset,
       "data-variant": variant,
       className: cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 dark:focus:bg-terminal-hover",
         className
       ),
       ...props
@@ -38907,14 +38910,14 @@ function AlertDescription({
   );
 }
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden dark:rounded-terminal",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary: "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+        default: "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90 dark:border-terminal dark:bg-terminal-green dark:text-terminal-bg",
+        secondary: "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90 dark:border-terminal dark:bg-terminal-hover dark:text-terminal",
         destructive: "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline: "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground"
+        outline: "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground dark:border-terminal dark:text-terminal"
       }
     },
     defaultVariants: {
@@ -38945,7 +38948,7 @@ function Input({ className, type, ...props }) {
       type,
       "data-slot": "input",
       className: cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-terminal-card dark:border-terminal dark:text-terminal dark:rounded-terminal",
         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
@@ -61214,7 +61217,7 @@ function DialogContent({
       {
         "data-slot": "dialog-content",
         className: cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg dark:bg-terminal-card dark:border-terminal dark:text-terminal dark:rounded-terminal",
           className
         ),
         ...props,
@@ -66451,7 +66454,7 @@ function PopoverContent({
       align,
       sideOffset,
       className: cn(
-        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border p-4 shadow-md outline-hidden",
+        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border p-4 shadow-md outline-hidden dark:bg-terminal-card dark:border-terminal dark:text-terminal dark:rounded-terminal",
         className
       ),
       ...props
@@ -68146,10 +68149,11 @@ function PortfolioChart({
       rangeButtons.map((btn) => /* @__PURE__ */ jsxRuntimeExports.jsx(
         Button$1,
         {
-          variant: dateRange === btn.key ? "default" : "outline",
+          variant: "outline",
           size: "sm",
           onClick: () => handleRangeChange(btn.key),
-          className: "rounded-terminal font-terminal",
+          "data-ocid": `portfolio.range.${btn.key}.button`,
+          className: `rounded-terminal border-terminal bg-terminal-card font-terminal transition-colors ${dateRange === btn.key ? "border-terminal-green bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/15 hover:text-terminal-green" : "text-terminal hover:bg-terminal-hover hover:text-terminal"}`,
           children: btn.label
         },
         btn.key
@@ -68160,7 +68164,8 @@ function PortfolioChart({
           {
             variant: "outline",
             size: "sm",
-            className: "rounded-terminal font-terminal",
+            "data-ocid": "portfolio.date_picker.open_modal_button",
+            className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green",
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(Calendar$1, { className: "mr-2 h-4 w-4" }),
               selectedDate ? format(selectedDate, "PPP") : t2.selectDate
@@ -71672,7 +71677,7 @@ function SelectTrigger({
       "data-slot": "select-trigger",
       "data-size": size2,
       className: cn(
-        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 dark:bg-terminal-card dark:border-terminal dark:rounded-terminal",
         className
       ),
       ...props,
@@ -71694,7 +71699,7 @@ function SelectContent({
     {
       "data-slot": "select-content",
       className: cn(
-        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md",
+        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md dark:bg-terminal-card dark:border-terminal dark:rounded-terminal",
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
       ),
@@ -71727,7 +71732,7 @@ function SelectItem({
     {
       "data-slot": "select-item",
       className: cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 dark:focus:bg-terminal-hover",
         className
       ),
       ...props,
@@ -73919,15 +73924,15 @@ function MarketDataStatusPanel({
   };
   const renderErrorBlock = (label, field) => {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-semibold text-foreground", children: label }),
-      field === null ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: t2.debugNoError }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugErrorLabel }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-semibold text-terminal", children: label }),
+      field === null ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-terminal-muted", children: t2.debugNoError }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-terminal-muted", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-terminal", children: t2.debugErrorLabel }),
           " ",
           field.error
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-muted-foreground", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground", children: t2.debugTimestampLabel }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-terminal-muted", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-terminal", children: t2.debugTimestampLabel }),
           " ",
           formatDateTime(new Date(Number(field.timestamp) / 1e6))
         ] })
@@ -73936,7 +73941,7 @@ function MarketDataStatusPanel({
   };
   const renderDebugContent = () => {
     if (lastFetchErrorQuery.isLoading) {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: t2.debugLoading });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-terminal-muted", children: t2.debugLoading });
     }
     const data = lastFetchErrorQuery.data ?? {
       marketData: null,
@@ -73949,16 +73954,16 @@ function MarketDataStatusPanel({
       renderErrorBlock(t2.debugBlockTechnicalData, data.technicalData)
     ] });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "mb-6 border-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "mb-6 rounded-terminal border-terminal bg-terminal-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-foreground", children: t2.marketDataStatus }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-terminal", children: t2.marketDataStatus }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Badge,
             {
               variant: "outline",
-              className: `flex items-center gap-2 px-3 py-1 ${isLoading ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20" : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"}`,
+              className: `flex items-center gap-2 rounded-terminal px-3 py-1 font-terminal ${isLoading ? "bg-terminal-red/10 text-terminal-red border-terminal-red/20" : "bg-terminal-green/10 text-terminal-green border-terminal-green/20"}`,
               children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold uppercase tracking-wide", children: t2.loading })
@@ -73970,40 +73975,47 @@ function MarketDataStatusPanel({
           )
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
             t2.lastUpdated,
             ":"
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-mono font-semibold text-foreground", children: lastUpdated ? formatTime(lastUpdated) : formatTime(currentTime) })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-terminal font-semibold text-terminal", children: lastUpdated ? formatTime(lastUpdated) : formatTime(currentTime) })
         ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { className: "h-4 w-4 text-muted-foreground" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { className: "h-4 w-4 text-terminal-muted" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
             t2.calculationQuality,
             ":"
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 w-24 rounded-full bg-muted overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 w-24 overflow-hidden rounded-terminal bg-terminal-hover", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
               "div",
               {
-                className: "h-full bg-primary transition-all duration-300",
+                className: "h-full bg-terminal-green transition-all duration-300",
                 style: { width: `${calculationQuality}%` }
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-semibold text-foreground", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-terminal font-semibold text-terminal", children: [
               calculationQuality,
               "%"
             ] })
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
             t2.trackedAssets,
             ":"
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-semibold", children: trackedAssetsCount })
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Badge,
+            {
+              variant: "secondary",
+              className: "rounded-terminal font-terminal font-semibold",
+              children: trackedAssetsCount
+            }
+          )
         ] }),
         showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -74013,6 +74025,7 @@ function MarketDataStatusPanel({
               size: "sm",
               onClick: handleRefreshPrices,
               disabled: isRefreshing,
+              className: "rounded-terminal font-terminal",
               "data-ocid": "market_data_status.refresh_prices_button",
               children: isRefreshing ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
@@ -74026,7 +74039,7 @@ function MarketDataStatusPanel({
           refreshError && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "span",
             {
-              className: "text-xs text-red-600 dark:text-red-400",
+              className: "text-xs text-terminal-red",
               "data-ocid": "market_data_status.refresh_prices_error",
               children: t2.refreshPricesError
             }
@@ -74039,13 +74052,13 @@ function MarketDataStatusPanel({
       {
         open: debugOpen,
         onOpenChange: setDebugOpen,
-        className: "mt-4 border-t pt-3",
+        className: "mt-4 border-t border-terminal pt-3",
         "data-ocid": "market_data_status.debug_section",
         children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs(
             CollapsibleTrigger,
             {
-              className: "flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground",
+              className: "flex items-center gap-1 text-sm font-medium text-terminal-muted hover:text-terminal",
               "data-ocid": "market_data_status.debug_toggle",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -74155,15 +74168,30 @@ function PortfolioSelector({
           value: (selectedPortfolioId == null ? void 0 : selectedPortfolioId.toString()) || "",
           onValueChange: (value) => onSelectPortfolio(BigInt(value)),
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(SelectTrigger, { className: "w-full max-w-[300px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, { placeholder: t2.selectPortfolio }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(SelectContent, { children: portfolios.map((portfolio) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-              SelectItem,
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              SelectTrigger,
               {
-                value: portfolio.id.toString(),
-                children: portfolio.name
-              },
-              portfolio.id.toString()
-            )) })
+                className: "w-full max-w-[300px] rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover data-[placeholder]:text-terminal-muted",
+                "data-ocid": "portfolio.select",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, { placeholder: t2.selectPortfolio })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              SelectContent,
+              {
+                className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal",
+                "data-ocid": "portfolio.select.dropdown_menu",
+                children: portfolios.map((portfolio) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  SelectItem,
+                  {
+                    value: portfolio.id.toString(),
+                    className: "rounded-terminal font-terminal text-terminal focus:bg-terminal-hover focus:text-terminal-green",
+                    children: portfolio.name
+                  },
+                  portfolio.id.toString()
+                ))
+              }
+            )
           ]
         }
       ),
@@ -74173,6 +74201,8 @@ function PortfolioSelector({
           onClick: () => setShowCreateDialog(true),
           disabled: portfolios.length >= 10,
           size: "sm",
+          "data-ocid": "portfolio.new_button",
+          className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-green hover:bg-terminal-hover hover:text-terminal-green",
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "mr-2 h-4 w-4" }),
             t2.createNew
@@ -74186,78 +74216,111 @@ function PortfolioSelector({
           size: "sm",
           onClick: () => setShowDeleteDialog(true),
           title: t2.delete,
+          "data-ocid": "portfolio.delete_button",
+          className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-red hover:bg-terminal-hover hover:text-terminal-red",
           children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "h-4 w-4" })
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: showCreateDialog, onOpenChange: setShowCreateDialog, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: t2.createTitle }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { children: t2.createDescription })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4 py-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "portfolio-name", children: t2.nameLabel }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Input,
-          {
-            id: "portfolio-name",
-            value: newPortfolioName,
-            onChange: (e3) => setNewPortfolioName(e3.target.value),
-            placeholder: t2.namePlaceholder,
-            onKeyDown: (e3) => e3.key === "Enter" && handleCreate()
-          }
-        )
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: "outline",
-            onClick: () => setShowCreateDialog(false),
-            children: t2.cancel
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            onClick: handleCreate,
-            disabled: !newPortfolioName.trim() || createPortfolio.isPending,
-            children: createPortfolio.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }),
-              t2.creating
-            ] }) : t2.create
-          }
-        )
-      ] })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: showDeleteDialog, onOpenChange: setShowDeleteDialog, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: t2.deleteTitle }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { children: t2.deleteDescription })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: "outline",
-            onClick: () => setShowDeleteDialog(false),
-            children: t2.cancel
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: "destructive",
-            onClick: handleDelete,
-            disabled: deletePortfolio.isPending,
-            children: deletePortfolio.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }),
-              t2.deleting
-            ] }) : t2.delete
-          }
-        )
-      ] })
-    ] }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: showCreateDialog, onOpenChange: setShowCreateDialog, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      DialogContent,
+      {
+        className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal",
+        "data-ocid": "portfolio.create.dialog",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { className: "text-terminal", children: t2.createTitle }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: "text-terminal-muted", children: t2.createDescription })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4 py-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Label,
+              {
+                htmlFor: "portfolio-name",
+                className: "text-terminal-muted font-terminal",
+                children: t2.nameLabel
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Input,
+              {
+                id: "portfolio-name",
+                value: newPortfolioName,
+                onChange: (e3) => setNewPortfolioName(e3.target.value),
+                placeholder: t2.namePlaceholder,
+                onKeyDown: (e3) => e3.key === "Enter" && handleCreate(),
+                className: "rounded-terminal border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted",
+                "data-ocid": "portfolio.name.input"
+              }
+            )
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button$1,
+              {
+                variant: "outline",
+                onClick: () => setShowCreateDialog(false),
+                "data-ocid": "portfolio.create.cancel_button",
+                className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover",
+                children: t2.cancel
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button$1,
+              {
+                onClick: handleCreate,
+                disabled: !newPortfolioName.trim() || createPortfolio.isPending,
+                "data-ocid": "portfolio.create.confirm_button",
+                className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal-green hover:bg-terminal-hover hover:text-terminal-green",
+                children: createPortfolio.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }),
+                  t2.creating
+                ] }) : t2.create
+              }
+            )
+          ] })
+        ]
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: showDeleteDialog, onOpenChange: setShowDeleteDialog, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      DialogContent,
+      {
+        className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal",
+        "data-ocid": "portfolio.delete.dialog",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { className: "text-terminal", children: t2.deleteTitle }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: "text-terminal-muted", children: t2.deleteDescription })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button$1,
+              {
+                variant: "outline",
+                onClick: () => setShowDeleteDialog(false),
+                "data-ocid": "portfolio.delete.cancel_button",
+                className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover",
+                children: t2.cancel
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button$1,
+              {
+                variant: "destructive",
+                onClick: handleDelete,
+                disabled: deletePortfolio.isPending,
+                "data-ocid": "portfolio.delete.confirm_button",
+                className: "rounded-terminal font-terminal",
+                children: deletePortfolio.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }),
+                  t2.deleting
+                ] }) : t2.delete
+              }
+            )
+          ] })
+        ]
+      }
+    ) })
   ] });
 }
 const translations$1 = {
@@ -74509,6 +74572,7 @@ function PortfolioManager({ language }) {
             disabled: !portfolios || portfolios.length === 0,
             title: t2.exportPortfolios,
             "data-ocid": "portfolio.export_button",
+            className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green",
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
               t2.exportPortfolios
@@ -74523,6 +74587,7 @@ function PortfolioManager({ language }) {
             onClick: () => setShowImportModal(true),
             title: t2.importPortfolios,
             "data-ocid": "portfolio.import_button",
+            className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green",
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "mr-2 h-4 w-4" }),
               t2.importPortfolios
@@ -74537,6 +74602,7 @@ function PortfolioManager({ language }) {
           size: "sm",
           onClick: handleRefreshMarketData,
           disabled: isRefreshing || marketDataLoading || trackedAssetsLoading,
+          className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green",
           children: isRefreshing || marketDataLoading || trackedAssetsLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }),
             t2.refreshing
@@ -74788,7 +74854,7 @@ function AppContent() {
   if (showProfileSetup) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProfileSetupDialog, { language }) });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-terminal", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { language }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "pb-8", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(PortfolioManager, { language }) }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Footer$1, { language })

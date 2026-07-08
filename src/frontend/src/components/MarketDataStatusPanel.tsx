@@ -143,19 +143,19 @@ export default function MarketDataStatusPanel({
   ) => {
     return (
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="text-sm font-semibold text-terminal">{label}</p>
         {field === null ? (
-          <p className="text-sm text-muted-foreground">{t.debugNoError}</p>
+          <p className="text-sm text-terminal-muted">{t.debugNoError}</p>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
+            <p className="text-sm text-terminal-muted">
+              <span className="font-semibold text-terminal">
                 {t.debugErrorLabel}
               </span>{" "}
               {field.error}
             </p>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
+            <p className="text-sm text-terminal-muted">
+              <span className="font-semibold text-terminal">
                 {t.debugTimestampLabel}
               </span>{" "}
               {formatDateTime(new Date(Number(field.timestamp) / 1_000_000))}
@@ -168,7 +168,7 @@ export default function MarketDataStatusPanel({
 
   const renderDebugContent = () => {
     if (lastFetchErrorQuery.isLoading) {
-      return <p className="text-sm text-muted-foreground">{t.debugLoading}</p>;
+      return <p className="text-sm text-terminal-muted">{t.debugLoading}</p>;
     }
 
     const data = lastFetchErrorQuery.data ?? {
@@ -187,21 +187,21 @@ export default function MarketDataStatusPanel({
   };
 
   return (
-    <Card className="mb-6 border-2">
+    <Card className="mb-6 rounded-terminal border-terminal bg-terminal-card">
       <div className="p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Left section: Status and timestamp */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium text-terminal">
                 {t.marketDataStatus}
               </span>
               <Badge
                 variant="outline"
-                className={`flex items-center gap-2 px-3 py-1 ${
+                className={`flex items-center gap-2 rounded-terminal px-3 py-1 font-terminal ${
                   isLoading
-                    ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                    : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                    ? "bg-terminal-red/10 text-terminal-red border-terminal-red/20"
+                    : "bg-terminal-green/10 text-terminal-green border-terminal-green/20"
                 }`}
               >
                 {isLoading ? (
@@ -223,10 +223,10 @@ export default function MarketDataStatusPanel({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-terminal-muted">
                 {t.lastUpdated}:
               </span>
-              <span className="text-sm font-mono font-semibold text-foreground">
+              <span className="text-sm font-terminal font-semibold text-terminal">
                 {lastUpdated
                   ? formatTime(lastUpdated)
                   : formatTime(currentTime)}
@@ -237,28 +237,31 @@ export default function MarketDataStatusPanel({
           {/* Right section: Calculation quality and tracked assets */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex items-center gap-3">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+              <Activity className="h-4 w-4 text-terminal-muted" />
+              <span className="text-sm text-terminal-muted">
                 {t.calculationQuality}:
               </span>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                <div className="h-2 w-24 overflow-hidden rounded-terminal bg-terminal-hover">
                   <div
-                    className="h-full bg-primary transition-all duration-300"
+                    className="h-full bg-terminal-green transition-all duration-300"
                     style={{ width: `${calculationQuality}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-sm font-terminal font-semibold text-terminal">
                   {calculationQuality}%
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-terminal-muted">
                 {t.trackedAssets}:
               </span>
-              <Badge variant="secondary" className="font-semibold">
+              <Badge
+                variant="secondary"
+                className="rounded-terminal font-terminal font-semibold"
+              >
                 {trackedAssetsCount}
               </Badge>
             </div>
@@ -270,6 +273,7 @@ export default function MarketDataStatusPanel({
                   size="sm"
                   onClick={handleRefreshPrices}
                   disabled={isRefreshing}
+                  className="rounded-terminal font-terminal"
                   data-ocid="market_data_status.refresh_prices_button"
                 >
                   {isRefreshing ? (
@@ -286,7 +290,7 @@ export default function MarketDataStatusPanel({
                 </Button>
                 {refreshError && (
                   <span
-                    className="text-xs text-red-600 dark:text-red-400"
+                    className="text-xs text-terminal-red"
                     data-ocid="market_data_status.refresh_prices_error"
                   >
                     {t.refreshPricesError}
@@ -301,11 +305,11 @@ export default function MarketDataStatusPanel({
           <Collapsible
             open={debugOpen}
             onOpenChange={setDebugOpen}
-            className="mt-4 border-t pt-3"
+            className="mt-4 border-t border-terminal pt-3"
             data-ocid="market_data_status.debug_section"
           >
             <CollapsibleTrigger
-              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 text-sm font-medium text-terminal-muted hover:text-terminal"
               data-ocid="market_data_status.debug_toggle"
             >
               <ChevronDown
