@@ -60713,7 +60713,7 @@ const translations$c = {
     symbol: "Symbol"
   }
 };
-const COLORS = [
+const DARK_COLORS = [
   "#00ff88",
   // terminal green
   "#3b82f6",
@@ -60735,11 +60735,49 @@ const COLORS = [
   "#84cc16"
   // lime
 ];
+const LIGHT_COLORS = [
+  "#16a34a",
+  // green
+  "#3b82f6",
+  // blue
+  "#f59e0b",
+  // amber
+  "#ef4444",
+  // red
+  "#8b5cf6",
+  // violet
+  "#ec4899",
+  // pink
+  "#14b8a6",
+  // teal
+  "#f97316",
+  // orange
+  "#6366f1",
+  // indigo
+  "#84cc16"
+  // lime
+];
+function useAllocationPalette() {
+  const { resolvedTheme } = z();
+  if (resolvedTheme === "light") {
+    return {
+      colors: LIGHT_COLORS,
+      axisStroke: "#9ca3af",
+      tickFill: "#6b7280"
+    };
+  }
+  return {
+    colors: DARK_COLORS,
+    axisStroke: "rgba(0,255,136,0.45)",
+    tickFill: "rgba(0,255,136,0.75)"
+  };
+}
 function AssetAllocationChart({
   portfolio,
   language
 }) {
   const t2 = translations$c[language];
+  const palette = useAllocationPalette();
   const [showPercentage, setShowPercentage] = reactExports.useState(false);
   const chartData = reactExports.useMemo(() => {
     if (!(portfolio == null ? void 0 : portfolio.assets)) return [];
@@ -60814,7 +60852,7 @@ function AssetAllocationChart({
         y: 0,
         dy: 4,
         textAnchor: "end",
-        fill: "rgba(0,255,136,0.75)",
+        fill: palette.tickFill,
         className: "font-terminal text-xs",
         style: { fontFamily: "var(--font-mono-terminal)" },
         children: showPercentage ? `${payload.value}%` : formatCurrency(payload.value)
@@ -60874,9 +60912,9 @@ function AssetAllocationChart({
               textAnchor: "end",
               height: 80,
               interval: 0,
-              stroke: "rgba(0,255,136,0.45)",
+              stroke: palette.axisStroke,
               tick: {
-                fill: "rgba(0,255,136,0.75)",
+                fill: palette.tickFill,
                 fontSize: 11,
                 fontFamily: "var(--font-mono-terminal)"
               }
@@ -60887,7 +60925,7 @@ function AssetAllocationChart({
             {
               tick: /* @__PURE__ */ jsxRuntimeExports.jsx(CustomYAxisTick, {}),
               width: showPercentage ? 60 : 100,
-              stroke: "rgba(0,255,136,0.45)",
+              stroke: palette.axisStroke,
               domain: yAxisDomain
             }
           ),
@@ -60909,7 +60947,7 @@ function AssetAllocationChart({
               children: chartData.map((entry, index2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
                 Cell,
                 {
-                  fill: COLORS[index2 % COLORS.length]
+                  fill: palette.colors[index2 % palette.colors.length]
                 },
                 `cell-${entry.name}`
               ))
@@ -67943,12 +67981,32 @@ const translations$a = {
     selectDate: "Select date"
   }
 };
-const LINE_COLORS = {
-  totalValue: "#00ff88",
-  totalProfitLoss: "#00ff88",
-  unrealizedProfitLoss: "#ff3b30",
-  totalPurchaseValue: "#3b82f6"
+const DARK_PALETTE = {
+  lineColors: {
+    totalValue: "#00ff88",
+    totalProfitLoss: "#00ff88",
+    unrealizedProfitLoss: "#ff3b30",
+    totalPurchaseValue: "#3b82f6"
+  },
+  gridStroke: "rgba(16,185,129,0.12)",
+  axisStroke: "rgba(0,255,136,0.45)",
+  tickFill: "rgba(0,255,136,0.75)"
 };
+const LIGHT_PALETTE = {
+  lineColors: {
+    totalValue: "#16a34a",
+    totalProfitLoss: "#16a34a",
+    unrealizedProfitLoss: "#dc2626",
+    totalPurchaseValue: "#3b82f6"
+  },
+  gridStroke: "#e5e7eb",
+  axisStroke: "#9ca3af",
+  tickFill: "#6b7280"
+};
+function useChartPalette() {
+  const { resolvedTheme } = z();
+  return resolvedTheme === "light" ? LIGHT_PALETTE : DARK_PALETTE;
+}
 function PortfolioChart({
   portfolio,
   language,
@@ -68246,18 +68304,19 @@ function ValueChart({
   formatCurrency,
   noDataLabel
 }) {
+  const palette = useChartPalette();
   const lines = [
     {
       key: "totalValue",
       name: totalValueName,
-      color: LINE_COLORS.totalValue,
+      color: palette.lineColors.totalValue,
       gradientId: "colorTotalValue",
       strokeWidth: 1.5
     },
     {
       key: "totalPurchaseValue",
       name: totalPurchaseValueName,
-      color: LINE_COLORS.totalPurchaseValue,
+      color: palette.lineColors.totalPurchaseValue,
       gradientId: "colorPurchaseValue",
       strokeWidth: 1.5
     }
@@ -68278,7 +68337,7 @@ function ValueChart({
             checked: showTotalValue,
             onCheckedChange: onToggleTotalValue,
             label: showTotalValueLabel,
-            color: LINE_COLORS.totalValue,
+            color: palette.lineColors.totalValue,
             bold: true
           }
         ),
@@ -68289,7 +68348,7 @@ function ValueChart({
             checked: showTotalPurchaseValue,
             onCheckedChange: onToggleTotalPurchaseValue,
             label: showTotalPurchaseValueLabel,
-            color: LINE_COLORS.totalPurchaseValue
+            color: palette.lineColors.totalPurchaseValue
           }
         )
       ] })
@@ -68303,7 +68362,10 @@ function ValueChart({
         yAxisMin,
         yAxisMax,
         formatCurrency,
-        noDataLabel
+        noDataLabel,
+        gridStroke: palette.gridStroke,
+        axisStroke: palette.axisStroke,
+        tickFill: palette.tickFill
       }
     ) })
   ] });
@@ -68323,18 +68385,19 @@ function ProfitLossChart({
   formatCurrency,
   noDataLabel
 }) {
+  const palette = useChartPalette();
   const lines = [
     {
       key: "totalProfitLoss",
       name: totalProfitLossName,
-      color: LINE_COLORS.totalProfitLoss,
+      color: palette.lineColors.totalProfitLoss,
       gradientId: "colorTotalPL",
       strokeWidth: 1.5
     },
     {
       key: "unrealizedProfitLoss",
       name: unrealizedProfitLossName,
-      color: LINE_COLORS.unrealizedProfitLoss,
+      color: palette.lineColors.unrealizedProfitLoss,
       gradientId: "colorUnrealizedPL",
       strokeWidth: 1.5
     }
@@ -68355,7 +68418,7 @@ function ProfitLossChart({
             checked: showTotalProfitLoss,
             onCheckedChange: onToggleTotalProfitLoss,
             label: showTotalProfitLossLabel,
-            color: LINE_COLORS.totalProfitLoss,
+            color: palette.lineColors.totalProfitLoss,
             bold: true
           }
         ),
@@ -68366,7 +68429,7 @@ function ProfitLossChart({
             checked: showUnrealizedProfitLoss,
             onCheckedChange: onToggleUnrealizedProfitLoss,
             label: showUnrealizedProfitLossLabel,
-            color: LINE_COLORS.unrealizedProfitLoss
+            color: palette.lineColors.unrealizedProfitLoss
           }
         )
       ] })
@@ -68380,7 +68443,10 @@ function ProfitLossChart({
         yAxisMin,
         yAxisMax,
         formatCurrency,
-        noDataLabel
+        noDataLabel,
+        gridStroke: palette.gridStroke,
+        axisStroke: palette.axisStroke,
+        tickFill: palette.tickFill
       }
     ) })
   ] });
@@ -68420,7 +68486,10 @@ function ChartCanvas({
   yAxisMin,
   yAxisMax,
   formatCurrency,
-  noDataLabel
+  noDataLabel,
+  gridStroke,
+  axisStroke,
+  tickFill
 }) {
   if (!hasData) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[400px] w-full items-center justify-center text-terminal-muted font-terminal text-sm", children: noDataLabel });
@@ -68429,7 +68498,7 @@ function ChartCanvas({
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       CartesianGrid,
       {
-        stroke: "rgba(16,185,129,0.12)",
+        stroke: gridStroke,
         strokeDasharray: "2 2",
         strokeWidth: 1,
         vertical: true,
@@ -68441,11 +68510,11 @@ function ChartCanvas({
       {
         dataKey: "date",
         tickFormatter: (timestamp) => format(new Date(timestamp), "MMM d"),
-        stroke: "rgba(0,255,136,0.45)",
+        stroke: axisStroke,
         tick: {
           fontSize: 11,
           fontFamily: "var(--font-mono-terminal)",
-          fill: "rgba(0,255,136,0.75)"
+          fill: tickFill
         }
       }
     ),
@@ -68454,11 +68523,11 @@ function ChartCanvas({
       {
         tickFormatter: (value) => formatCurrency(value),
         domain: [yAxisMin, yAxisMax],
-        stroke: "rgba(0,255,136,0.45)",
+        stroke: axisStroke,
         tick: {
           fontSize: 11,
           fontFamily: "var(--font-mono-terminal)",
-          fill: "rgba(0,255,136,0.75)"
+          fill: tickFill
         },
         label: {
           value: "USD ($)",
@@ -72901,7 +72970,7 @@ function AssetList({
             return /* @__PURE__ */ jsxRuntimeExports.jsxs(
               TableRow,
               {
-                className: "cursor-pointer border-b border-terminal hover:bg-[#12141a]",
+                className: "cursor-pointer border-b border-terminal hover:bg-terminal-hover",
                 onClick: () => handleAssetClick(asset),
                 children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-medium border-r border-terminal text-center text-terminal py-1 px-2", children: asset.name }),
@@ -74342,7 +74411,9 @@ const translations$1 = {
     trackedAssets: "śledzonych aktywów",
     noTrackedAssets: "Brak śledzonych aktywów w portfelu",
     welcome: "Witaj w Menedżerze Portfeli",
-    getStarted: "Utwórz swój pierwszy portfel, aby rozpocząć"
+    getStarted: "Utwórz swój pierwszy portfel, aby rozpocząć",
+    lightMode: "Tryb jasny",
+    darkMode: "Tryb ciemny"
   },
   en: {
     exportPortfolios: "Export portfolios",
@@ -74362,10 +74433,16 @@ const translations$1 = {
     trackedAssets: "tracked assets",
     noTrackedAssets: "No tracked assets in portfolio",
     welcome: "Welcome to Portfolio Manager",
-    getStarted: "Create your first portfolio to get started"
+    getStarted: "Create your first portfolio to get started",
+    lightMode: "Light mode",
+    darkMode: "Dark mode"
   }
 };
 function PortfolioManager({ language }) {
+  const { setTheme, resolvedTheme } = z();
+  const { data: userProfile } = useGetCallerUserProfile();
+  const saveProfile = useSaveCallerUserProfile();
+  const [mounted, setMounted] = reactExports.useState(false);
   const {
     data: portfolios,
     isLoading,
@@ -74418,6 +74495,23 @@ function PortfolioManager({ language }) {
       setLastUpdated(/* @__PURE__ */ new Date());
     }
   }, [marketDataLoading, isRefreshing, marketData]);
+  reactExports.useEffect(() => {
+    setMounted(true);
+  }, []);
+  const handleThemeToggle = async () => {
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    if (userProfile) {
+      try {
+        await saveProfile.mutateAsync({
+          ...userProfile,
+          theme: newTheme
+        });
+      } catch (error) {
+        console.error("Error saving theme preference:", error);
+      }
+    }
+  };
   const handleRefreshMarketData = async () => {
     setIsRefreshing(true);
     try {
@@ -74611,6 +74705,20 @@ function PortfolioManager({ language }) {
             t2.refreshMarketData
           ] })
         }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          variant: "outline",
+          size: "sm",
+          onClick: handleThemeToggle,
+          disabled: !mounted,
+          title: resolvedTheme === "dark" ? t2.lightMode : t2.darkMode,
+          "aria-label": resolvedTheme === "dark" ? t2.lightMode : t2.darkMode,
+          "data-ocid": "portfolio.theme_toggle",
+          className: "rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green",
+          children: mounted && resolvedTheme === "light" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Sun, { className: "h-4 w-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Moon, { className: "h-4 w-4" })
+        }
       )
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -74692,7 +74800,7 @@ function ProfileSetupDialog({
     try {
       await saveProfile.mutateAsync({
         name: name.trim(),
-        theme: "system",
+        theme: "dark",
         language,
         colorScheme: "default"
       });
@@ -74759,6 +74867,7 @@ function AppContent() {
     isFetched: profileFetched,
     error: profileError
   } = useGetCallerUserProfile();
+  const { setTheme } = z();
   const [language, setLanguage] = reactExports.useState("pl");
   const [retryCount, setRetryCount] = reactExports.useState(0);
   const [actorInitTimeout, setActorInitTimeout] = reactExports.useState(false);
@@ -74770,6 +74879,15 @@ function AppContent() {
       setLanguage(userProfile.language);
     }
   }, [userProfile]);
+  reactExports.useEffect(() => {
+    if (!profileFetched) return;
+    const saved = userProfile == null ? void 0 : userProfile.theme;
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    } else {
+      setTheme("dark");
+    }
+  }, [userProfile, profileFetched, setTheme]);
   reactExports.useEffect(() => {
     if (isAuthenticated && !isActorReady && !actorFetching) {
       const timeout2 = setTimeout(() => {
@@ -74861,7 +74979,7 @@ function AppContent() {
   ] });
 }
 function App() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient$1, children: /* @__PURE__ */ jsxRuntimeExports.jsx(J$1, { attribute: "class", defaultTheme: "system", enableSystem: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ThemeProvider, { children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient$1, children: /* @__PURE__ */ jsxRuntimeExports.jsx(J$1, { attribute: "class", defaultTheme: "dark", enableSystem: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ThemeProvider, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(AppContent, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, {})
   ] }) }) }) });

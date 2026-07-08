@@ -500,25 +500,31 @@ video {
   display: none;
 }
   :root {
-    /* Trading-terminal token layer (dashboard-scoped, does NOT override global theme) */
+    /* Trading-terminal token layer (dashboard-scoped, does NOT override global theme).
+       LIGHT mode values: page bg #f8f9fa, white cards with subtle border + soft shadow,
+       dark primary text #1a1a1a, medium-gray muted text, toned-down green/red P&L,
+       light-gray chart grid. Spacing/density/font/radius tokens are identical to dark. */
     --font-mono-terminal: "JetBrains Mono", "IBM Plex Mono", ui-monospace,
       SFMono-Regular, Menlo, monospace;
-    --terminal-bg: #0a0a0f;
-    --terminal-card: #0d0f12;
-    --terminal-hover: #12141a;
-    --terminal-border: #1a1d24;
-    --terminal-green: #00ff88;
-    --terminal-red: #ff3b30;
-    --terminal-grid: rgba(16, 185, 129, 0.12);
-    --terminal-axis: rgba(0, 255, 136, 0.45);
-    --terminal-axis-label: rgba(0, 255, 136, 0.75);
-    --terminal-text: rgba(255, 255, 255, 0.92);
-    --terminal-text-muted: rgba(255, 255, 255, 0.55);
+    --terminal-bg: #f8f9fa;
+    --terminal-card: #ffffff;
+    --terminal-hover: #f1f3f5;
+    --terminal-border: #e5e7eb;
+    --terminal-green: #16a34a;
+    --terminal-red: #dc2626;
+    --terminal-grid: #e5e7eb;
+    --terminal-axis: rgba(0, 0, 0, 0.55);
+    --terminal-axis-label: rgba(0, 0, 0, 0.75);
+    --terminal-text: #1a1a1a;
+    --terminal-text-muted: #6b7280;
     --terminal-card-pad: 0.875rem;
     --terminal-row-height: 2.25rem;
     --radius: 0.625rem;
     /* Sharp 2px corner token for dashboard terminal surfaces (does NOT change global --radius) */
     --radius-terminal: 2px;
+    /* Soft shadow for light-mode cards (dark mode has no shadow) */
+    --terminal-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px
+      rgba(0, 0, 0, 0.06);
     --background: 0.98 0 0;
     --foreground: 0.145 0 0;
     --card: 1 0 0;
@@ -554,6 +560,21 @@ video {
   }
 
   .dark {
+    /* Trading-terminal token layer — DARK mode values (the original terminal look):
+       #0a0a0f page bg, #0d0f12 cards, #1a1d24 borders, neon green/red P&L,
+       green-tinted chart grid. No card shadow in dark mode. */
+    --terminal-bg: #0a0a0f;
+    --terminal-card: #0d0f12;
+    --terminal-hover: #12141a;
+    --terminal-border: #1a1d24;
+    --terminal-green: #00ff88;
+    --terminal-red: #ff3b30;
+    --terminal-grid: rgba(16, 185, 129, 0.12);
+    --terminal-axis: rgba(0, 255, 136, 0.45);
+    --terminal-axis-label: rgba(0, 255, 136, 0.75);
+    --terminal-text: rgba(255, 255, 255, 0.92);
+    --terminal-text-muted: rgba(255, 255, 255, 0.55);
+    --terminal-card-shadow: none;
     --background: 0.12 0 0;
     --foreground: 0.985 0 0;
     --card: 0.16 0 0;
@@ -2263,6 +2284,8 @@ video {
   }
 .bg-terminal-card {
     background-color: var(--terminal-card);
+    /* Soft shadow in light mode (var is `none` in dark mode) */
+    box-shadow: var(--terminal-card-shadow);
   }
 .bg-terminal-hover {
     background-color: var(--terminal-hover);
@@ -2808,10 +2831,6 @@ td {
 }
 .hover\:border-primary\/60:hover {
   border-color: oklch(var(--primary) / 0.6);
-}
-.hover\:bg-\[\#12141a\]:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(18 20 26 / var(--tw-bg-opacity, 1));
 }
 .hover\:bg-accent:hover {
   --tw-bg-opacity: 1;
@@ -3855,6 +3874,8 @@ td {
   }
 .dark\:bg-terminal-card:is(.dark *) {
     background-color: var(--terminal-card);
+    /* Soft shadow in light mode (var is `none` in dark mode) */
+    box-shadow: var(--terminal-card-shadow);
   }
 .dark\:bg-terminal-hover:is(.dark *) {
     background-color: var(--terminal-hover);

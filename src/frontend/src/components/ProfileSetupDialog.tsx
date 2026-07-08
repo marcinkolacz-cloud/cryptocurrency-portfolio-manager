@@ -53,7 +53,7 @@ export default function ProfileSetupDialog({
     try {
       await saveProfile.mutateAsync({
         name: name.trim(),
-        theme: "system",
+        theme: "dark",
         language,
         colorScheme: "default",
       });

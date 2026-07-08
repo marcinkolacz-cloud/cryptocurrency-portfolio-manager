@@ -497,7 +497,7 @@ export default function AssetList({
                     return (
                       <TableRow
                         key={asset.symbol}
-                        className="cursor-pointer border-b border-terminal hover:bg-[#12141a]"
+                        className="cursor-pointer border-b border-terminal hover:bg-terminal-hover"
                         onClick={() => handleAssetClick(asset)}
                       >
                         <TableCell className="font-medium border-r border-terminal text-center text-terminal py-1 px-2">

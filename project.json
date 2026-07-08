@@ -1,22 +1,18 @@
 {
-  "overview": "Bilingual crypto portfolio manager with export/import, real-time prices, TradingView charts, and multi-portfolio support on Internet Computer.",
+  "overview": "Cryptocurrency portfolio tracker with a dark terminal theme and a light theme toggle.",
   "features": [
-    "Manage up to 10 independent portfolios",
-    "Export selected portfolios to JSON file",
-    "Import portfolios from JSON file (merge with existing)",
-    "Real-time prices auto-refreshed every minute",
-    "TradingView candlestick charts per asset",
-    "Transaction history with zero-price staking support",
-    "Multiple color themes (default, gray, navy)",
-    "Bilingual Polish/English interface"
+    "Track cryptocurrency portfolios with live market data",
+    "Visualize portfolio value and allocation with charts",
+    "Switch between dark terminal and light themes",
+    "Persist theme choice across sessions"
   ],
-  "category": "finance",
+  "category": "productivity",
   "tags": [
     "crypto",
     "portfolio",
-    "finance",
-    "internet-computer",
-    "bilingual"
+    "dashboard",
+    "charts",
+    "themes"
   ],
-  "last_updated": "2026-06-04T07:55:19.020Z"
+  "last_updated": "2026-07-08T10:13:39.292Z"
 }

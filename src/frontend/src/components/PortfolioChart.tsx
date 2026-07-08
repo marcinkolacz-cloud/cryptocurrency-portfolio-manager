@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { format, startOfYear, subDays } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
 import {
   CartesianGrid,
@@ -99,12 +100,47 @@ const translations = {
 
 // Terminal ticker palette: neon green for value/profit, red for loss.
 // Other series keep distinct hues but stay saturated against the dark canvas.
-const LINE_COLORS = {
-  totalValue: "#00ff88",
-  totalProfitLoss: "#00ff88",
-  unrealizedProfitLoss: "#ff3b30",
-  totalPurchaseValue: "#3b82f6",
-} as const;
+// Light theme uses toned-down values that read well on a white card.
+interface ChartPalette {
+  lineColors: {
+    totalValue: string;
+    totalProfitLoss: string;
+    unrealizedProfitLoss: string;
+    totalPurchaseValue: string;
+  };
+  gridStroke: string;
+  axisStroke: string;
+  tickFill: string;
+}
+
+const DARK_PALETTE: ChartPalette = {
+  lineColors: {
+    totalValue: "#00ff88",
+    totalProfitLoss: "#00ff88",
+    unrealizedProfitLoss: "#ff3b30",
+    totalPurchaseValue: "#3b82f6",
+  },
+  gridStroke: "rgba(16,185,129,0.12)",
+  axisStroke: "rgba(0,255,136,0.45)",
+  tickFill: "rgba(0,255,136,0.75)",
+};
+
+const LIGHT_PALETTE: ChartPalette = {
+  lineColors: {
+    totalValue: "#16a34a",
+    totalProfitLoss: "#16a34a",
+    unrealizedProfitLoss: "#dc2626",
+    totalPurchaseValue: "#3b82f6",
+  },
+  gridStroke: "#e5e7eb",
+  axisStroke: "#9ca3af",
+  tickFill: "#6b7280",
+};
+
+function useChartPalette(): ChartPalette {
+  const { resolvedTheme } = useTheme();
+  return resolvedTheme === "light" ? LIGHT_PALETTE : DARK_PALETTE;
+}
 
 export default function PortfolioChart({
   portfolio,
@@ -461,18 +497,19 @@ function ValueChart({
   formatCurrency,
   noDataLabel,
 }: ValueChartProps) {
+  const palette = useChartPalette();
   const lines: LineConfig[] = [
     {
       key: "totalValue",
       name: totalValueName,
-      color: LINE_COLORS.totalValue,
+      color: palette.lineColors.totalValue,
       gradientId: "colorTotalValue",
       strokeWidth: 1.5,
     },
     {
       key: "totalPurchaseValue",
       name: totalPurchaseValueName,
-      color: LINE_COLORS.totalPurchaseValue,
+      color: palette.lineColors.totalPurchaseValue,
       gradientId: "colorPurchaseValue",
       strokeWidth: 1.5,
     },
@@ -497,7 +534,7 @@ function ValueChart({
             checked={showTotalValue}
             onCheckedChange={onToggleTotalValue}
             label={showTotalValueLabel}
-            color={LINE_COLORS.totalValue}
+            color={palette.lineColors.totalValue}
             bold
           />
           <CheckboxLine
@@ -505,7 +542,7 @@ function ValueChart({
             checked={showTotalPurchaseValue}
             onCheckedChange={onToggleTotalPurchaseValue}
             label={showTotalPurchaseValueLabel}
-            color={LINE_COLORS.totalPurchaseValue}
+            color={palette.lineColors.totalPurchaseValue}
           />
         </div>
       </CardHeader>
@@ -518,6 +555,9 @@ function ValueChart({
           yAxisMax={yAxisMax}
           formatCurrency={formatCurrency}
           noDataLabel={noDataLabel}
+          gridStroke={palette.gridStroke}
+          axisStroke={palette.axisStroke}
+          tickFill={palette.tickFill}
         />
       </CardContent>
     </Card>
@@ -555,18 +595,19 @@ function ProfitLossChart({
   formatCurrency,
   noDataLabel,
 }: ProfitLossChartProps) {
+  const palette = useChartPalette();
   const lines: LineConfig[] = [
     {
       key: "totalProfitLoss",
       name: totalProfitLossName,
-      color: LINE_COLORS.totalProfitLoss,
+      color: palette.lineColors.totalProfitLoss,
       gradientId: "colorTotalPL",
       strokeWidth: 1.5,
     },
     {
       key: "unrealizedProfitLoss",
       name: unrealizedProfitLossName,
-      color: LINE_COLORS.unrealizedProfitLoss,
+      color: palette.lineColors.unrealizedProfitLoss,
       gradientId: "colorUnrealizedPL",
       strokeWidth: 1.5,
     },
@@ -591,7 +632,7 @@ function ProfitLossChart({
             checked={showTotalProfitLoss}
             onCheckedChange={onToggleTotalProfitLoss}
             label={showTotalProfitLossLabel}
-            color={LINE_COLORS.totalProfitLoss}
+            color={palette.lineColors.totalProfitLoss}
             bold
           />
           <CheckboxLine
@@ -599,7 +640,7 @@ function ProfitLossChart({
             checked={showUnrealizedProfitLoss}
             onCheckedChange={onToggleUnrealizedProfitLoss}
             label={showUnrealizedProfitLossLabel}
-            color={LINE_COLORS.unrealizedProfitLoss}
+            color={palette.lineColors.unrealizedProfitLoss}
           />
         </div>
       </CardHeader>
@@ -612,6 +653,9 @@ function ProfitLossChart({
           yAxisMax={yAxisMax}
           formatCurrency={formatCurrency}
           noDataLabel={noDataLabel}
+          gridStroke={palette.gridStroke}
+          axisStroke={palette.axisStroke}
+          tickFill={palette.tickFill}
         />
       </CardContent>
     </Card>
@@ -661,6 +705,9 @@ interface ChartCanvasProps {
   yAxisMax: number;
   formatCurrency: (value: number) => string;
   noDataLabel: string;
+  gridStroke: string;
+  axisStroke: string;
+  tickFill: string;
 }
 
 function ChartCanvas({
@@ -671,6 +718,9 @@ function ChartCanvas({
   yAxisMax,
   formatCurrency,
   noDataLabel,
+  gridStroke,
+  axisStroke,
+  tickFill,
 }: ChartCanvasProps) {
   if (!hasData) {
     return (
@@ -685,7 +735,7 @@ function ChartCanvas({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid
-            stroke="rgba(16,185,129,0.12)"
+            stroke={gridStroke}
             strokeDasharray="2 2"
             strokeWidth={1}
             vertical={true}
@@ -694,21 +744,21 @@ function ChartCanvas({
           <XAxis
             dataKey="date"
             tickFormatter={(timestamp) => format(new Date(timestamp), "MMM d")}
-            stroke="rgba(0,255,136,0.45)"
+            stroke={axisStroke}
             tick={{
               fontSize: 11,
               fontFamily: "var(--font-mono-terminal)",
-              fill: "rgba(0,255,136,0.75)",
+              fill: tickFill,
             }}
           />
           <YAxis
             tickFormatter={(value) => formatCurrency(value)}
             domain={[yAxisMin, yAxisMax]}
-            stroke="rgba(0,255,136,0.45)"
+            stroke={axisStroke}
             tick={{
               fontSize: 11,
               fontFamily: "var(--font-mono-terminal)",
-              fill: "rgba(0,255,136,0.75)",
+              fill: tickFill,
             }}
             label={{
               value: "USD ($)",

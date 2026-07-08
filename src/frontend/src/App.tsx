@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider as NextThemeProvider } from "next-themes";
+import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import BackendUnavailableScreen from "./components/BackendUnavailableScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -41,6 +41,8 @@ function AppContent() {
     error: profileError,
   } = useGetCallerUserProfile();
 
+  const { setTheme } = useTheme();
+
   const [language, setLanguage] = useState<"pl" | "en">("pl");
   const [retryCount, setRetryCount] = useState(0);
   const [actorInitTimeout, setActorInitTimeout] = useState(false);
@@ -60,6 +62,20 @@ function AppContent() {
       setLanguage(userProfile.language as "pl" | "en");
     }
   }, [userProfile]);
+
+  // Apply saved theme from profile on load. Closes the write-only gap:
+  // a saved 'light' or 'dark' choice is restored on reload. 'system' or
+  // unset falls back to 'dark' (the dark terminal theme is the default).
+  useEffect(() => {
+    if (!profileFetched) return;
+    const saved = userProfile?.theme;
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    } else {
+      // 'system', empty, or unset → default to dark terminal theme
+      setTheme("dark");
+    }
+  }, [userProfile, profileFetched, setTheme]);
 
   // Set timeout for actor initialization
   useEffect(() => {
@@ -202,7 +218,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <NextThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <NextThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ColorSchemeProvider>
             <AppContent />
             <Toaster />

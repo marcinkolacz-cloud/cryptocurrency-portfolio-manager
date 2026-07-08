@@ -13,17 +13,22 @@ import {
   AlertTriangle,
   Download,
   Loader2,
+  Moon,
   RefreshCw,
+  Sun,
   Upload,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
+  useGetCallerUserProfile,
   useGetMarketData,
   useGetPortfolioTrackedAssets,
   useGetPortfolios,
   useGetPriorityAssets,
+  useSaveCallerUserProfile,
 } from "../hooks/useQueries";
 import AssetList from "./AssetList";
 import ExportPortfolioModal from "./ExportPortfolioModal";
@@ -55,6 +60,8 @@ const translations = {
     noTrackedAssets: "Brak śledzonych aktywów w portfelu",
     welcome: "Witaj w Menedżerze Portfeli",
     getStarted: "Utwórz swój pierwszy portfel, aby rozpocząć",
+    lightMode: "Tryb jasny",
+    darkMode: "Tryb ciemny",
   },
   en: {
     exportPortfolios: "Export portfolios",
@@ -75,10 +82,16 @@ const translations = {
     noTrackedAssets: "No tracked assets in portfolio",
     welcome: "Welcome to Portfolio Manager",
     getStarted: "Create your first portfolio to get started",
+    lightMode: "Light mode",
+    darkMode: "Dark mode",
   },
 };
 
 export default function PortfolioManager({ language }: PortfolioManagerProps) {
+  const { setTheme, resolvedTheme } = useTheme();
+  const { data: userProfile } = useGetCallerUserProfile();
+  const saveProfile = useSaveCallerUserProfile();
+  const [mounted, setMounted] = useState(false);
   const {
     data: portfolios,
     isLoading,
@@ -149,6 +162,28 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       setLastUpdated(new Date());
     }
   }, [marketDataLoading, isRefreshing, marketData]);
+
+  // next-themes hydration guard — resolvedTheme is undefined before mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleThemeToggle = async () => {
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+
+    // Persist theme preference to user profile (same pattern as Header.tsx)
+    if (userProfile) {
+      try {
+        await saveProfile.mutateAsync({
+          ...userProfile,
+          theme: newTheme,
+        });
+      } catch (error) {
+        console.error("Error saving theme preference:", error);
+      }
+    }
+  };
 
   const handleRefreshMarketData = async () => {
     setIsRefreshing(true);
@@ -393,6 +428,22 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
               <RefreshCw className="mr-2 h-4 w-4" />
               {t.refreshMarketData}
             </>
+          )}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleThemeToggle}
+          disabled={!mounted}
+          title={resolvedTheme === "dark" ? t.lightMode : t.darkMode}
+          aria-label={resolvedTheme === "dark" ? t.lightMode : t.darkMode}
+          data-ocid="portfolio.theme_toggle"
+          className="rounded-terminal border-terminal bg-terminal-card font-terminal text-terminal hover:bg-terminal-hover hover:text-terminal-green"
+        >
+          {mounted && resolvedTheme === "light" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
           )}
         </Button>
       </div>

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
 import {
   Bar,
@@ -44,7 +45,8 @@ const translations = {
 
 // Terminal palette: first color shifted to neon green for consistency with PortfolioChart.
 // Color assignment order is unchanged — only hex values updated.
-const COLORS = [
+// Light theme tones the first color down to a readable green on white.
+const DARK_COLORS = [
   "#00ff88", // terminal green
   "#3b82f6", // blue
   "#f59e0b", // amber
@@ -57,11 +59,47 @@ const COLORS = [
   "#84cc16", // lime
 ];
 
+const LIGHT_COLORS = [
+  "#16a34a", // green
+  "#3b82f6", // blue
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#14b8a6", // teal
+  "#f97316", // orange
+  "#6366f1", // indigo
+  "#84cc16", // lime
+];
+
+interface AllocationPalette {
+  colors: string[];
+  axisStroke: string;
+  tickFill: string;
+}
+
+function useAllocationPalette(): AllocationPalette {
+  const { resolvedTheme } = useTheme();
+  if (resolvedTheme === "light") {
+    return {
+      colors: LIGHT_COLORS,
+      axisStroke: "#9ca3af",
+      tickFill: "#6b7280",
+    };
+  }
+  return {
+    colors: DARK_COLORS,
+    axisStroke: "rgba(0,255,136,0.45)",
+    tickFill: "rgba(0,255,136,0.75)",
+  };
+}
+
 export default function AssetAllocationChart({
   portfolio,
   language,
 }: AssetAllocationChartProps) {
   const t = translations[language];
+  const palette = useAllocationPalette();
   const [showPercentage, setShowPercentage] = useState(false);
 
   const chartData = useMemo(() => {
@@ -154,7 +192,7 @@ export default function AssetAllocationChart({
           y={0}
           dy={4}
           textAnchor="end"
-          fill="rgba(0,255,136,0.75)"
+          fill={palette.tickFill}
           className="font-terminal text-xs"
           style={{ fontFamily: "var(--font-mono-terminal)" }}
         >
@@ -221,9 +259,9 @@ export default function AssetAllocationChart({
                   textAnchor="end"
                   height={80}
                   interval={0}
-                  stroke="rgba(0,255,136,0.45)"
+                  stroke={palette.axisStroke}
                   tick={{
-                    fill: "rgba(0,255,136,0.75)",
+                    fill: palette.tickFill,
                     fontSize: 11,
                     fontFamily: "var(--font-mono-terminal)",
                   }}
@@ -231,7 +269,7 @@ export default function AssetAllocationChart({
                 <YAxis
                   tick={<CustomYAxisTick />}
                   width={showPercentage ? 60 : 100}
-                  stroke="rgba(0,255,136,0.45)"
+                  stroke={palette.axisStroke}
                   domain={yAxisDomain}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -250,7 +288,7 @@ export default function AssetAllocationChart({
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${entry.name}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={palette.colors[index % palette.colors.length]}
                     />
                   ))}
                 </Bar>
