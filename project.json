@@ -1,18 +1,16 @@
 {
-  "overview": "Cryptocurrency portfolio tracker with a dark terminal theme and a light theme toggle.",
+  "overview": "Cryptocurrency portfolio manager with admin-only custom token search and add via a dialog UI.",
   "features": [
-    "Track cryptocurrency portfolios with live market data",
-    "Visualize portfolio value and allocation with charts",
-    "Switch between dark terminal and light themes",
-    "Persist theme choice across sessions"
+    "Admin-only Add Token dialog with CoinGecko search",
+    "Custom priority asset list display",
+    "Terminal-dark themed UI matching existing components"
   ],
   "category": "productivity",
   "tags": [
-    "crypto",
+    "cryptocurrency",
     "portfolio",
-    "dashboard",
-    "charts",
-    "themes"
+    "admin",
+    "token-management"
   ],
-  "last_updated": "2026-07-08T10:13:39.292Z"
+  "last_updated": "2026-07-08T13:33:28.676Z"
 }

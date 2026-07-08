@@ -38793,7 +38793,7 @@ function applyColorScheme(scheme) {
     }
   }
 }
-const translations$d = {
+const translations$e = {
   pl: {
     logout: "Wyloguj",
     loggingOut: "Wylogowywanie...",
@@ -38825,7 +38825,7 @@ function Header({ language }) {
   const { colorScheme, setColorScheme } = useColorScheme();
   const queryClient2 = useQueryClient();
   const [mounted, setMounted] = reactExports.useState(false);
-  const t2 = translations$d[language];
+  const t2 = translations$e[language];
   reactExports.useEffect(() => {
     setMounted(true);
   }, []);
@@ -60864,7 +60864,7 @@ var BarChart = generateCategoricalChart({
   }],
   formatAxisMap
 });
-const translations$c = {
+const translations$d = {
   pl: {
     assetAllocation: "Alokacja aktywów",
     showPercentage: "Pokaż %",
@@ -60949,7 +60949,7 @@ function AssetAllocationChart({
   portfolio,
   language
 }) {
-  const t2 = translations$c[language];
+  const t2 = translations$d[language];
   const palette = useAllocationPalette();
   const [showPercentage, setShowPercentage] = reactExports.useState(false);
   const chartData = reactExports.useMemo(() => {
@@ -61570,7 +61570,7 @@ function buildWidgetUrl(tvSymbol, isDark) {
   });
   return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
 }
-const translations$b = {
+const translations$c = {
   pl: {
     priceChart: "Wykres ceny",
     technicalData: "Dane techniczne",
@@ -61603,7 +61603,7 @@ function AssetChartModal({
   onClose
 }) {
   const { data: technicalData, isLoading: isTechnicalLoading } = useFetchCoinTechnicalData(coinId);
-  const t2 = translations$b[language];
+  const t2 = translations$c[language];
   const [isDark, setIsDark] = reactExports.useState(
     () => document.documentElement.classList.contains("dark")
   );
@@ -68106,7 +68106,7 @@ function cleanEscapedString(input) {
 function subDays(date2, amount) {
   return addDays(date2, -amount);
 }
-const translations$a = {
+const translations$b = {
   pl: {
     portfolioValue: "Wartość portfela w czasie",
     portfolioValueOverTime: "Wartość portfela w czasie",
@@ -68185,7 +68185,7 @@ function PortfolioChart({
   language,
   marketData
 }) {
-  const t2 = translations$a[language];
+  const t2 = translations$b[language];
   const [showTotalValue, setShowTotalValue] = reactExports.useState(true);
   const [showTotalProfitLoss, setShowTotalProfitLoss] = reactExports.useState(true);
   const [showUnrealizedProfitLoss, setShowUnrealizedProfitLoss] = reactExports.useState(true);
@@ -69211,7 +69211,7 @@ function Textarea({ className, ...props }) {
     }
   );
 }
-const translations$9 = {
+const translations$a = {
   pl: {
     titleBuy: "Kup aktywo",
     titleSell: "Sprzedaj aktywo",
@@ -69310,7 +69310,7 @@ function TransactionDialog({
     isFetching: marketDataFetching
   } = useGetMarketData();
   const { data: priorityAssets } = useGetPriorityAssets();
-  const t2 = translations$9[language];
+  const t2 = translations$a[language];
   reactExports.useEffect(() => {
     if (preselectedAsset) {
       setSelectedAsset({
@@ -72020,7 +72020,7 @@ function SelectScrollDownButton({
     }
   );
 }
-const translations$8 = {
+const translations$9 = {
   pl: {
     title: "Edytuj transakcję",
     description: "Zaktualizuj szczegóły transakcji",
@@ -72084,7 +72084,7 @@ function TransactionEditDialog({
   const [comment, setComment] = reactExports.useState(transaction.comment || "");
   const [calendarOpen, setCalendarOpen] = reactExports.useState(false);
   const editTransaction = useEditTransaction();
-  const t2 = translations$8[language];
+  const t2 = translations$9[language];
   const totalValue = reactExports.useMemo(() => {
     const amountNum = Number.parseFloat(amount) || 0;
     const priceNum = Number.parseFloat(price) || 0;
@@ -72246,7 +72246,7 @@ function TransactionEditDialog({
     ] })
   ] }) });
 }
-const translations$7 = {
+const translations$8 = {
   pl: {
     title: "Historia transakcji",
     subtitle: "Pełna historia wszystkich transakcji kupna i sprzedaży",
@@ -72341,7 +72341,7 @@ function TransactionHistoryModal({
   const [editDialogOpen, setEditDialogOpen] = reactExports.useState(false);
   const [transactionToEdit, setTransactionToEdit] = reactExports.useState(null);
   const deleteTransaction = useDeleteTransaction();
-  const t2 = translations$7[language];
+  const t2 = translations$8[language];
   const formatCurrency = (value) => {
     return `$${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 2,
@@ -72778,7 +72778,7 @@ function TransactionHistoryModal({
     )
   ] });
 }
-const translations$6 = {
+const translations$7 = {
   pl: {
     totalValue: "Całkowita wartość",
     totalProfitLoss: "Całkowity zysk/strata portfolio",
@@ -72846,7 +72846,7 @@ function AssetList({
   const [transactionType, setTransactionType] = reactExports.useState("buy");
   const [chartModalOpen, setChartModalOpen] = reactExports.useState(false);
   const [selectedChartAsset, setSelectedChartAsset] = reactExports.useState(null);
-  const t2 = translations$6[language];
+  const t2 = translations$7[language];
   const updatedPortfolio = reactExports.useMemo(() => {
     return updatePortfolioWithMarketPrices(
       portfolio,
@@ -73451,7 +73451,7 @@ function toBackendTransaction(tx, newId) {
     amount: tx.amount
   };
 }
-const translations$5 = {
+const translations$6 = {
   pl: {
     title: "Eksportuj dane portfela",
     subtitle: "Export Portfolio Data",
@@ -73483,7 +73483,7 @@ function ExportPortfolioModal({
   onClose,
   language
 }) {
-  const t2 = translations$5[language];
+  const t2 = translations$6[language];
   const [selected, setSelected] = reactExports.useState(
     () => new Set(portfolios.map((p2) => p2.id.toString()))
   );
@@ -73633,7 +73633,7 @@ function ExportPortfolioModal({
     ] })
   ] }) });
 }
-const translations$4 = {
+const translations$5 = {
   pl: {
     title: "Importuj dane portfela",
     subtitle: "Import Portfolio Data",
@@ -73678,7 +73678,7 @@ function ImportPortfolioModal({
   onImportComplete,
   language
 }) {
-  const tr = translations$4[language];
+  const tr = translations$5[language];
   const fileRef = reactExports.useRef(null);
   const [step, setStep] = reactExports.useState("idle");
   const [parseError, setParseError] = reactExports.useState(null);
@@ -73913,6 +73913,403 @@ function ImportPortfolioModal({
     ] })
   ] }) });
 }
+const translations$4 = {
+  pl: {
+    title: "Dodaj token",
+    description: "Wyszukaj token na CoinGecko i dodaj go do listy priorytetowych aktywów. Nowe tokeny pojawią się w wyborze aktywów transakcji bez przeładowania strony.",
+    searchPlaceholder: "Szukaj monety (np. bitcoin, eth, solana)",
+    searchButton: "Szukaj",
+    searching: "Szukanie...",
+    noResults: "Brak wyników",
+    searchError: "Błąd wyszukiwania",
+    resultsLabel: "Wyniki",
+    tickerLabel: "Ticker do użycia",
+    tickerPlaceholder: "np. ICP",
+    confirmButton: "Potwierdź dodanie",
+    adding: "Dodawanie...",
+    cancel: "Anuluj",
+    added: "Dodano {symbol}",
+    addError: "Błąd dodawania",
+    customAssetsTitle: "Bieżące niestandardowe tokeny",
+    noCustomAssets: "Brak dodanych tokenów",
+    loadingCustom: "Ładowanie...",
+    selectResultHint: "Wybierz wynik, aby kontynuować.",
+    tickerRequired: "Ticker nie może być pusty."
+  },
+  en: {
+    title: "Add token",
+    description: "Search for a token on CoinGecko and add it to the priority asset list. New tokens appear in the transaction asset picker without a page reload.",
+    searchPlaceholder: "Search coin (e.g. bitcoin, eth, solana)",
+    searchButton: "Search",
+    searching: "Searching...",
+    noResults: "No results",
+    searchError: "Search error",
+    resultsLabel: "Results",
+    tickerLabel: "Ticker to use",
+    tickerPlaceholder: "e.g. ICP",
+    confirmButton: "Confirm add",
+    adding: "Adding...",
+    cancel: "Cancel",
+    added: "Added {symbol}",
+    addError: "Error adding",
+    customAssetsTitle: "Current custom tokens",
+    noCustomAssets: "No custom tokens added yet",
+    loadingCustom: "Loading...",
+    selectResultHint: "Select a result to continue.",
+    tickerRequired: "Ticker cannot be empty."
+  }
+};
+function AddTokenDialog({
+  isOpen,
+  onOpenChange,
+  language
+}) {
+  const t2 = translations$4[language];
+  const [searchQuery, setSearchQuery] = reactExports.useState("");
+  const [searchResults, setSearchResults] = reactExports.useState(
+    []
+  );
+  const [searchError, setSearchError] = reactExports.useState(null);
+  const [selectedCoin, setSelectedCoin] = reactExports.useState(null);
+  const [ticker2, setTicker] = reactExports.useState("");
+  const [addError, setAddError] = reactExports.useState(null);
+  const searchTokensMutation = useSearchCoinGeckoTokens();
+  const addAssetMutation = useAddCustomPriorityAsset();
+  const customAssetsQuery = useGetCustomPriorityAssets();
+  const debounceRef = reactExports.useRef(null);
+  const hasSearchedRef = reactExports.useRef(false);
+  const resetState = reactExports.useCallback(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchError(null);
+    setSelectedCoin(null);
+    setTicker("");
+    setAddError(null);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    hasSearchedRef.current = false;
+  }, []);
+  const handleOpenChange = (open) => {
+    if (!open) {
+      resetState();
+    }
+    onOpenChange(open);
+  };
+  const runSearch = async (query) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setSearchError(null);
+      hasSearchedRef.current = false;
+      return;
+    }
+    setSearchError(null);
+    try {
+      const response = await searchTokensMutation.mutateAsync(trimmed);
+      if (response.error) {
+        setSearchError(response.error);
+        setSearchResults([]);
+      } else {
+        setSearchResults(response.results.slice(0, 10));
+      }
+    } catch (error) {
+      console.error("Error searching CoinGecko tokens:", error);
+      setSearchError(error instanceof Error ? error.message : t2.searchError);
+      setSearchResults([]);
+    }
+    hasSearchedRef.current = true;
+  };
+  const handleSearchInputChange = (e3) => {
+    const value = e3.target.value;
+    setSearchQuery(value);
+    setSelectedCoin(null);
+    setTicker("");
+    setAddError(null);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      void runSearch(value);
+    }, 350);
+  };
+  const handleSearchSubmit = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    void runSearch(searchQuery);
+  };
+  const handleSelectResult = (coin) => {
+    setSelectedCoin(coin);
+    setTicker(coin.symbol.toUpperCase());
+    setAddError(null);
+  };
+  const handleConfirmAdd = async () => {
+    if (!selectedCoin || !ticker2.trim()) return;
+    setAddError(null);
+    try {
+      const response = await addAssetMutation.mutateAsync({
+        coinGeckoId: selectedCoin.id,
+        tickerSymbol: ticker2.trim().toUpperCase()
+      });
+      if (response.success) {
+        ue$1.success(t2.added.replace("{symbol}", ticker2.trim().toUpperCase()));
+        await customAssetsQuery.refetch();
+        handleOpenChange(false);
+      } else {
+        const message2 = response.error || t2.addError;
+        setAddError(message2);
+        ue$1.error(message2);
+      }
+    } catch (error) {
+      console.error("Error adding custom priority asset:", error);
+      const message2 = error instanceof Error ? error.message : t2.addError;
+      setAddError(message2);
+      ue$1.error(message2);
+    }
+  };
+  reactExports.useEffect(() => {
+    if (!isOpen) {
+      resetState();
+    }
+  }, [isOpen, resetState]);
+  const isSearching = searchTokensMutation.isPending;
+  const isAdding = addAssetMutation.isPending;
+  const canConfirm = !!selectedCoin && ticker2.trim().length > 0 && !isAdding;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: isOpen, onOpenChange: handleOpenChange, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { className: "max-w-lg", "data-ocid": "add_token.dialog", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogTitle, { className: "flex items-center gap-2 font-terminal text-terminal", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-5 w-5 text-terminal-green" }),
+        t2.title
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: "text-terminal-muted", children: t2.description })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2 sm:flex-row sm:items-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Input,
+          {
+            type: "text",
+            value: searchQuery,
+            onChange: handleSearchInputChange,
+            onKeyDown: (e3) => {
+              if (e3.key === "Enter") {
+                e3.preventDefault();
+                handleSearchSubmit();
+              }
+            },
+            placeholder: t2.searchPlaceholder,
+            disabled: isSearching,
+            className: "rounded-terminal border-terminal bg-terminal-hover font-terminal text-terminal placeholder:text-terminal-muted focus-visible:ring-terminal-green/40",
+            "data-ocid": "add_token.search_input"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Button$1,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: handleSearchSubmit,
+            disabled: isSearching || !searchQuery.trim(),
+            className: "shrink-0 rounded-terminal font-terminal",
+            "data-ocid": "add_token.search_button",
+            children: isSearching ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+              t2.searching
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "h-3.5 w-3.5" }),
+              t2.searchButton
+            ] })
+          }
+        )
+      ] }),
+      searchError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-red",
+          "data-ocid": "add_token.search_error",
+          children: searchError
+        }
+      ),
+      isSearching && searchResults.length === 0 && !searchError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-muted",
+          "data-ocid": "add_token.searching_state",
+          children: t2.searching
+        }
+      ),
+      !isSearching && !searchError && searchResults.length === 0 && hasSearchedRef.current && searchQuery.trim() && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-muted",
+          "data-ocid": "add_token.empty_state",
+          children: t2.noResults
+        }
+      ),
+      searchResults.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-semibold text-terminal-muted", children: t2.resultsLabel }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            className: "flex max-h-48 flex-col gap-1 overflow-y-auto",
+            "data-ocid": "add_token.results_list",
+            children: searchResults.map((coin, index2) => {
+              const isSelected = (selectedCoin == null ? void 0 : selectedCoin.id) === coin.id;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  className: `flex w-full cursor-pointer items-center justify-between gap-2 rounded-terminal px-2 py-1.5 text-left transition-colors ${isSelected ? "bg-terminal-green/10 border border-terminal-green/30" : "bg-terminal-hover border border-transparent hover:bg-terminal-green/5"}`,
+                  onClick: () => handleSelectResult(coin),
+                  "data-ocid": `add_token.item.${index2 + 1}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-col", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate text-sm font-terminal text-terminal", children: [
+                        coin.name,
+                        " (",
+                        coin.symbol.toUpperCase(),
+                        ")"
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate text-xs text-terminal-muted", children: coin.id })
+                    ] }),
+                    isSelected && /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "h-4 w-4 shrink-0 text-terminal-green" })
+                  ]
+                },
+                coin.id
+              );
+            })
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1.5", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Label,
+        {
+          htmlFor: "add-token-ticker",
+          className: "text-xs font-semibold text-terminal-muted",
+          children: t2.tickerLabel
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Input,
+        {
+          id: "add-token-ticker",
+          type: "text",
+          value: ticker2,
+          onChange: (e3) => {
+            setTicker(e3.target.value.toUpperCase());
+            setAddError(null);
+          },
+          placeholder: t2.tickerPlaceholder,
+          disabled: isAdding,
+          className: "rounded-terminal border-terminal bg-terminal-hover font-terminal text-terminal placeholder:text-terminal-muted focus-visible:ring-terminal-green/40",
+          "data-ocid": "add_token.ticker_input"
+        }
+      ),
+      !selectedCoin && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-muted",
+          "data-ocid": "add_token.ticker_hint",
+          children: t2.selectResultHint
+        }
+      ),
+      selectedCoin && ticker2.trim().length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-red",
+          "data-ocid": "add_token.ticker_field_error",
+          children: t2.tickerRequired
+        }
+      )
+    ] }),
+    addError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "p",
+      {
+        className: "text-xs text-terminal-red",
+        "data-ocid": "add_token.add_error_state",
+        children: addError
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-t border-terminal pt-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-1.5 text-xs font-semibold text-terminal-muted", children: t2.customAssetsTitle }),
+      customAssetsQuery.isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-muted",
+          "data-ocid": "add_token.custom_loading_state",
+          children: t2.loadingCustom
+        }
+      ) : customAssetsQuery.data && customAssetsQuery.data.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "flex flex-wrap gap-1.5",
+          "data-ocid": "add_token.custom_assets_list",
+          children: customAssetsQuery.data.map(([assetId, assetTicker], index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Badge,
+            {
+              variant: "outline",
+              className: "rounded-terminal border-terminal-green/20 bg-terminal-green/10 font-terminal text-terminal-green",
+              "data-ocid": `add_token.custom_asset.item.${index2 + 1}`,
+              children: [
+                assetId,
+                " (",
+                assetTicker,
+                ")"
+              ]
+            },
+            `${assetId}-${assetTicker}`
+          ))
+        }
+      ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-xs text-terminal-muted",
+          "data-ocid": "add_token.custom_empty_state",
+          children: t2.noCustomAssets
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button$1,
+        {
+          variant: "ghost",
+          size: "sm",
+          onClick: () => handleOpenChange(false),
+          disabled: isAdding,
+          className: "rounded-terminal font-terminal",
+          "data-ocid": "add_token.cancel_button",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "h-3.5 w-3.5" }),
+            t2.cancel
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          variant: "outline",
+          size: "sm",
+          onClick: handleConfirmAdd,
+          disabled: !canConfirm,
+          className: "rounded-terminal font-terminal",
+          "data-ocid": "add_token.confirm_button",
+          children: isAdding ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+            t2.adding
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-3.5 w-3.5" }),
+            t2.confirmButton
+          ] })
+        }
+      )
+    ] })
+  ] }) });
+}
 var COLLAPSIBLE_NAME = "Collapsible";
 var [createCollapsibleContext] = createContextScope(COLLAPSIBLE_NAME);
 var [CollapsibleProvider, useCollapsibleContext] = createCollapsibleContext(COLLAPSIBLE_NAME);
@@ -74090,18 +74487,7 @@ const translations$3 = {
     refreshPrices: "Odśwież ceny",
     refreshPricesLoading: "Odświeżanie...",
     refreshPricesError: "Błąd odświeżania cen",
-    addPriorityAssetTitle: "Dodaj priorytetowe aktywa",
-    searchPlaceholder: "Szukaj monety (np. bitcoin, eth, solana)",
-    searchButton: "Szukaj",
-    searching: "Szukanie...",
-    noResults: "Brak wyników",
-    searchError: "Błąd wyszukiwania",
-    addButton: "Dodaj",
-    adding: "Dodawanie...",
-    added: "Dodano {symbol}",
-    addError: "Błąd dodawania",
-    customAssetsTitle: "Dodane priorytetowe aktywa",
-    noCustomAssets: "Brak dodanych aktywów"
+    addTokenButton: "Dodaj token"
   },
   en: {
     marketDataStatus: "Market Data Status",
@@ -74122,18 +74508,7 @@ const translations$3 = {
     refreshPrices: "Refresh prices",
     refreshPricesLoading: "Refreshing...",
     refreshPricesError: "Error refreshing prices",
-    addPriorityAssetTitle: "Add Priority Asset",
-    searchPlaceholder: "Search coin (e.g. bitcoin, eth, solana)",
-    searchButton: "Search",
-    searching: "Searching...",
-    noResults: "No results",
-    searchError: "Search error",
-    addButton: "Add",
-    adding: "Adding...",
-    added: "Added {symbol}",
-    addError: "Error adding",
-    customAssetsTitle: "Added custom assets",
-    noCustomAssets: "No custom assets added"
+    addTokenButton: "Add token"
   }
 };
 function MarketDataStatusPanel({
@@ -74148,20 +74523,12 @@ function MarketDataStatusPanel({
   const [currentTime, setCurrentTime] = reactExports.useState(/* @__PURE__ */ new Date());
   const [debugOpen, setDebugOpen] = reactExports.useState(false);
   const [refreshError, setRefreshError] = reactExports.useState(false);
+  const [addTokenOpen, setAddTokenOpen] = reactExports.useState(false);
   const lastFetchErrorQuery = useGetLastFetchError();
   const isAdminQuery = useGetIsAdmin();
   const showDebug = isAdmin || isAdminQuery;
   const fetchMarketDataMutation = useFetchMarketData();
   const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
-  const [searchQuery, setSearchQuery] = reactExports.useState("");
-  const [searchResults, setSearchResults] = reactExports.useState(
-    []
-  );
-  const [searchError, setSearchError] = reactExports.useState(null);
-  const [addFeedback, setAddFeedback] = reactExports.useState(null);
-  const searchTokensMutation = useSearchCoinGeckoTokens();
-  const addAssetMutation = useAddCustomPriorityAsset();
-  const customAssetsQuery = useGetCustomPriorityAssets();
   const isRefreshing = fetchMarketDataMutation.isPending || fetchPriorityAssetPricesMutation.isPending;
   const handleRefreshPrices = async () => {
     setRefreshError(false);
@@ -74174,62 +74541,6 @@ function MarketDataStatusPanel({
       console.error("Error refreshing prices:", error);
       setRefreshError(true);
     }
-  };
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
-    if (!query) return;
-    setSearchResults([]);
-    setSearchError(null);
-    setAddFeedback(null);
-    try {
-      const response = await searchTokensMutation.mutateAsync(query);
-      if (response.error) {
-        setSearchError(response.error);
-        setSearchResults([]);
-      } else {
-        setSearchResults(response.results.slice(0, 10));
-      }
-    } catch (error) {
-      console.error("Error searching CoinGecko tokens:", error);
-      setSearchError(error instanceof Error ? error.message : t2.searchError);
-      setSearchResults([]);
-    }
-  };
-  const handleAdd = async (coin) => {
-    setAddFeedback(null);
-    try {
-      const ticker2 = coin.symbol.toUpperCase();
-      const response = await addAssetMutation.mutateAsync({
-        coinGeckoId: coin.id,
-        tickerSymbol: ticker2
-      });
-      if (response.success) {
-        setAddFeedback({
-          message: t2.added.replace("{symbol}", ticker2),
-          isError: false
-        });
-        await customAssetsQuery.refetch();
-        setSearchResults([]);
-        setSearchQuery("");
-      } else {
-        setAddFeedback({
-          message: response.error || t2.addError,
-          isError: true
-        });
-      }
-    } catch (error) {
-      console.error("Error adding custom priority asset:", error);
-      setAddFeedback({
-        message: error instanceof Error ? error.message : t2.addError,
-        isError: true
-      });
-    }
-  };
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchResults([]);
-    setSearchError(null);
-    setAddFeedback(null);
   };
   reactExports.useEffect(() => {
     const timer = setInterval(() => {
@@ -74286,307 +74597,155 @@ function MarketDataStatusPanel({
       renderErrorBlock(t2.debugBlockTechnicalData, data.technicalData)
     ] });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "mb-6 rounded-terminal border-terminal bg-terminal-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-terminal", children: t2.marketDataStatus }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Badge,
-            {
-              variant: "outline",
-              className: `flex items-center gap-2 rounded-terminal px-3 py-1 font-terminal ${isLoading ? "bg-terminal-red/10 text-terminal-red border-terminal-red/20" : "bg-terminal-green/10 text-terminal-green border-terminal-green/20"}`,
-              children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold uppercase tracking-wide", children: t2.loading })
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "h-3.5 w-3.5" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold uppercase tracking-wide", children: t2.connected })
-              ] })
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
-            t2.lastUpdated,
-            ":"
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-terminal font-semibold text-terminal", children: lastUpdated ? formatTime(lastUpdated) : formatTime(currentTime) })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { className: "h-4 w-4 text-terminal-muted" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
-            t2.calculationQuality,
-            ":"
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "mb-6 rounded-terminal border-terminal bg-terminal-card", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-terminal", children: t2.marketDataStatus }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Badge,
+              {
+                variant: "outline",
+                className: `flex items-center gap-2 rounded-terminal px-3 py-1 font-terminal ${isLoading ? "bg-terminal-red/10 text-terminal-red border-terminal-red/20" : "bg-terminal-green/10 text-terminal-green border-terminal-green/20"}`,
+                children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold uppercase tracking-wide", children: t2.loading })
+                ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "h-3.5 w-3.5" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold uppercase tracking-wide", children: t2.connected })
+                ] })
+              }
+            )
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 w-24 overflow-hidden rounded-terminal bg-terminal-hover", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "div",
-              {
-                className: "h-full bg-terminal-green transition-all duration-300",
-                style: { width: `${calculationQuality}%` }
-              }
-            ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-terminal font-semibold text-terminal", children: [
-              calculationQuality,
-              "%"
-            ] })
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
+              t2.lastUpdated,
+              ":"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-terminal font-semibold text-terminal", children: lastUpdated ? formatTime(lastUpdated) : formatTime(currentTime) })
           ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
-            t2.trackedAssets,
-            ":"
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Badge,
-            {
-              variant: "secondary",
-              className: "rounded-terminal font-terminal font-semibold",
-              children: trackedAssetsCount
-            }
-          )
-        ] }),
-        showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Button$1,
-            {
-              variant: "outline",
-              size: "sm",
-              onClick: handleRefreshPrices,
-              disabled: isRefreshing,
-              className: "rounded-terminal font-terminal",
-              "data-ocid": "market_data_status.refresh_prices_button",
-              children: isRefreshing ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
-                t2.refreshPricesLoading
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5" }),
-                t2.refreshPrices
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { className: "h-4 w-4 text-terminal-muted" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
+              t2.calculationQuality,
+              ":"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 w-24 overflow-hidden rounded-terminal bg-terminal-hover", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "h-full bg-terminal-green transition-all duration-300",
+                  style: { width: `${calculationQuality}%` }
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-terminal font-semibold text-terminal", children: [
+                calculationQuality,
+                "%"
               ] })
-            }
-          ),
-          refreshError && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "span",
-            {
-              className: "text-xs text-terminal-red",
-              "data-ocid": "market_data_status.refresh_prices_error",
-              children: t2.refreshPricesError
-            }
-          )
-        ] })
-      ] })
-    ] }),
-    showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Collapsible,
-      {
-        open: debugOpen,
-        onOpenChange: setDebugOpen,
-        className: "mt-4 border-t border-terminal pt-3",
-        "data-ocid": "market_data_status.debug_section",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            CollapsibleTrigger,
-            {
-              className: "flex items-center gap-1 text-sm font-medium text-terminal-muted hover:text-terminal",
-              "data-ocid": "market_data_status.debug_toggle",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  ChevronDown,
-                  {
-                    className: `h-4 w-4 transition-transform ${debugOpen ? "rotate-180" : ""}`
-                  }
-                ),
-                t2.debugTitle
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContent, { className: "mt-2", children: renderDebugContent() })
-        ]
-      }
-    ),
-    showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      "div",
-      {
-        className: "mt-4 border-t border-terminal pt-3",
-        "data-ocid": "market_data_status.add_priority_asset.section",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-2 text-sm font-semibold text-terminal", children: t2.addPriorityAssetTitle }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2 sm:flex-row sm:items-center", children: [
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm text-terminal-muted", children: [
+              t2.trackedAssets,
+              ":"
+            ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Input,
+              Badge,
               {
-                type: "text",
-                value: searchQuery,
-                onChange: (e3) => setSearchQuery(e3.target.value),
-                onKeyDown: (e3) => {
-                  if (e3.key === "Enter") {
-                    e3.preventDefault();
-                    handleSearch();
-                  }
-                },
-                placeholder: t2.searchPlaceholder,
-                disabled: searchTokensMutation.isPending,
-                className: "rounded-terminal border-terminal bg-terminal-hover font-terminal text-terminal placeholder:text-terminal-muted focus-visible:ring-terminal-green/40",
-                "data-ocid": "market_data_status.add_priority_asset.search_input"
+                variant: "secondary",
+                className: "rounded-terminal font-terminal font-semibold",
+                children: trackedAssetsCount
               }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+            )
+          ] }),
+          showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 Button$1,
                 {
                   variant: "outline",
                   size: "sm",
-                  onClick: handleSearch,
-                  disabled: searchTokensMutation.isPending || !searchQuery.trim(),
+                  onClick: handleRefreshPrices,
+                  disabled: isRefreshing,
                   className: "rounded-terminal font-terminal",
-                  "data-ocid": "market_data_status.add_priority_asset.search_button",
-                  children: searchTokensMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  "data-ocid": "market_data_status.refresh_prices_button",
+                  children: isRefreshing ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
-                    t2.searching
+                    t2.refreshPricesLoading
                   ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "h-3.5 w-3.5" }),
-                    t2.searchButton
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5" }),
+                    t2.refreshPrices
                   ] })
                 }
               ),
-              (searchResults.length > 0 || searchQuery || searchError) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 Button$1,
                 {
-                  variant: "ghost",
+                  variant: "outline",
                   size: "sm",
-                  onClick: handleClearSearch,
-                  disabled: searchTokensMutation.isPending,
+                  onClick: () => setAddTokenOpen(true),
+                  disabled: isRefreshing,
                   className: "rounded-terminal font-terminal",
-                  "data-ocid": "market_data_status.add_priority_asset.clear_button",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "h-3.5 w-3.5" })
+                  "data-ocid": "market_data_status.add_token_button",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-3.5 w-3.5" }),
+                    t2.addTokenButton
+                  ]
                 }
               )
-            ] })
-          ] }),
-          searchError && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              className: "mt-2 text-xs text-terminal-red",
-              "data-ocid": "market_data_status.add_priority_asset.search_error",
-              children: searchError
-            }
-          ),
-          searchTokensMutation.isPending && searchResults.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              className: "mt-2 text-xs text-terminal-muted",
-              "data-ocid": "market_data_status.add_priority_asset.searching_state",
-              children: t2.searching
-            }
-          ),
-          !searchTokensMutation.isPending && !searchError && searchResults.length === 0 && searchQuery && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              className: "mt-2 text-xs text-terminal-muted",
-              "data-ocid": "market_data_status.add_priority_asset.empty_state",
-              children: t2.noResults
-            }
-          ),
-          searchResults.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "ul",
-            {
-              className: "mt-2 flex flex-col gap-1",
-              "data-ocid": "market_data_status.add_priority_asset.results_list",
-              children: searchResults.map((coin, index2) => {
-                var _a3, _b3;
-                return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "li",
-                  {
-                    className: "flex items-center justify-between gap-2 rounded-terminal bg-terminal-hover px-2 py-1.5",
-                    "data-ocid": `market_data_status.add_priority_asset.item.${index2 + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-col", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate text-sm font-terminal text-terminal", children: coin.name }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate text-xs text-terminal-muted", children: [
-                          coin.symbol.toUpperCase(),
-                          " · ",
-                          coin.id
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        Button$1,
-                        {
-                          variant: "outline",
-                          size: "sm",
-                          onClick: () => handleAdd(coin),
-                          disabled: addAssetMutation.isPending || ((_a3 = addAssetMutation.variables) == null ? void 0 : _a3.coinGeckoId) === coin.id,
-                          className: "shrink-0 rounded-terminal font-terminal",
-                          "data-ocid": `market_data_status.add_priority_asset.add_button.${index2 + 1}`,
-                          children: addAssetMutation.isPending && ((_b3 = addAssetMutation.variables) == null ? void 0 : _b3.coinGeckoId) === coin.id ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }),
-                            t2.adding
-                          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-3.5 w-3.5" }),
-                            t2.addButton
-                          ] })
-                        }
-                      )
-                    ]
-                  },
-                  coin.id
-                );
-              })
-            }
-          ),
-          addFeedback && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              className: `mt-2 text-xs ${addFeedback.isError ? "text-terminal-red" : "text-terminal-green"}`,
-              "data-ocid": addFeedback.isError ? "market_data_status.add_priority_asset.add_error_state" : "market_data_status.add_priority_asset.add_success_state",
-              children: addFeedback.message
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-1.5 text-xs font-semibold text-terminal-muted", children: t2.customAssetsTitle }),
-            customAssetsQuery.isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "p",
+            ] }),
+            refreshError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
               {
-                className: "text-xs text-terminal-muted",
-                "data-ocid": "market_data_status.add_priority_asset.custom_loading_state",
-                children: t2.debugLoading
-              }
-            ) : customAssetsQuery.data && customAssetsQuery.data.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "div",
-              {
-                className: "flex flex-wrap gap-1.5",
-                "data-ocid": "market_data_status.add_priority_asset.custom_assets_list",
-                children: customAssetsQuery.data.map(([assetId, ticker2], index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  Badge,
-                  {
-                    variant: "outline",
-                    className: "rounded-terminal bg-terminal-green/10 font-terminal text-terminal-green border-terminal-green/20",
-                    "data-ocid": `market_data_status.add_priority_asset.custom_asset.item.${index2 + 1}`,
-                    children: [
-                      assetId,
-                      " (",
-                      ticker2,
-                      ")"
-                    ]
-                  },
-                  `${assetId}-${ticker2}`
-                ))
-              }
-            ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "p",
-              {
-                className: "text-xs text-terminal-muted",
-                "data-ocid": "market_data_status.add_priority_asset.custom_empty_state",
-                children: t2.noCustomAssets
+                className: "text-xs text-terminal-red",
+                "data-ocid": "market_data_status.refresh_prices_error",
+                children: t2.refreshPricesError
               }
             )
           ] })
-        ]
+        ] })
+      ] }),
+      showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Collapsible,
+        {
+          open: debugOpen,
+          onOpenChange: setDebugOpen,
+          className: "mt-4 border-t border-terminal pt-3",
+          "data-ocid": "market_data_status.debug_section",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              CollapsibleTrigger,
+              {
+                className: "flex items-center gap-1 text-sm font-medium text-terminal-muted hover:text-terminal",
+                "data-ocid": "market_data_status.debug_toggle",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    ChevronDown,
+                    {
+                      className: `h-4 w-4 transition-transform ${debugOpen ? "rotate-180" : ""}`
+                    }
+                  ),
+                  t2.debugTitle
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContent, { className: "mt-2", children: renderDebugContent() })
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      AddTokenDialog,
+      {
+        isOpen: addTokenOpen,
+        onOpenChange: setAddTokenOpen,
+        language
       }
     )
-  ] }) });
+  ] });
 }
 const translations$2 = {
   pl: {
