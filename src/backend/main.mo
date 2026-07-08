@@ -14,12 +14,17 @@ import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
+import Migration "migration";
 
-// No explicit migration needed: the current stable signature (six per-function
-// error pairs, no lastFetchError/lastFetchErrorTimestamp) is identical to the
-// previously deployed signature in .old/src/backend/dist/backend.most, so the
-// upgrade is stable-compatible and handled by implicit migration.
-actor {
+// An explicit migration is required for the Asset type change: the Asset
+// record gained two new fields (totalSoldCost and realizedProfitLossPercentage)
+// that did not exist in the previously deployed signature in
+// .old/src/backend/dist/backend.most. The migration (Migration.run) maps over
+// every portfolio's assets array and adds both fields with 0.0 defaults on
+// upgrade. recalculateAssets (next edit/delete) recomputes correct values, and
+// updateAssets accumulates correctly on subsequent sells, so the 0.0 defaults
+// are safe.
+(with migration = Migration.run) actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
    var accessControlState : {
     var adminAssigned : Bool;
@@ -190,6 +195,8 @@ actor {
     currentValue : Float;
     realizedProfitLoss : Float;
     averagePurchasePrice : Float;
+    totalSoldCost : Float;
+    realizedProfitLossPercentage : Float;
   };
 
   public type Transaction = {
@@ -693,6 +700,8 @@ actor {
               currentValue = transaction.amount * effectiveCurrentPrice;
               realizedProfitLoss = 0.0;
               averagePurchasePrice = transaction.price;
+              totalSoldCost = 0.0;
+              realizedProfitLossPercentage = 0.0;
             }],
           );
         } else {
@@ -740,6 +749,17 @@ actor {
 
               let newRealizedProfitLoss = a.realizedProfitLoss + transactionRealizedPL;
 
+              // Cumulative cost basis (at average purchase price) of everything
+              // ever sold for this symbol. Carried forward across transactions
+              // the same way realizedProfitLoss is, so realizedProfitLossPercentage
+              // divides realized gains by the cost basis of what was actually sold
+              // (not by the smaller remaining cost basis of what's still held).
+              let newTotalSoldCost = if (transaction.type_ == "sell") {
+                a.totalSoldCost + (transaction.amount * a.averagePrice);
+              } else {
+                a.totalSoldCost;
+              };
+
               let updatedCurrentPrice = if (effectiveCurrentPrice > 0.0) {
                 effectiveCurrentPrice;
               } else {
@@ -756,12 +776,20 @@ actor {
 
               let totalProfitLoss = newRealizedProfitLoss + unrealizedPL;
 
+              // Unrealized-only: divide unrealized P/L by the cost basis of what
+              // is still held (newPurchaseValue). Realized gains now live in
+              // realizedProfitLossPercentage, so the old mixed formula and its
+              // fully-sold fallbacks are removed.
               let profitLossPercentage = if (newPurchaseValue > 0.0) {
-                (totalProfitLoss / newPurchaseValue) * 100.0;
-              } else if (newAmount == 0.0 and a.purchaseValue > 0.0) {
-                (newRealizedProfitLoss / a.purchaseValue) * 100.0;
-              } else if (newPurchaseValue == 0.0 and newCurrentValue > 0.0) {
-                100.0;
+                (unrealizedPL / newPurchaseValue) * 100.0;
+              } else {
+                0.0;
+              };
+
+              // Realized-only: divide realized P/L by the cumulative cost basis
+              // of everything ever sold for this symbol.
+              let realizedProfitLossPercentage = if (newTotalSoldCost > 0.0) {
+                (newRealizedProfitLoss / newTotalSoldCost) * 100.0;
               } else {
                 0.0;
               };
@@ -784,6 +812,8 @@ actor {
                 currentValue = newCurrentValue;
                 realizedProfitLoss = newRealizedProfitLoss;
                 averagePurchasePrice;
+                totalSoldCost = newTotalSoldCost;
+                realizedProfitLossPercentage;
               };
             } else {
               a;
@@ -1505,12 +1535,19 @@ actor {
 
               let totalProfitLoss = asset.realizedProfitLoss + unrealizedPL;
 
+              // profitLossPercentage is unrealized-only: unrealizedPL / current purchaseValue * 100.
               let profitLossPercentage = if (asset.purchaseValue > 0.0) {
-                (totalProfitLoss / asset.purchaseValue) * 100.0;
-              } else if (asset.amount == 0.0 and asset.purchaseValue > 0.0) {
-                (asset.realizedProfitLoss / asset.purchaseValue) * 100.0;
+                (unrealizedPL / asset.purchaseValue) * 100.0;
               } else if (asset.purchaseValue == 0.0 and asset.currentValue > 0.0) {
                 100.0;
+              } else {
+                0.0;
+              };
+
+              // realizedProfitLossPercentage is recomputed from the carried-forward
+              // totalSoldCost and realizedProfitLoss (both already stored on the asset).
+              let realizedProfitLossPercentage = if (asset.totalSoldCost > 0.0) {
+                (asset.realizedProfitLoss / asset.totalSoldCost) * 100.0;
               } else {
                 0.0;
               };
@@ -1533,6 +1570,8 @@ actor {
                 currentValue = newCurrentValue;
                 realizedProfitLoss = asset.realizedProfitLoss;
                 averagePurchasePrice;
+                totalSoldCost = asset.totalSoldCost;
+                realizedProfitLossPercentage;
               };
             },
           );

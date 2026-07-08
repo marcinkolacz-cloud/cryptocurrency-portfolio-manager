@@ -141,7 +141,9 @@ type Asset =
    profitLossPercentage: float64;
    purchaseValue: float64;
    realizedProfitLoss: float64;
+   realizedProfitLossPercentage: float64;
    symbol: text;
+   totalSoldCost: float64;
  };
 service : {
   _initializeAccessControl: () -> ();

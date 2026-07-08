@@ -36872,6 +36872,7 @@ const MarketDataStatus = Record({
 const Asset = Record({
   "currentPrice": Float64,
   "averagePrice": Float64,
+  "realizedProfitLossPercentage": Float64,
   "name": Text$1,
   "averagePurchasePrice": Float64,
   "profitLoss": Float64,
@@ -36879,6 +36880,7 @@ const Asset = Record({
   "purchaseValue": Float64,
   "profitLossPercentage": Float64,
   "amount": Float64,
+  "totalSoldCost": Float64,
   "realizedProfitLoss": Float64,
   "symbol": Text$1
 });
@@ -37112,6 +37114,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
   const Asset2 = IDL2.Record({
     "currentPrice": IDL2.Float64,
     "averagePrice": IDL2.Float64,
+    "realizedProfitLossPercentage": IDL2.Float64,
     "name": IDL2.Text,
     "averagePurchasePrice": IDL2.Float64,
     "profitLoss": IDL2.Float64,
@@ -37119,6 +37122,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "purchaseValue": IDL2.Float64,
     "profitLossPercentage": IDL2.Float64,
     "amount": IDL2.Float64,
+    "totalSoldCost": IDL2.Float64,
     "realizedProfitLoss": IDL2.Float64,
     "symbol": IDL2.Text
   });

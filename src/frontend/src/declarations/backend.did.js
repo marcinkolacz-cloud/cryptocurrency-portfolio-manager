@@ -53,6 +53,7 @@ export const MarketDataStatus = IDL.Record({
 export const Asset = IDL.Record({
   'currentPrice' : IDL.Float64,
   'averagePrice' : IDL.Float64,
+  'realizedProfitLossPercentage' : IDL.Float64,
   'name' : IDL.Text,
   'averagePurchasePrice' : IDL.Float64,
   'profitLoss' : IDL.Float64,
@@ -60,6 +61,7 @@ export const Asset = IDL.Record({
   'purchaseValue' : IDL.Float64,
   'profitLossPercentage' : IDL.Float64,
   'amount' : IDL.Float64,
+  'totalSoldCost' : IDL.Float64,
   'realizedProfitLoss' : IDL.Float64,
   'symbol' : IDL.Text,
 });
@@ -297,6 +299,7 @@ export const idlFactory = ({ IDL }) => {
   const Asset = IDL.Record({
     'currentPrice' : IDL.Float64,
     'averagePrice' : IDL.Float64,
+    'realizedProfitLossPercentage' : IDL.Float64,
     'name' : IDL.Text,
     'averagePurchasePrice' : IDL.Float64,
     'profitLoss' : IDL.Float64,
@@ -304,6 +307,7 @@ export const idlFactory = ({ IDL }) => {
     'purchaseValue' : IDL.Float64,
     'profitLossPercentage' : IDL.Float64,
     'amount' : IDL.Float64,
+    'totalSoldCost' : IDL.Float64,
     'realizedProfitLoss' : IDL.Float64,
     'symbol' : IDL.Text,
   });

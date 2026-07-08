@@ -131,6 +131,7 @@ export interface TransformationInput {
 export interface Asset {
     currentPrice: number;
     averagePrice: number;
+    realizedProfitLossPercentage: number;
     name: string;
     averagePurchasePrice: number;
     profitLoss: number;
@@ -138,6 +139,7 @@ export interface Asset {
     purchaseValue: number;
     profitLossPercentage: number;
     amount: number;
+    totalSoldCost: number;
     realizedProfitLoss: number;
     symbol: string;
 }
