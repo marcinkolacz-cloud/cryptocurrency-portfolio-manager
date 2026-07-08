@@ -1,14 +1,3 @@
-type http_request_result = 
- record {
-   body: blob;
-   headers: vec http_header;
-   status: nat;
- };
-type http_header = 
- record {
-   name: text;
-   value: text;
- };
 type UserRole = 
  variant {
    admin;
@@ -25,13 +14,13 @@ type UserProfile =
 type TransformationOutput = 
  record {
    body: blob;
-   headers: vec http_header;
+   headers: vec HttpHeader;
    status: nat;
  };
 type TransformationInput = 
  record {
    context: blob;
-   response: http_request_result;
+   response: HttpRequestResult;
  };
 type Transaction = 
  record {
@@ -96,6 +85,17 @@ type MarketData =
    name: text;
    price: float64;
    symbol: text;
+ };
+type HttpRequestResult = 
+ record {
+   body: blob;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type HttpHeader = 
+ record {
+   name: text;
+   value: text;
  };
 type HistoricalValue = 
  record {

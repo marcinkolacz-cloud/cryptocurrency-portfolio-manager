@@ -1,11 +1,12 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "e662b490923168c281505297ada557babb2d6eed0430d07db916771c06fc61af",
+  "mopsTomlDepsHash": "d0efc12fef6e0c0c48de63b57215d3e4e5b04efa70db4664b8b1eab664959f44",
   "deps": {
     "core": "2.6.0",
     "base": "0.16.0",
     "caffeineai-authorization": "0.1.1",
-    "caffeineai-http-outcalls": "0.1.1",
+    "caffeineai-http-outcalls": "0.1.2",
+    "ic": "4.0.0",
     "json": "1.4.0",
     "xtended-numbers": "0.3.1"
   },
@@ -135,10 +136,18 @@
       "caffeineai-authorization@0.1.1/rules/mixin-authorization-included.toml": "57fa6a81594ea8c12e0a3315c36dec4adf718444b8ef70a11cda1aaa1b11624a",
       "caffeineai-authorization@0.1.1/src/access-control.mo": "e517d2a028b510d804a633631a15981160def610ea9410dd5a122f92af3c04d8"
     },
-    "caffeineai-http-outcalls@0.1.1": {
-      "caffeineai-http-outcalls@0.1.1/mops.toml": "412e8919376cb4b2260c2bb830dc44a7c9092271b1082469da30f445d6e40e00",
-      "caffeineai-http-outcalls@0.1.1/README.md": "c8dd0ee7548ac60f5c82c6f5f0a517bbcb847e1e876b71351a5b174b9a46a3fd",
-      "caffeineai-http-outcalls@0.1.1/src/outcall.mo": "f5e1eec3b12a04244856f99358e8766a2b5eedc0bf8d9abbebe372c1a3eaca58"
+    "caffeineai-http-outcalls@0.1.2": {
+      "caffeineai-http-outcalls@0.1.2/README.md": "c8dd0ee7548ac60f5c82c6f5f0a517bbcb847e1e876b71351a5b174b9a46a3fd",
+      "caffeineai-http-outcalls@0.1.2/mops.toml": "7e614a05258ac65d20ebfa39eaa2da9ca6e229a138ebd04da2d2d612e0ef71db",
+      "caffeineai-http-outcalls@0.1.2/src/outcall.mo": "82b2356d4eb135830beae0df7e3d4ad69437f801a14c9a2302329eaebf7770fd"
+    },
+    "ic@4.0.0": {
+      "ic@4.0.0/README.md": "7686aefce0c535d18ee2768e98660575563daa53b00d2c1041170032c232784c",
+      "ic@4.0.0/mops.toml": "7a6bb3d74b1ec5539b9bb88e0a0a0ba09e8c46e00b38cb5feda009d6b80723df",
+      "ic@4.0.0/src/Call.mo": "b4a3572e5617d0b1eb696450344b65e99504f844794e7ddf1cff664fcfeb2994",
+      "ic@4.0.0/src/lib.mo": "9d9ec84a85eb25d191c1cae99cb841d9b6e0cf0f9bc27c3f3805ac9673d7bef1",
+      "ic@4.0.0/LICENSE": "ec415b57f8143746b567c94bfad243f5342f3edf110c94641a1a60e02722db55",
+      "ic@4.0.0/src/Types.mo": "373c3a18e072058aecaaec99385a08f95746c7e86cc9694f9f23caa982c2ad6c"
     },
     "json@1.4.0": {
       "json@1.4.0/README.md": "05a648e7dd1384458c69a090b518f6dbf166262bd294ecc3dd726cff6b7bf9d1",

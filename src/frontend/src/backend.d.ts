@@ -14,7 +14,12 @@ export interface HistoricalValue {
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
-    headers: Array<http_header>;
+    headers: Array<HttpHeader>;
+}
+export interface HttpRequestResult {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
 }
 export interface MarketDataStatus {
     status: string;
@@ -34,14 +39,9 @@ export type AuthResult_1 = {
     __kind__: "unauthorized";
     unauthorized: string;
 };
-export interface http_header {
+export interface HttpHeader {
     value: string;
     name: string;
-}
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
 }
 export interface MarketData {
     id: bigint;
@@ -49,15 +49,6 @@ export interface MarketData {
     name: string;
     lastUpdated: bigint;
     price: number;
-    symbol: string;
-}
-export interface TechnicalData {
-    currentPrice: number;
-    change24h: number;
-    marketCap: number;
-    name: string;
-    lastUpdated: bigint;
-    volume24h: number;
     symbol: string;
 }
 export interface Transaction {
@@ -70,6 +61,15 @@ export interface Transaction {
     price: number;
     amount: number;
 }
+export interface TechnicalData {
+    currentPrice: number;
+    change24h: number;
+    marketCap: number;
+    name: string;
+    lastUpdated: bigint;
+    volume24h: number;
+    symbol: string;
+}
 export interface HistoricalTotalValue {
     totalValue: number;
     timestamp: bigint;
@@ -80,7 +80,7 @@ export interface HistoricalProfitLoss {
 }
 export interface TransformationInput {
     context: Uint8Array;
-    response: http_request_result;
+    response: HttpRequestResult;
 }
 export interface Asset {
     currentPrice: number;

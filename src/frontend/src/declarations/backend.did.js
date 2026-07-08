@@ -116,23 +116,20 @@ export const TechnicalData = IDL.Record({
   'volume24h' : IDL.Float64,
   'symbol' : IDL.Text,
 });
-export const http_header = IDL.Record({
-  'value' : IDL.Text,
-  'name' : IDL.Text,
-});
-export const http_request_result = IDL.Record({
+export const HttpHeader = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+export const HttpRequestResult = IDL.Record({
   'status' : IDL.Nat,
   'body' : IDL.Vec(IDL.Nat8),
-  'headers' : IDL.Vec(http_header),
+  'headers' : IDL.Vec(HttpHeader),
 });
 export const TransformationInput = IDL.Record({
   'context' : IDL.Vec(IDL.Nat8),
-  'response' : http_request_result,
+  'response' : HttpRequestResult,
 });
 export const TransformationOutput = IDL.Record({
   'status' : IDL.Nat,
   'body' : IDL.Vec(IDL.Nat8),
-  'headers' : IDL.Vec(http_header),
+  'headers' : IDL.Vec(HttpHeader),
 });
 
 export const idlService = IDL.Service({
@@ -363,20 +360,20 @@ export const idlFactory = ({ IDL }) => {
     'volume24h' : IDL.Float64,
     'symbol' : IDL.Text,
   });
-  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
-  const http_request_result = IDL.Record({
+  const HttpHeader = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const HttpRequestResult = IDL.Record({
     'status' : IDL.Nat,
     'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(http_header),
+    'headers' : IDL.Vec(HttpHeader),
   });
   const TransformationInput = IDL.Record({
     'context' : IDL.Vec(IDL.Nat8),
-    'response' : http_request_result,
+    'response' : HttpRequestResult,
   });
   const TransformationOutput = IDL.Record({
     'status' : IDL.Nat,
     'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(http_header),
+    'headers' : IDL.Vec(HttpHeader),
   });
   
   return IDL.Service({

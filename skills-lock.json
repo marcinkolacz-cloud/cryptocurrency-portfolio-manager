@@ -19,7 +19,7 @@
     "extension-core-infrastructure": {
       "source": "caffeinelabs/skills",
       "sourceType": "github",
-      "computedHash": "d70e6ac17050ababaa4d91440184912a10115b6e2d581d2436e4507118718833"
+      "computedHash": "80163fc5b6736341f5bb4c0ba1f474b81b93848cc3b8af2b98722936941bb4e6"
     },
     "extension-data-viewer": {
       "source": "caffeinelabs/skills",

@@ -489,7 +489,7 @@ actor {
           var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
           var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
           var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
-          var totalPurchaseValue = calculateTotalPurchaseValue(updatedTransactions);
+          var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
           var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
           // Update tracked assets
@@ -558,7 +558,7 @@ actor {
               var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
               var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
               var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
-              var totalPurchaseValue = calculateTotalPurchaseValue(updatedTransactions);
+              var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
               var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
               // Update tracked assets
@@ -618,7 +618,7 @@ actor {
               var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
               var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
               var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
-              var totalPurchaseValue = calculateTotalPurchaseValue(updatedTransactions);
+              var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
               var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
               // Update tracked assets
@@ -916,14 +916,12 @@ actor {
     Array.append(historicalUnrealizedProfitLoss, [newHistoricalUnrealizedProfitLoss]);
   };
 
-  func calculateTotalPurchaseValue(transactions : [Transaction]) : Float {
-    var total : Float = 0.0;
-    for (transaction in transactions.vals()) {
-      if (transaction.type_ == "buy" and transaction.amount >= 0.0 and transaction.price >= 0.0) {
-        total := total + (transaction.amount * transaction.price);
-      };
-    };
-    total;
+  func calculateTotalPurchaseValue(assets : [Asset]) : Float {
+    Array.foldLeft(
+      assets,
+      0.0,
+      func(acc, asset) { acc + asset.purchaseValue },
+    );
   };
 
   func updateHistoricalTotalValue(historicalTotalValue : [HistoricalTotalValue], assets : [Asset], totalProfitLoss : Float) : [HistoricalTotalValue] {

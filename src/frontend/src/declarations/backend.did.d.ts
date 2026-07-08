@@ -42,6 +42,12 @@ export interface HistoricalUnrealizedProfitLoss {
   'unrealizedProfitLoss' : number,
 }
 export interface HistoricalValue { 'totalValue' : number, 'timestamp' : bigint }
+export interface HttpHeader { 'value' : string, 'name' : string }
+export interface HttpRequestResult {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<HttpHeader>,
+}
 export interface MarketData {
   'id' : bigint,
   'marketCap' : number,
@@ -102,12 +108,12 @@ export interface Transaction {
 }
 export interface TransformationInput {
   'context' : Uint8Array,
-  'response' : http_request_result,
+  'response' : HttpRequestResult,
 }
 export interface TransformationOutput {
   'status' : bigint,
   'body' : Uint8Array,
-  'headers' : Array<http_header>,
+  'headers' : Array<HttpHeader>,
 }
 export interface UserProfile {
   'theme' : string,
@@ -118,12 +124,6 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface http_header { 'value' : string, 'name' : string }
-export interface http_request_result {
-  'status' : bigint,
-  'body' : Uint8Array,
-  'headers' : Array<http_header>,
-}
 export interface _SERVICE {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'addTransaction' : ActorMethod<[bigint, Transaction], undefined>,

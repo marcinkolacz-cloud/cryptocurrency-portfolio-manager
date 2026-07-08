@@ -26,5 +26,5 @@ args = [ "--default-persistent-actors", "--actor-idl=src/backend/system-idl", "-
 core = "2.6.0"
 base = "0.16.0"
 caffeineai-authorization = "0.1.1"
-caffeineai-http-outcalls = "0.1.1"
+caffeineai-http-outcalls = "0.1.2"
 json = "1.4.0"
