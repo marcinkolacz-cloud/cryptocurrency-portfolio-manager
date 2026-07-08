@@ -18,7 +18,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Asset, MarketData, Portfolio, PriorityAsset } from "../backend";
 import { updatePortfolioWithMarketPrices } from "../hooks/useQueries";
 import AssetAllocationChart from "./AssetAllocationChart";
@@ -131,34 +131,6 @@ export default function AssetList({
     );
   }, [portfolio, marketData, priorityAssets]);
 
-  // Helper function to calculate profit/loss percentage for an asset
-  const calculateProfitLossPercentage = useCallback((asset: Asset): number => {
-    const purchaseValue = asset.purchaseValue || 0;
-    const currentValue = asset.currentValue || 0;
-    const profitLoss = asset.profitLoss || 0;
-    const amount = asset.amount || 0;
-
-    // For assets with nonzero purchase value, calculate percentage based on purchase value
-    if (purchaseValue > 0) {
-      return (profitLoss / purchaseValue) * 100;
-    }
-
-    // For free tokens (purchase value = $0) with positive current value, show 100% profit
-    if (purchaseValue === 0 && currentValue > 0 && amount > 0) {
-      return 100;
-    }
-
-    // For sold assets with realized profit/loss
-    if (amount === 0 && profitLoss !== 0) {
-      // If we have the original purchase value from backend, use it
-      // Otherwise, the profit/loss percentage should already be calculated
-      return asset.profitLossPercentage || 0;
-    }
-
-    // Default case: no profit/loss
-    return 0;
-  }, []);
-
   const formatCurrency = (value: number) => {
     return `$${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 2,
@@ -251,7 +223,7 @@ export default function AssetList({
           break;
         case "profitLossPercent":
           comparison =
-            calculateProfitLossPercentage(a) - calculateProfitLossPercentage(b);
+            (a.profitLossPercentage || 0) - (b.profitLossPercentage || 0);
           break;
         case "realizedProfitLossPercent":
           comparison =
@@ -263,13 +235,7 @@ export default function AssetList({
     });
 
     return filtered;
-  }, [
-    updatedPortfolio,
-    searchTerm,
-    sortField,
-    sortDirection,
-    calculateProfitLossPercentage,
-  ]);
+  }, [updatedPortfolio, searchTerm, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -506,7 +472,7 @@ export default function AssetList({
 
                     const profitLoss = asset.profitLoss || 0;
                     const profitLossPercentage =
-                      calculateProfitLossPercentage(asset);
+                      asset.profitLossPercentage || 0;
                     const isPositive = profitLoss >= 0;
                     const totalSoldCost = asset.totalSoldCost || 0;
                     const hasSellHistory = totalSoldCost > 0;

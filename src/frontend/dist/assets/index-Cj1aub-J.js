@@ -72566,22 +72566,6 @@ function AssetList({
       priorityAssets
     );
   }, [portfolio, marketData, priorityAssets]);
-  const calculateProfitLossPercentage = reactExports.useCallback((asset) => {
-    const purchaseValue = asset.purchaseValue || 0;
-    const currentValue = asset.currentValue || 0;
-    const profitLoss = asset.profitLoss || 0;
-    const amount = asset.amount || 0;
-    if (purchaseValue > 0) {
-      return profitLoss / purchaseValue * 100;
-    }
-    if (purchaseValue === 0 && currentValue > 0 && amount > 0) {
-      return 100;
-    }
-    if (amount === 0 && profitLoss !== 0) {
-      return asset.profitLossPercentage || 0;
-    }
-    return 0;
-  }, []);
   const formatCurrency = (value) => {
     return `$${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 2,
@@ -72662,7 +72646,7 @@ function AssetList({
           comparison = (a2.profitLoss || 0) - (b2.profitLoss || 0);
           break;
         case "profitLossPercent":
-          comparison = calculateProfitLossPercentage(a2) - calculateProfitLossPercentage(b2);
+          comparison = (a2.profitLossPercentage || 0) - (b2.profitLossPercentage || 0);
           break;
         case "realizedProfitLossPercent":
           comparison = (a2.realizedProfitLossPercentage || 0) - (b2.realizedProfitLossPercentage || 0);
@@ -72671,13 +72655,7 @@ function AssetList({
       return sortDirection === "asc" ? comparison : -comparison;
     });
     return filtered;
-  }, [
-    updatedPortfolio,
-    searchTerm,
-    sortField,
-    sortDirection,
-    calculateProfitLossPercentage
-  ]);
+  }, [updatedPortfolio, searchTerm, sortField, sortDirection]);
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -72853,7 +72831,7 @@ function AssetList({
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: filteredAndSortedAssets.map((asset) => {
             if (!asset) return null;
             const profitLoss = asset.profitLoss || 0;
-            const profitLossPercentage = calculateProfitLossPercentage(asset);
+            const profitLossPercentage = asset.profitLossPercentage || 0;
             const isPositive = profitLoss >= 0;
             const totalSoldCost = asset.totalSoldCost || 0;
             const hasSellHistory = totalSoldCost > 0;
