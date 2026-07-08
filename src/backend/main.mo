@@ -1958,7 +1958,7 @@ import Error "mo:core/Error";
   // without requiring any user transaction to trigger. Idempotent via the
   // migrationVersion guard — runs only on the first upgrade that sees
   // migrationVersion < 1.
-  system func preupgrade() {
+  system func postupgrade() {
     if (migrationVersion < 1) {
       portfolios := principalMap.map(
         portfolios,
