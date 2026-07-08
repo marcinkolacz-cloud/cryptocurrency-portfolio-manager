@@ -321,57 +321,57 @@ export default function AssetList({
   return (
     <div className="space-y-3">
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border border-terminal bg-terminal-card p-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
-            <CardTitle className="text-xs font-medium text-terminal-muted">
+        <Card className="rounded-terminal border border-terminal bg-terminal-card p-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-terminal-muted">
               {t.totalValue}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <div className="font-terminal text-xl font-bold text-terminal">
+          <CardContent className="p-2 pt-1">
+            <div className="font-terminal text-2xl font-bold text-terminal">
               {formatCurrency(totalValue)}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-terminal bg-terminal-card p-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
-            <CardTitle className="text-xs font-medium text-terminal-muted">
+        <Card className="rounded-terminal border border-terminal bg-terminal-card p-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-terminal-muted">
               {t.totalProfitLoss}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1">
+          <CardContent className="p-2 pt-1">
             <div
-              className={`font-terminal text-xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
+              className={`font-terminal text-2xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
             >
               {formatCurrency(totalProfitLoss)}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-terminal bg-terminal-card p-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
-            <CardTitle className="text-xs font-medium text-terminal-muted">
+        <Card className="rounded-terminal border border-terminal bg-terminal-card p-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-terminal-muted">
               {t.unrealizedProfitLoss}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1">
+          <CardContent className="p-2 pt-1">
             <div
-              className={`font-terminal text-xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
+              className={`font-terminal text-2xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
             >
               {formatCurrency(unrealizedProfitLoss)}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-terminal bg-terminal-card p-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
-            <CardTitle className="text-xs font-medium text-terminal-muted">
+        <Card className="rounded-terminal border border-terminal bg-terminal-card p-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-terminal-muted">
               {t.totalPurchaseValue}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1">
-            <div className="font-terminal text-xl font-bold text-terminal">
+          <CardContent className="p-2 pt-1">
+            <div className="font-terminal text-2xl font-bold text-terminal">
               {formatCurrency(totalPurchaseValue)}
             </div>
           </CardContent>
@@ -392,9 +392,9 @@ export default function AssetList({
         </div>
       )}
 
-      <Card className="border border-terminal bg-terminal-card p-3">
-        <CardHeader className="p-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="rounded-terminal border border-terminal bg-terminal-card p-2">
+        <CardHeader className="p-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base font-bold text-terminal">
               {t.assets}
             </CardTitle>
@@ -403,7 +403,7 @@ export default function AssetList({
                 variant="outline"
                 size="sm"
                 onClick={() => setHistoryModalOpen(true)}
-                className="font-terminal"
+                className="rounded-terminal font-terminal"
               >
                 <History className="mr-2 h-4 w-4" />
                 {t.transactionHistory}
@@ -411,7 +411,7 @@ export default function AssetList({
               <Button
                 size="sm"
                 onClick={() => handleBuyClick()}
-                className="font-terminal"
+                className="rounded-terminal font-terminal"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {t.addTransaction}
@@ -419,15 +419,15 @@ export default function AssetList({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-3">
-          <div className="mb-3">
+        <CardContent className="p-2">
+          <div className="mb-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-terminal-muted" />
               <Input
                 placeholder={t.searchAssets}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted pl-9"
+                className="rounded-terminal border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted pl-9"
               />
             </div>
           </div>
@@ -441,7 +441,7 @@ export default function AssetList({
                 {t.addFirst}
               </p>
               <Button
-                className="mt-4 font-terminal"
+                className="mt-4 rounded-terminal font-terminal"
                 onClick={() => handleBuyClick()}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -475,7 +475,7 @@ export default function AssetList({
                     <SortableHeader field="realizedProfitLossPercent">
                       {t.realizedProfitLossPercent}
                     </SortableHeader>
-                    <TableHead className="text-center border-r-0 text-terminal-muted">
+                    <TableHead className="text-center border-r-0 font-terminal text-terminal-muted">
                       {t.actions}
                     </TableHead>
                   </TableRow>
@@ -497,40 +497,40 @@ export default function AssetList({
                     return (
                       <TableRow
                         key={asset.symbol}
-                        className="cursor-pointer border-b border-terminal/50 hover:bg-terminal-green/5"
+                        className="cursor-pointer border-b border-terminal hover:bg-[#12141a]"
                         onClick={() => handleAssetClick(asset)}
                       >
-                        <TableCell className="font-medium border-r border-terminal/50 text-center text-terminal py-1.5 px-2">
+                        <TableCell className="font-medium border-r border-terminal text-center text-terminal py-1 px-2">
                           {asset.name}
                         </TableCell>
-                        <TableCell className="border-r border-terminal/50 text-center py-1.5 px-2">
+                        <TableCell className="border-r border-terminal text-center py-1 px-2">
                           <div className="flex justify-center">
                             <Badge
                               variant="outline"
-                              className="border-terminal text-terminal-muted font-terminal"
+                              className="rounded-terminal border-terminal text-terminal-muted font-terminal"
                             >
                               {asset.symbol}
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
+                        <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
                           {formatCurrency(asset.currentPrice || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
+                        <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
                           {formatCurrency(asset.averagePurchasePrice || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
+                        <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
                           {formatNumber(asset.amount || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-terminal font-semibold border-r border-terminal/50 text-terminal py-1.5 px-2">
+                        <TableCell className="text-center font-terminal font-semibold border-r border-terminal text-terminal py-1 px-2">
                           {formatCurrency(
                             (asset.amount || 0) * (asset.currentPrice || 0),
                           )}
                         </TableCell>
-                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
+                        <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
                           {formatCurrency(asset.purchaseValue || 0)}
                         </TableCell>
-                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
+                        <TableCell className="text-center border-r border-terminal py-1 px-2">
                           <div
                             className={`flex items-center justify-center gap-1 font-semibold font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
                           >
@@ -542,14 +542,14 @@ export default function AssetList({
                             {formatCurrency(Math.abs(profitLoss))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
+                        <TableCell className="text-center border-r border-terminal py-1 px-2">
                           <div
                             className={`font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
                           >
                             {formatPercent(profitLossPercentage)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
+                        <TableCell className="text-center border-r border-terminal py-1 px-2">
                           {hasSellHistory ? (
                             <div
                               className={`font-medium font-terminal ${isRealizedPositive ? "text-terminal-green" : "text-terminal-red"}`}
@@ -563,14 +563,14 @@ export default function AssetList({
                           )}
                         </TableCell>
                         <TableCell
-                          className="text-center py-1.5 px-2"
+                          className="text-center py-1 px-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-center gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 hover:bg-terminal-green/10"
+                              className="h-8 w-8 rounded-terminal hover:bg-terminal-green/10"
                               onClick={() => handleBuyClick(asset)}
                               title={t.buy}
                             >
@@ -583,7 +583,7 @@ export default function AssetList({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 hover:bg-terminal-red/10"
+                              className="h-8 w-8 rounded-terminal hover:bg-terminal-red/10"
                               onClick={() => handleSellClick(asset)}
                               title={t.sell}
                             >

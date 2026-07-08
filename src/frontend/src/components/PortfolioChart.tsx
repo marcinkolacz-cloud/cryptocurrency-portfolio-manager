@@ -343,7 +343,7 @@ export default function PortfolioChart({
   return (
     <div className="space-y-2">
       {/* Compact period-filter toolbar — no title (title lives on the ValueChart card) */}
-      <Card className="border border-terminal bg-terminal-card p-3">
+      <Card className="rounded-terminal border border-terminal bg-terminal-card p-3">
         <div className="flex flex-wrap items-center gap-2">
           {rangeButtons.map((btn) => (
             <Button
@@ -351,19 +351,26 @@ export default function PortfolioChart({
               variant={dateRange === btn.key ? "default" : "outline"}
               size="sm"
               onClick={() => handleRangeChange(btn.key)}
-              className="font-terminal"
+              className="rounded-terminal font-terminal"
             >
               {btn.label}
             </Button>
           ))}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="font-terminal">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-terminal font-terminal"
+              >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {selectedDate ? format(selectedDate, "PPP") : t.selectDate}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent
+              className="w-auto rounded-terminal p-0"
+              align="start"
+            >
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -454,7 +461,7 @@ function ValueChart({
       name: totalValueName,
       color: LINE_COLORS.totalValue,
       gradientId: "colorTotalValue",
-      strokeWidth: 2,
+      strokeWidth: 1.5,
     },
     {
       key: "totalPurchaseValue",
@@ -473,7 +480,7 @@ function ValueChart({
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
 
   return (
-    <Card className="border border-terminal bg-terminal-card p-3">
+    <Card className="rounded-terminal border border-terminal bg-terminal-card p-3">
       <CardHeader className="gap-2 p-3">
         <CardTitle className="text-base font-bold text-terminal">
           {title}
@@ -567,7 +574,7 @@ function ProfitLossChart({
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
 
   return (
-    <Card className="border border-terminal bg-terminal-card p-3">
+    <Card className="rounded-terminal border border-terminal bg-terminal-card p-3">
       <CardHeader className="gap-2 p-3">
         <CardTitle className="text-base font-bold text-terminal">
           {title}
@@ -672,7 +679,8 @@ function ChartCanvas({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid
-            stroke="rgba(0,255,136,0.08)"
+            stroke="rgba(16,185,129,0.12)"
+            strokeDasharray="2 2"
             strokeWidth={1}
             vertical={true}
             horizontal={true}
@@ -713,7 +721,7 @@ function ChartCanvas({
               if (active && payload && payload.length) {
                 const point = payload[0]?.payload as ChartPoint | undefined;
                 return (
-                  <div className="rounded-md border border-terminal bg-terminal-card p-3 shadow-xl">
+                  <div className="rounded-terminal border border-terminal bg-terminal-card p-3 shadow-xl">
                     <p className="font-terminal text-xs text-terminal-muted mb-2">
                       {format(new Date(point?.date || Date.now()), "PPP")}
                     </p>

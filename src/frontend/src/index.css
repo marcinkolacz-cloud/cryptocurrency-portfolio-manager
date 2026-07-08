@@ -21,7 +21,7 @@
     --terminal-border: #1a1d24;
     --terminal-green: #00ff88;
     --terminal-red: #ff3b30;
-    --terminal-grid: rgba(0, 255, 136, 0.08);
+    --terminal-grid: rgba(16, 185, 129, 0.12);
     --terminal-axis: rgba(0, 255, 136, 0.45);
     --terminal-axis-label: rgba(0, 255, 136, 0.75);
     --terminal-text: rgba(255, 255, 255, 0.92);
@@ -29,6 +29,8 @@
     --terminal-card-pad: 0.875rem;
     --terminal-row-height: 2.25rem;
     --radius: 0.625rem;
+    /* Sharp 2px corner token for dashboard terminal surfaces (does NOT change global --radius) */
+    --radius-terminal: 2px;
     --background: 0.98 0 0;
     --foreground: 0.145 0 0;
     --card: 1 0 0;
@@ -168,8 +170,12 @@
   transition: fill 0.3s ease;
 }
 
-/* Recharts text elements in dark mode - maximum contrast */
-.dark .recharts-text {
+/* Recharts text elements in dark mode - maximum contrast.
+   Scoped to NOT override terminal-mode inline tick fills: the
+   `:not(.recharts-cartesian-axis-tick-value)` guard lets the terminal
+   green axis labels (set inline via tick.fill) win, while other recharts
+   text (pie labels, etc.) still gets the bright dark-mode fill. */
+.dark .recharts-text:not(.recharts-cartesian-axis-tick-value) {
   fill: rgba(255, 255, 255, 1);
   font-weight: 600;
 }
@@ -180,10 +186,13 @@
   transition: fill 0.3s ease;
 }
 
-/* Recharts cartesian axis tick in dark mode - maximum readability */
+/* Recharts cartesian axis tick in dark mode.
+   Removed the white-force override so the inline terminal-green tick fill
+   (rgba(0,255,136,0.75)) and fontFamily (var(--font-mono-terminal)) set
+   via the Recharts `tick` prop actually apply in dark mode. Only font-weight
+   is kept as a soft default, which inline styles can still override. */
 .dark .recharts-cartesian-axis-tick-value {
-  fill: rgba(255, 255, 255, 1);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Recharts legend text in light mode */
@@ -192,9 +201,12 @@
   transition: color 0.3s ease;
 }
 
-/* Recharts legend text in dark mode - bright and clear */
+/* Recharts legend text in dark mode - bright and clear.
+   Removed the `!important` white-force override so terminal-mode legend
+   text (styled via a formatter callback returning <span className="font-terminal">)
+   can apply its own color. Without !important, the inline/element color wins. */
 .dark .recharts-legend-item-text {
-  color: rgba(255, 255, 255, 1) !important;
+  color: rgba(255, 255, 255, 1);
   font-weight: 600;
 }
 
@@ -249,6 +261,13 @@
   }
   .h-terminal-row {
     height: var(--terminal-row-height);
+  }
+
+  /* Sharp 2px corner utility for dashboard terminal surfaces.
+     Mirrors the `rounded-terminal` Tailwind class from borderRadius.terminal
+     so it can be used in plain CSS / className contexts alike. */
+  .rounded-terminal {
+    border-radius: var(--radius-terminal);
   }
 
   .modal-overlay {

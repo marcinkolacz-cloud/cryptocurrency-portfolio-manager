@@ -83,7 +83,10 @@ export default {
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',
-                sm: 'calc(var(--radius) - 4px)'
+                sm: 'calc(var(--radius) - 4px)',
+                /* Sharp 2px corners for dashboard terminal surfaces (cards, buttons, inputs, badges, tooltips).
+                   Does NOT alter the global --radius used by light/dark non-dashboard pages. */
+                terminal: '2px'
             },
             boxShadow: {
                 xs: '0 1px 2px 0 rgba(0,0,0,0.05)'

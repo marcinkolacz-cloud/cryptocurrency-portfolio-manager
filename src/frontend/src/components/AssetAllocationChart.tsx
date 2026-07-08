@@ -114,11 +114,19 @@ export default function AssetAllocationChart({
 
   const hasData = chartData.length > 0;
 
+  // Explicit max with 10% headroom so a dominant asset (e.g. 95% allocation)
+  // does not fill 100% of the chart height — smaller assets stay visible.
+  const maxValue = useMemo(() => {
+    if (chartData.length === 0) return 0;
+    return Math.max(...chartData.map((d) => d.displayValue));
+  }, [chartData]);
+  const yAxisDomain: [number, number] = [0, maxValue * 1.1];
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-md border border-terminal bg-terminal-card p-3 shadow-xl">
+        <div className="rounded-terminal border border-terminal bg-terminal-card p-3 shadow-xl">
           <p className="font-terminal text-xs font-bold text-terminal mb-2">
             {data.name}
           </p>
@@ -157,8 +165,8 @@ export default function AssetAllocationChart({
   };
 
   return (
-    <Card className="border border-terminal bg-terminal-card p-3">
-      <CardHeader className="gap-2 p-3">
+    <Card className="rounded-terminal border border-terminal bg-terminal-card p-3">
+      <CardHeader className="gap-2 p-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold text-terminal">
             {t.assetAllocation}
@@ -168,7 +176,7 @@ export default function AssetAllocationChart({
               variant={showPercentage ? "outline" : "default"}
               size="sm"
               onClick={() => setShowPercentage(false)}
-              className="font-terminal"
+              className="rounded-terminal font-terminal"
             >
               {t.showDollar}
             </Button>
@@ -176,14 +184,14 @@ export default function AssetAllocationChart({
               variant={showPercentage ? "default" : "outline"}
               size="sm"
               onClick={() => setShowPercentage(true)}
-              className="font-terminal"
+              className="rounded-terminal font-terminal"
             >
               {t.showPercentage}
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         {!hasData ? (
           <div className="h-[400px] flex flex-col items-center justify-center text-center bg-terminal">
             <p className="text-terminal-muted font-terminal text-sm">
@@ -200,7 +208,13 @@ export default function AssetAllocationChart({
                 data={chartData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
               >
-                <CartesianGrid stroke="rgba(0,255,136,0.08)" strokeWidth={1} />
+                <CartesianGrid
+                  stroke="var(--terminal-grid)"
+                  strokeWidth={1}
+                  strokeDasharray="2 2"
+                  horizontal={true}
+                  vertical={true}
+                />
                 <XAxis
                   dataKey="name"
                   angle={-45}
@@ -218,6 +232,7 @@ export default function AssetAllocationChart({
                   tick={<CustomYAxisTick />}
                   width={showPercentage ? 60 : 100}
                   stroke="rgba(0,255,136,0.45)"
+                  domain={yAxisDomain}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
@@ -229,7 +244,8 @@ export default function AssetAllocationChart({
                 <Bar
                   dataKey="displayValue"
                   name={showPercentage ? t.percentage : t.value}
-                  radius={[8, 8, 0, 0]}
+                  barSize={40}
+                  radius={[2, 2, 0, 0]}
                 >
                   {chartData.map((entry, index) => (
                     <Cell
