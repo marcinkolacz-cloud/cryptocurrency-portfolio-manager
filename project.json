@@ -1,16 +1,18 @@
 {
-  "overview": "Cryptocurrency portfolio manager with admin-only custom token search and add via a dialog UI.",
+  "overview": "A cryptocurrency portfolio manager that tracks holdings, transactions, and live prices with Polish-first i18n.",
   "features": [
-    "Admin-only Add Token dialog with CoinGecko search",
-    "Custom priority asset list display",
-    "Terminal-dark themed UI matching existing components"
+    "Track buy and sell transactions per portfolio",
+    "Live price fetching from CoinGecko",
+    "Admin-managed custom priority tokens",
+    "Realized and unrealized profit and loss tracking",
+    "Polish and English language support"
   ],
-  "category": "productivity",
+  "category": "finance",
   "tags": [
     "cryptocurrency",
     "portfolio",
-    "admin",
-    "token-management"
+    "finance",
+    "polish"
   ],
-  "last_updated": "2026-07-08T13:33:28.676Z"
+  "last_updated": "2026-07-08T17:28:59.940Z"
 }

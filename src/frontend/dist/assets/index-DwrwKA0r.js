@@ -36845,6 +36845,19 @@ const UserRole = Variant({
   "user": Null,
   "guest": Null
 });
+const Value = Variant({
+  "int": Int,
+  "nat": Nat,
+  "float": Float64,
+  "bool": Bool,
+  "null": Null,
+  "text": Text$1
+});
+const Cell$1 = Record({ "value": Value, "name": Text$1 });
+const Result = Record({
+  "hasMore": Bool,
+  "rows": Vec(Vec(Cell$1))
+});
 const UserProfile = Record({
   "theme": Text$1,
   "name": Text$1,
@@ -36887,32 +36900,12 @@ const Asset = Record({
   "realizedProfitLoss": Float64,
   "symbol": Text$1
 });
-const HistoricalProfitLoss = Record({
-  "totalProfitLoss": Float64,
-  "timestamp": Int
-});
-const HistoricalTotalValue = Record({
-  "totalValue": Float64,
-  "timestamp": Int
-});
-const HistoricalUnrealizedProfitLoss = Record({
-  "timestamp": Int,
-  "unrealizedProfitLoss": Float64
-});
-const HistoricalValue = Record({
-  "totalValue": Float64,
-  "timestamp": Int
-});
 const Portfolio = Record({
   "id": Nat,
-  "historicalUnrealizedProfitLoss": Vec(HistoricalUnrealizedProfitLoss),
-  "historicalValues": Vec(HistoricalValue),
   "totalProfitLoss": Float64,
-  "historicalTotalValue": Vec(HistoricalTotalValue),
   "name": Text$1,
   "createdAt": Int,
   "assets": Vec(Asset),
-  "historicalProfitLoss": Vec(HistoricalProfitLoss),
   "trackedAssets": Vec(Text$1),
   "totalPurchaseValue": Float64,
   "transactions": Vec(Transaction),
@@ -36968,6 +36961,7 @@ Service({
   "deletePortfolio": Func([Nat], [], []),
   "deleteTransaction": Func([Nat, Nat], [], []),
   "editTransaction": Func([Nat, Nat, Transaction], [], []),
+  "execute": Func([Text$1], [Result], ["query"]),
   "fetchHistoricalPriceData": Func([Text$1], [Text$1], []),
   "fetchMarketData": Func([], [], []),
   "fetchPriorityAssetPrices": Func([], [], []),
@@ -36981,6 +36975,7 @@ Service({
     [Vec(Tuple(Text$1, Text$1))],
     ["query"]
   ),
+  "getHistoricalPrice": Func([Text$1, Int], [Float64], []),
   "getLastFetchError": Func(
     [],
     [
@@ -37001,26 +36996,6 @@ Service({
   "getMarketData": Func([], [Vec(MarketData)], ["query"]),
   "getMarketDataStatus": Func([], [Opt(MarketDataStatus)], ["query"]),
   "getPortfolioAssets": Func([Nat], [Vec(Asset)], ["query"]),
-  "getPortfolioHistoricalProfitLoss": Func(
-    [Nat],
-    [Vec(HistoricalProfitLoss)],
-    ["query"]
-  ),
-  "getPortfolioHistoricalTotalValue": Func(
-    [Nat],
-    [Vec(HistoricalTotalValue)],
-    ["query"]
-  ),
-  "getPortfolioHistoricalUnrealizedProfitLoss": Func(
-    [Nat],
-    [Vec(HistoricalUnrealizedProfitLoss)],
-    ["query"]
-  ),
-  "getPortfolioHistoricalValues": Func(
-    [Nat],
-    [Vec(HistoricalValue)],
-    ["query"]
-  ),
   "getPortfolioSummary": Func(
     [Nat],
     [
@@ -37072,7 +37047,13 @@ Service({
   "initializeAccessControl": Func([], [], []),
   "isAuthenticated": Func([], [Bool], ["query"]),
   "isCallerAdmin": Func([], [Bool], ["query"]),
+  "removeCustomPriorityAsset": Func(
+    [Text$1],
+    [Record({ "error": Opt(Text$1), "success": Bool })],
+    []
+  ),
   "saveCallerUserProfile": Func([UserProfile], [], []),
+  "schema": Func([], [Text$1], ["query"]),
   "searchCoinGeckoTokens": Func(
     [Text$1],
     [
@@ -37112,6 +37093,19 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "admin": IDL2.Null,
     "user": IDL2.Null,
     "guest": IDL2.Null
+  });
+  const Value2 = IDL2.Variant({
+    "int": IDL2.Int,
+    "nat": IDL2.Nat,
+    "float": IDL2.Float64,
+    "bool": IDL2.Bool,
+    "null": IDL2.Null,
+    "text": IDL2.Text
+  });
+  const Cell3 = IDL2.Record({ "value": Value2, "name": IDL2.Text });
+  const Result2 = IDL2.Record({
+    "hasMore": IDL2.Bool,
+    "rows": IDL2.Vec(IDL2.Vec(Cell3))
   });
   const UserProfile2 = IDL2.Record({
     "theme": IDL2.Text,
@@ -37155,32 +37149,12 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "realizedProfitLoss": IDL2.Float64,
     "symbol": IDL2.Text
   });
-  const HistoricalProfitLoss2 = IDL2.Record({
-    "totalProfitLoss": IDL2.Float64,
-    "timestamp": IDL2.Int
-  });
-  const HistoricalTotalValue2 = IDL2.Record({
-    "totalValue": IDL2.Float64,
-    "timestamp": IDL2.Int
-  });
-  const HistoricalUnrealizedProfitLoss2 = IDL2.Record({
-    "timestamp": IDL2.Int,
-    "unrealizedProfitLoss": IDL2.Float64
-  });
-  const HistoricalValue2 = IDL2.Record({
-    "totalValue": IDL2.Float64,
-    "timestamp": IDL2.Int
-  });
   const Portfolio2 = IDL2.Record({
     "id": IDL2.Nat,
-    "historicalUnrealizedProfitLoss": IDL2.Vec(HistoricalUnrealizedProfitLoss2),
-    "historicalValues": IDL2.Vec(HistoricalValue2),
     "totalProfitLoss": IDL2.Float64,
-    "historicalTotalValue": IDL2.Vec(HistoricalTotalValue2),
     "name": IDL2.Text,
     "createdAt": IDL2.Int,
     "assets": IDL2.Vec(Asset2),
-    "historicalProfitLoss": IDL2.Vec(HistoricalProfitLoss2),
     "trackedAssets": IDL2.Vec(IDL2.Text),
     "totalPurchaseValue": IDL2.Float64,
     "transactions": IDL2.Vec(Transaction2),
@@ -37236,6 +37210,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "deletePortfolio": IDL2.Func([IDL2.Nat], [], []),
     "deleteTransaction": IDL2.Func([IDL2.Nat, IDL2.Nat], [], []),
     "editTransaction": IDL2.Func([IDL2.Nat, IDL2.Nat, Transaction2], [], []),
+    "execute": IDL2.Func([IDL2.Text], [Result2], ["query"]),
     "fetchHistoricalPriceData": IDL2.Func([IDL2.Text], [IDL2.Text], []),
     "fetchMarketData": IDL2.Func([], [], []),
     "fetchPriorityAssetPrices": IDL2.Func([], [], []),
@@ -37249,6 +37224,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Vec(IDL2.Tuple(IDL2.Text, IDL2.Text))],
       ["query"]
     ),
+    "getHistoricalPrice": IDL2.Func([IDL2.Text, IDL2.Int], [IDL2.Float64], []),
     "getLastFetchError": IDL2.Func(
       [],
       [
@@ -37273,26 +37249,6 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "getPortfolioAssets": IDL2.Func([IDL2.Nat], [IDL2.Vec(Asset2)], ["query"]),
-    "getPortfolioHistoricalProfitLoss": IDL2.Func(
-      [IDL2.Nat],
-      [IDL2.Vec(HistoricalProfitLoss2)],
-      ["query"]
-    ),
-    "getPortfolioHistoricalTotalValue": IDL2.Func(
-      [IDL2.Nat],
-      [IDL2.Vec(HistoricalTotalValue2)],
-      ["query"]
-    ),
-    "getPortfolioHistoricalUnrealizedProfitLoss": IDL2.Func(
-      [IDL2.Nat],
-      [IDL2.Vec(HistoricalUnrealizedProfitLoss2)],
-      ["query"]
-    ),
-    "getPortfolioHistoricalValues": IDL2.Func(
-      [IDL2.Nat],
-      [IDL2.Vec(HistoricalValue2)],
-      ["query"]
-    ),
     "getPortfolioSummary": IDL2.Func(
       [IDL2.Nat],
       [
@@ -37344,7 +37300,13 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "initializeAccessControl": IDL2.Func([], [], []),
     "isAuthenticated": IDL2.Func([], [IDL2.Bool], ["query"]),
     "isCallerAdmin": IDL2.Func([], [IDL2.Bool], ["query"]),
+    "removeCustomPriorityAsset": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Record({ "error": IDL2.Opt(IDL2.Text), "success": IDL2.Bool })],
+      []
+    ),
     "saveCallerUserProfile": IDL2.Func([UserProfile2], [], []),
+    "schema": IDL2.Func([], [IDL2.Text], ["query"]),
     "searchCoinGeckoTokens": IDL2.Func(
       [IDL2.Text],
       [
@@ -37492,6 +37454,20 @@ class Backend {
       return result;
     }
   }
+  async execute(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.execute(arg0);
+        return from_candid_Result_n5(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.execute(arg0);
+      return from_candid_Result_n5(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async fetchHistoricalPriceData(arg0) {
     if (this.processError) {
       try {
@@ -37566,42 +37542,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfile();
-        return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfile();
-      return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserProfileWithStatus() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfileWithStatus();
-        return from_candid_AuthResult_1_n6(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_1_n14(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfileWithStatus();
-      return from_candid_AuthResult_1_n6(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_1_n14(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCustomPriorityAssets() {
@@ -37618,18 +37594,32 @@ class Backend {
       return result;
     }
   }
+  async getHistoricalPrice(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getHistoricalPrice(arg0, arg1);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getHistoricalPrice(arg0, arg1);
+      return result;
+    }
+  }
   async getLastFetchError() {
     if (this.processError) {
       try {
         const result = await this.actor.getLastFetchError();
-        return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n18(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getLastFetchError();
-      return from_candid_record_n10(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n18(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMarketData() {
@@ -37650,14 +37640,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMarketDataStatus();
-        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMarketDataStatus();
-      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioAssets(arg0) {
@@ -37674,74 +37664,18 @@ class Backend {
       return result;
     }
   }
-  async getPortfolioHistoricalProfitLoss(arg0) {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getPortfolioHistoricalProfitLoss(arg0);
-        return result;
-      } catch (e3) {
-        this.processError(e3);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getPortfolioHistoricalProfitLoss(arg0);
-      return result;
-    }
-  }
-  async getPortfolioHistoricalTotalValue(arg0) {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getPortfolioHistoricalTotalValue(arg0);
-        return result;
-      } catch (e3) {
-        this.processError(e3);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getPortfolioHistoricalTotalValue(arg0);
-      return result;
-    }
-  }
-  async getPortfolioHistoricalUnrealizedProfitLoss(arg0) {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getPortfolioHistoricalUnrealizedProfitLoss(arg0);
-        return result;
-      } catch (e3) {
-        this.processError(e3);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getPortfolioHistoricalUnrealizedProfitLoss(arg0);
-      return result;
-    }
-  }
-  async getPortfolioHistoricalValues(arg0) {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getPortfolioHistoricalValues(arg0);
-        return result;
-      } catch (e3) {
-        this.processError(e3);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getPortfolioHistoricalValues(arg0);
-      return result;
-    }
-  }
   async getPortfolioSummary(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfolioSummary(arg0);
-        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfolioSummary(arg0);
-      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioTrackedAssets(arg0) {
@@ -37790,14 +37724,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfoliosWithStatus();
-        return from_candid_AuthResult_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_n22(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfoliosWithStatus();
-      return from_candid_AuthResult_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_n22(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPriorityAssets() {
@@ -37832,28 +37766,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getTechnicalData(arg0);
-        return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getTechnicalData(arg0);
-      return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserProfile(arg0);
-        return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserProfile(arg0);
-      return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
     }
   }
   async initializeAccessControl() {
@@ -37898,6 +37832,20 @@ class Backend {
       return result;
     }
   }
+  async removeCustomPriorityAsset(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.removeCustomPriorityAsset(arg0);
+        return from_candid_record_n1(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.removeCustomPriorityAsset(arg0);
+      return from_candid_record_n1(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async saveCallerUserProfile(arg0) {
     if (this.processError) {
       try {
@@ -37912,18 +37860,32 @@ class Backend {
       return result;
     }
   }
+  async schema() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.schema();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.schema();
+      return result;
+    }
+  }
   async searchCoinGeckoTokens(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.searchCoinGeckoTokens(arg0);
-        return from_candid_record_n17(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n25(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchCoinGeckoTokens(arg0);
-      return from_candid_record_n17(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n25(this._uploadFile, this._downloadFile, result);
     }
   }
   async transform(arg0) {
@@ -37969,31 +37931,40 @@ class Backend {
     }
   }
 }
-function from_candid_AuthResult_1_n6(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n7(_uploadFile, _downloadFile, value);
-}
-function from_candid_AuthResult_n14(_uploadFile, _downloadFile, value) {
+function from_candid_AuthResult_1_n14(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n15(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n8(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n9(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_n22(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n11(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
+function from_candid_Cell_n9(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n12(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
+function from_candid_Result_n5(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n6(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n16(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n17(_uploadFile, _downloadFile, value);
+}
+function from_candid_Value_n11(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n13(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n16(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n19(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n2(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n5(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n20(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n21(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n24(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n1(_uploadFile, _downloadFile, value) {
@@ -38004,16 +37975,49 @@ function from_candid_record_n1(_uploadFile, _downloadFile, value) {
 }
 function from_candid_record_n10(_uploadFile, _downloadFile, value) {
   return {
-    marketData: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.marketData)),
-    priorityAssets: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.priorityAssets)),
-    technicalData: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.technicalData))
+    value: from_candid_Value_n11(_uploadFile, _downloadFile, value.value),
+    name: value.name
   };
 }
-function from_candid_record_n17(_uploadFile, _downloadFile, value) {
+function from_candid_record_n18(_uploadFile, _downloadFile, value) {
+  return {
+    marketData: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.marketData)),
+    priorityAssets: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.priorityAssets)),
+    technicalData: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.technicalData))
+  };
+}
+function from_candid_record_n25(_uploadFile, _downloadFile, value) {
   return {
     results: value.results,
     error: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.error))
   };
+}
+function from_candid_record_n6(_uploadFile, _downloadFile, value) {
+  return {
+    hasMore: value.hasMore,
+    rows: from_candid_vec_n7(_uploadFile, _downloadFile, value.rows)
+  };
+}
+function from_candid_variant_n12(_uploadFile, _downloadFile, value) {
+  return "int" in value ? {
+    __kind__: "int",
+    int: value.int
+  } : "nat" in value ? {
+    __kind__: "nat",
+    nat: value.nat
+  } : "float" in value ? {
+    __kind__: "float",
+    float: value.float
+  } : "bool" in value ? {
+    __kind__: "bool",
+    bool: value.bool
+  } : "null" in value ? {
+    __kind__: "null",
+    null: value.null
+  } : "text" in value ? {
+    __kind__: "text",
+    text: value.text
+  } : value;
 }
 function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -38027,7 +38031,10 @@ function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
     unauthorized: value.unauthorized
   } : value;
 }
-function from_candid_variant_n7(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n17(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+}
+function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -38039,8 +38046,11 @@ function from_candid_variant_n7(_uploadFile, _downloadFile, value) {
     unauthorized: value.unauthorized
   } : value;
 }
-function from_candid_variant_n9(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+function from_candid_vec_n7(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_vec_n8(_uploadFile, _downloadFile, x3));
+}
+function from_candid_vec_n8(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_Cell_n9(_uploadFile, _downloadFile, x3));
 }
 function to_candid_UserRole_n3(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n4(_uploadFile, _downloadFile, value);
@@ -38513,6 +38523,51 @@ function useGetCustomPriorityAssets() {
     enabled: !!actor && !actorFetching,
     staleTime: 3e4
   });
+}
+function useRemoveCustomPriorityAsset() {
+  const { actor } = useActor();
+  const queryClient2 = useQueryClient();
+  return useMutation({
+    mutationFn: async (coinGeckoId) => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Removing custom priority asset:", coinGeckoId);
+      const result = await actor.removeCustomPriorityAsset(coinGeckoId);
+      return {
+        success: (result == null ? void 0 : result.success) === true,
+        error: result == null ? void 0 : result.error
+      };
+    },
+    onSuccess: () => {
+      console.log("Custom priority asset removed successfully");
+      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
+      queryClient2.invalidateQueries({ queryKey: ["customPriorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error removing custom priority asset:", error);
+    }
+  });
+}
+function useGetHistoricalPrice() {
+  const { actor } = useActor();
+  return async (coinGeckoId, date2) => {
+    if (!actor) {
+      console.error("Actor not available for historical price fetch");
+      return null;
+    }
+    try {
+      const price = await actor.getHistoricalPrice(coinGeckoId, date2);
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+        console.warn(
+          `Historical price for ${coinGeckoId} on ${date2} was invalid (${price}); falling back`
+        );
+        return null;
+      }
+      return price;
+    } catch (error) {
+      console.error("Error fetching historical price:", error);
+      return null;
+    }
+  };
 }
 function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) {
   if (!portfolio) {
@@ -69242,8 +69297,10 @@ const translations$a = {
     fillAll: "Wypełnij wszystkie pola",
     loadingMarketData: "Ładowanie danych rynkowych...",
     insufficientBalance: "Niewystarczająca ilość do sprzedaży",
+    insufficientHoldings: "Nie posiadasz wystarczającej ilości {symbol} do sprzedaży (masz {held}, próbujesz sprzedać {sell})",
     available: "Dostępne",
-    freeTokenNote: "Cena $0 - użyto aktualnej ceny rynkowej",
+    freeTokenNoteMarket: "Cena $0 - użyto aktualnej ceny rynkowej",
+    freeTokenNoteHistorical: "Cena $0 - użyto ceny historycznej",
     refreshAssets: "Odśwież listę aktywów",
     assetsLoaded: "Załadowano aktywów",
     close: "Zamknij"
@@ -69278,8 +69335,10 @@ const translations$a = {
     fillAll: "Fill all fields",
     loadingMarketData: "Loading market data...",
     insufficientBalance: "Insufficient amount to sell",
+    insufficientHoldings: "Insufficient {symbol} to sell (you have {held}, attempting to sell {sell})",
     available: "Available",
-    freeTokenNote: "Price $0 - current market price used",
+    freeTokenNoteMarket: "Price $0 - current market price used",
+    freeTokenNoteHistorical: "Price $0 - historical price used",
     refreshAssets: "Refresh asset list",
     assetsLoaded: "assets loaded",
     close: "Close"
@@ -69302,6 +69361,7 @@ function TransactionDialog({
   const [comment, setComment] = reactExports.useState("");
   const [open, setOpen] = reactExports.useState(false);
   const [calendarOpen, setCalendarOpen] = reactExports.useState(false);
+  const [freeTokenPriceSource, setFreeTokenPriceSource] = reactExports.useState(null);
   const addTransaction = useAddTransaction();
   const {
     data: marketData,
@@ -69310,6 +69370,7 @@ function TransactionDialog({
     isFetching: marketDataFetching
   } = useGetMarketData();
   const { data: priorityAssets } = useGetPriorityAssets();
+  const getHistoricalPrice = useGetHistoricalPrice();
   const t2 = translations$a[language];
   reactExports.useEffect(() => {
     if (preselectedAsset) {
@@ -69361,6 +69422,7 @@ function TransactionDialog({
     return type === "buy" && Number.parseFloat(price) === 0 && selectedAsset;
   }, [type, price, selectedAsset]);
   const handleAdd = async () => {
+    var _a3;
     if (!selectedAsset || !amount) {
       ue$1.error(t2.fillAll);
       return;
@@ -69368,11 +69430,44 @@ function TransactionDialog({
     const amountNum = Number.parseFloat(amount);
     let priceNum = Number.parseFloat(price);
     if (type === "buy" && priceNum === 0 && selectedAsset) {
-      priceNum = selectedAsset.price;
+      const todayMidnight = /* @__PURE__ */ new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      const txMidnight = new Date(date2);
+      txMidnight.setHours(0, 0, 0, 0);
+      const isHistoricalDate = txMidnight.getTime() !== todayMidnight.getTime();
+      let resolvedPrice = 0;
+      let source = "market";
+      if (isHistoricalDate) {
+        const coinGeckoId = (_a3 = (priorityAssets || []).find(
+          (coin) => coin.symbol.toUpperCase() === selectedAsset.symbol.toUpperCase()
+        )) == null ? void 0 : _a3.id;
+        if (coinGeckoId) {
+          try {
+            const historical = await getHistoricalPrice(
+              coinGeckoId,
+              BigInt(txMidnight.getTime() * 1e6)
+            );
+            if (historical && historical > 0) {
+              resolvedPrice = historical;
+              source = "historical";
+            }
+          } catch (error) {
+            console.error("Historical price lookup failed:", error);
+          }
+        }
+      }
+      if (resolvedPrice === 0) {
+        resolvedPrice = selectedAsset.price;
+        source = "market";
+      }
+      priceNum = resolvedPrice;
+      setFreeTokenPriceSource(source);
       if (priceNum === 0) {
         ue$1.error(t2.fillAll);
         return;
       }
+    } else {
+      setFreeTokenPriceSource(null);
     }
     if (Number.isNaN(amountNum) || Number.isNaN(priceNum) || amountNum <= 0) {
       ue$1.error(t2.fillAll);
@@ -69420,7 +69515,18 @@ function TransactionDialog({
       onClose();
     } catch (error) {
       console.error("Add transaction error:", error);
-      ue$1.error(t2.error);
+      const message2 = typeof error === "object" && error !== null && "message" in error ? String(error.message) : String(error);
+      const match2 = message2.match(
+        /Insufficient holdings: cannot sell (\S+) (\S+) when only (\S+) are held/
+      );
+      if (match2) {
+        const [, sell, symbol, held] = match2;
+        ue$1.error(
+          t2.insufficientHoldings.replace("{symbol}", symbol).replace("{held}", held).replace("{sell}", sell)
+        );
+      } else {
+        ue$1.error(t2.error);
+      }
     }
   };
   const handleRefreshAssets = async () => {
@@ -69646,8 +69752,8 @@ function TransactionDialog({
           }
         )
       ] }),
-      isFreeToken && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-lg border border-blue-500/20 bg-blue-500/5 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-blue-600 dark:text-blue-400", children: [
-        t2.freeTokenNote,
+      isFreeToken && freeTokenPriceSource && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-lg border border-blue-500/20 bg-blue-500/5 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-blue-600 dark:text-blue-400", children: [
+        freeTokenPriceSource === "historical" ? t2.freeTokenNoteHistorical : t2.freeTokenNoteMarket,
         ": ",
         formatCurrency((selectedAsset == null ? void 0 : selectedAsset.price) || 0)
       ] }) }),
@@ -73137,6 +73243,8 @@ function AssetList({
             const profitLoss = asset.profitLoss || 0;
             const profitLossPercentage = asset.profitLossPercentage || 0;
             const isPositive = profitLoss >= 0;
+            const purchaseValue = asset.purchaseValue || 0;
+            const hasCostBasis = purchaseValue > 0;
             const totalSoldCost = asset.totalSoldCost || 0;
             const hasSellHistory = totalSoldCost > 0;
             const realizedPercentage = asset.realizedProfitLossPercentage || 0;
@@ -73173,13 +73281,13 @@ function AssetList({
                       ]
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal py-1 px-2", children: hasCostBasis ? /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "div",
                     {
                       className: `font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`,
                       children: formatPercent(profitLossPercentage)
                     }
-                  ) }),
+                  ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-terminal-muted", children: "—" }) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal py-1 px-2", children: hasSellHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "div",
                     {
@@ -73934,7 +74042,9 @@ const translations$4 = {
     noCustomAssets: "Brak dodanych tokenów",
     loadingCustom: "Ładowanie...",
     selectResultHint: "Wybierz wynik, aby kontynuować.",
-    tickerRequired: "Ticker nie może być pusty."
+    tickerRequired: "Ticker nie może być pusty.",
+    remove: "Usuń",
+    removeError: "Błąd usuwania tokenu"
   },
   en: {
     title: "Add token",
@@ -73956,7 +74066,9 @@ const translations$4 = {
     noCustomAssets: "No custom tokens added yet",
     loadingCustom: "Loading...",
     selectResultHint: "Select a result to continue.",
-    tickerRequired: "Ticker cannot be empty."
+    tickerRequired: "Ticker cannot be empty.",
+    remove: "Remove",
+    removeError: "Error removing token"
   }
 };
 function AddTokenDialog({
@@ -73975,6 +74087,7 @@ function AddTokenDialog({
   const [addError, setAddError] = reactExports.useState(null);
   const searchTokensMutation = useSearchCoinGeckoTokens();
   const addAssetMutation = useAddCustomPriorityAsset();
+  const removeAssetMutation = useRemoveCustomPriorityAsset();
   const customAssetsQuery = useGetCustomPriorityAssets();
   const debounceRef = reactExports.useRef(null);
   const hasSearchedRef = reactExports.useRef(false);
@@ -74066,6 +74179,21 @@ function AddTokenDialog({
       console.error("Error adding custom priority asset:", error);
       const message2 = error instanceof Error ? error.message : t2.addError;
       setAddError(message2);
+      ue$1.error(message2);
+    }
+  };
+  const handleRemoveAsset = async (coinGeckoId) => {
+    try {
+      const response = await removeAssetMutation.mutateAsync(coinGeckoId);
+      if (response.success) {
+        await customAssetsQuery.refetch();
+      } else {
+        const message2 = response.error || t2.removeError;
+        ue$1.error(message2);
+      }
+    } catch (error) {
+      console.error("Error removing custom priority asset:", error);
+      const message2 = error instanceof Error ? error.message : t2.removeError;
       ue$1.error(message2);
     }
   };
@@ -74248,21 +74376,39 @@ function AddTokenDialog({
         {
           className: "flex flex-wrap gap-1.5",
           "data-ocid": "add_token.custom_assets_list",
-          children: customAssetsQuery.data.map(([assetId, assetTicker], index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Badge,
-            {
-              variant: "outline",
-              className: "rounded-terminal border-terminal-green/20 bg-terminal-green/10 font-terminal text-terminal-green",
-              "data-ocid": `add_token.custom_asset.item.${index2 + 1}`,
-              children: [
-                assetId,
-                " (",
-                assetTicker,
-                ")"
-              ]
-            },
-            `${assetId}-${assetTicker}`
-          ))
+          children: customAssetsQuery.data.map(([assetId, assetTicker], index2) => {
+            const isRemoving = removeAssetMutation.isPending && removeAssetMutation.variables === assetId;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Badge,
+              {
+                variant: "outline",
+                className: "gap-1 rounded-terminal border-terminal-green/20 bg-terminal-green/10 py-1 pl-2 pr-1 font-terminal text-terminal-green",
+                "data-ocid": `add_token.custom_asset.item.${index2 + 1}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    assetId,
+                    " (",
+                    assetTicker,
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleRemoveAsset(assetId),
+                      disabled: isRemoving,
+                      "aria-label": t2.remove,
+                      title: t2.remove,
+                      className: "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-terminal text-terminal-muted transition-colors hover:text-terminal-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terminal-red/40 disabled:cursor-not-allowed disabled:opacity-50",
+                      "data-ocid": `add_token.delete_button.${index2 + 1}`,
+                      children: isRemoving ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3 w-3 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "h-3 w-3" })
+                    }
+                  )
+                ]
+              },
+              `${assetId}-${assetTicker}`
+            );
+          })
         }
       ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
         "p",
@@ -74516,8 +74662,7 @@ function MarketDataStatusPanel({
   isLoading,
   trackedAssetsCount,
   lastUpdated,
-  calculationQuality,
-  isAdmin = false
+  calculationQuality
 }) {
   const t2 = translations$3[language];
   const [currentTime, setCurrentTime] = reactExports.useState(/* @__PURE__ */ new Date());
@@ -74525,8 +74670,7 @@ function MarketDataStatusPanel({
   const [refreshError, setRefreshError] = reactExports.useState(false);
   const [addTokenOpen, setAddTokenOpen] = reactExports.useState(false);
   const lastFetchErrorQuery = useGetLastFetchError();
-  const isAdminQuery = useGetIsAdmin();
-  const showDebug = isAdmin || isAdminQuery;
+  const showDebug = useGetIsAdmin();
   const fetchMarketDataMutation = useFetchMarketData();
   const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
   const isRefreshing = fetchMarketDataMutation.isPending || fetchPriorityAssetPricesMutation.isPending;

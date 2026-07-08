@@ -7,10 +7,6 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface HistoricalValue {
-    totalValue: number;
-    timestamp: bigint;
-}
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
@@ -70,17 +66,17 @@ export interface TechnicalData {
     volume24h: number;
     symbol: string;
 }
-export interface HistoricalTotalValue {
-    totalValue: number;
-    timestamp: bigint;
-}
-export interface HistoricalProfitLoss {
-    totalProfitLoss: number;
-    timestamp: bigint;
+export interface Result {
+    hasMore: boolean;
+    rows: Array<Array<Cell>>;
 }
 export interface TransformationInput {
     context: Uint8Array;
     response: HttpRequestResult;
+}
+export interface Cell {
+    value: Value;
+    name: string;
 }
 export interface Asset {
     currentPrice: number;
@@ -99,14 +95,10 @@ export interface Asset {
 }
 export interface Portfolio {
     id: bigint;
-    historicalUnrealizedProfitLoss: Array<HistoricalUnrealizedProfitLoss>;
-    historicalValues: Array<HistoricalValue>;
     totalProfitLoss: number;
-    historicalTotalValue: Array<HistoricalTotalValue>;
     name: string;
     createdAt: bigint;
     assets: Array<Asset>;
-    historicalProfitLoss: Array<HistoricalProfitLoss>;
     trackedAssets: Array<string>;
     totalPurchaseValue: number;
     transactions: Array<Transaction>;
@@ -120,10 +112,25 @@ export interface PriorityAsset {
     price: number;
     symbol: string;
 }
-export interface HistoricalUnrealizedProfitLoss {
-    timestamp: bigint;
-    unrealizedProfitLoss: number;
-}
+export type Value = {
+    __kind__: "int";
+    int: bigint;
+} | {
+    __kind__: "nat";
+    nat: bigint;
+} | {
+    __kind__: "float";
+    float: number;
+} | {
+    __kind__: "bool";
+    bool: boolean;
+} | {
+    __kind__: "null";
+    null: null;
+} | {
+    __kind__: "text";
+    text: string;
+};
 export type AuthResult = {
     __kind__: "ok";
     ok: Array<Portfolio>;
@@ -156,6 +163,7 @@ export interface backendInterface {
     deletePortfolio(portfolioId: bigint): Promise<void>;
     deleteTransaction(portfolioId: bigint, transactionId: bigint): Promise<void>;
     editTransaction(portfolioId: bigint, transactionId: bigint, updatedTransaction: Transaction): Promise<void>;
+    execute(qJson: string): Promise<Result>;
     fetchHistoricalPriceData(assetId: string): Promise<string>;
     fetchMarketData(): Promise<void>;
     fetchPriorityAssetPrices(): Promise<void>;
@@ -165,6 +173,7 @@ export interface backendInterface {
     getCallerUserProfileWithStatus(): Promise<AuthResult_1>;
     getCallerUserRole(): Promise<UserRole>;
     getCustomPriorityAssets(): Promise<Array<[string, string]>>;
+    getHistoricalPrice(coinGeckoId: string, date: bigint): Promise<number>;
     getLastFetchError(): Promise<{
         marketData?: {
             error: string;
@@ -182,10 +191,6 @@ export interface backendInterface {
     getMarketData(): Promise<Array<MarketData>>;
     getMarketDataStatus(): Promise<MarketDataStatus | null>;
     getPortfolioAssets(portfolioId: bigint): Promise<Array<Asset>>;
-    getPortfolioHistoricalProfitLoss(portfolioId: bigint): Promise<Array<HistoricalProfitLoss>>;
-    getPortfolioHistoricalTotalValue(portfolioId: bigint): Promise<Array<HistoricalTotalValue>>;
-    getPortfolioHistoricalUnrealizedProfitLoss(portfolioId: bigint): Promise<Array<HistoricalUnrealizedProfitLoss>>;
-    getPortfolioHistoricalValues(portfolioId: bigint): Promise<Array<HistoricalValue>>;
     getPortfolioSummary(portfolioId: bigint): Promise<{
         totalProfitLoss: number;
         totalValue: number;
@@ -207,7 +212,12 @@ export interface backendInterface {
     initializeAccessControl(): Promise<void>;
     isAuthenticated(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    removeCustomPriorityAsset(coinGeckoId: string): Promise<{
+        error?: string;
+        success: boolean;
+    }>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    schema(): Promise<string>;
     searchCoinGeckoTokens(searchQuery: string): Promise<{
         results: Array<{
             id: string;

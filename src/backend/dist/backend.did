@@ -1,3 +1,12 @@
+type Value = 
+ variant {
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
 type UserRole = 
  variant {
    admin;
@@ -43,6 +52,11 @@ type TechnicalData =
    symbol: text;
    volume24h: float64;
  };
+type Result = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
 type PriorityAsset = 
  record {
    id: text;
@@ -56,10 +70,6 @@ type Portfolio =
  record {
    assets: vec Asset;
    createdAt: int;
-   historicalProfitLoss: vec HistoricalProfitLoss;
-   historicalTotalValue: vec HistoricalTotalValue;
-   historicalUnrealizedProfitLoss: vec HistoricalUnrealizedProfitLoss;
-   historicalValues: vec HistoricalValue;
    id: nat;
    name: text;
    totalProfitLoss: float64;
@@ -97,25 +107,10 @@ type HttpHeader =
    name: text;
    value: text;
  };
-type HistoricalValue = 
+type Cell = 
  record {
-   timestamp: int;
-   totalValue: float64;
- };
-type HistoricalUnrealizedProfitLoss = 
- record {
-   timestamp: int;
-   unrealizedProfitLoss: float64;
- };
-type HistoricalTotalValue = 
- record {
-   timestamp: int;
-   totalValue: float64;
- };
-type HistoricalProfitLoss = 
- record {
-   timestamp: int;
-   totalProfitLoss: float64;
+   name: text;
+   value: Value;
  };
 type AuthResult_1 = 
  variant {
@@ -159,6 +154,7 @@ service : {
   deleteTransaction: (portfolioId: nat, transactionId: nat) -> ();
   editTransaction: (portfolioId: nat, transactionId: nat, updatedTransaction:
    Transaction) -> ();
+  execute: (qJson: text) -> (Result) query;
   fetchHistoricalPriceData: (assetId: text) -> (text);
   fetchMarketData: () -> ();
   fetchPriorityAssetPrices: () -> ();
@@ -171,6 +167,7 @@ service : {
                                         text;
                                         text;
                                       }) query;
+  getHistoricalPrice: (coinGeckoId: text, date: int) -> (float64);
   getLastFetchError: () ->
    (record {
       marketData: opt record {
@@ -189,14 +186,6 @@ service : {
   getMarketData: () -> (vec MarketData) query;
   getMarketDataStatus: () -> (opt MarketDataStatus) query;
   getPortfolioAssets: (portfolioId: nat) -> (vec Asset) query;
-  getPortfolioHistoricalProfitLoss: (portfolioId: nat) ->
-   (vec HistoricalProfitLoss) query;
-  getPortfolioHistoricalTotalValue: (portfolioId: nat) ->
-   (vec HistoricalTotalValue) query;
-  getPortfolioHistoricalUnrealizedProfitLoss: (portfolioId: nat) ->
-   (vec HistoricalUnrealizedProfitLoss) query;
-  getPortfolioHistoricalValues: (portfolioId: nat) ->
-   (vec HistoricalValue) query;
   getPortfolioSummary: (portfolioId: nat) ->
    (opt
      record {
@@ -221,7 +210,13 @@ service : {
   initializeAccessControl: () -> ();
   isAuthenticated: () -> (bool) query;
   isCallerAdmin: () -> (bool) query;
+  removeCustomPriorityAsset: (coinGeckoId: text) ->
+   (record {
+      error: opt text;
+      success: bool;
+    });
   saveCallerUserProfile: (profile: UserProfile) -> ();
+  schema: () -> (text) query;
   searchCoinGeckoTokens: (searchQuery: text) ->
    (record {
       error: opt text;

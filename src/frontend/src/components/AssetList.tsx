@@ -488,6 +488,8 @@ export default function AssetList({
                     const profitLossPercentage =
                       asset.profitLossPercentage || 0;
                     const isPositive = profitLoss >= 0;
+                    const purchaseValue = asset.purchaseValue || 0;
+                    const hasCostBasis = purchaseValue > 0;
                     const totalSoldCost = asset.totalSoldCost || 0;
                     const hasSellHistory = totalSoldCost > 0;
                     const realizedPercentage =
@@ -543,11 +545,17 @@ export default function AssetList({
                           </div>
                         </TableCell>
                         <TableCell className="text-center border-r border-terminal py-1 px-2">
-                          <div
-                            className={`font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
-                          >
-                            {formatPercent(profitLossPercentage)}
-                          </div>
+                          {hasCostBasis ? (
+                            <div
+                              className={`font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
+                            >
+                              {formatPercent(profitLossPercentage)}
+                            </div>
+                          ) : (
+                            <div className="font-terminal text-terminal-muted">
+                              —
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-center border-r border-terminal py-1 px-2">
                           {hasSellHistory ? (

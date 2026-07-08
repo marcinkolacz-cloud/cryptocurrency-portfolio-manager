@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "d0efc12fef6e0c0c48de63b57215d3e4e5b04efa70db4664b8b1eab664959f44",
+  "mopsTomlDepsHash": "6e44f57d9793e530a62fa4cf405c6b3e33f59decf95e32ad6e7fc30577ee08f1",
   "deps": {
     "core": "2.6.0",
     "base": "0.16.0",
@@ -8,7 +8,8 @@
     "caffeineai-http-outcalls": "0.1.2",
     "ic": "4.0.0",
     "json": "1.4.0",
-    "xtended-numbers": "0.3.1"
+    "xtended-numbers": "0.3.1",
+    "caffeineai-oql": "0.3.0"
   },
   "hashes": {
     "core@2.6.0": {
@@ -167,6 +168,41 @@
       "xtended-numbers@0.3.1/README.md": "df334a5b7f8774bffe09495de9bacb4616d20ad431d50dd7f04fb3e923044cef",
       "xtended-numbers@0.3.1/src/IntX.mo": "a82947577982a37841ede78c7a4e27568c11bffeb86bb76d03d27eb9ef99a0b3",
       "xtended-numbers@0.3.1/src/NatX.mo": "735ec54844fe8cd6640c4fb0909e8312608db18c192fe278ee9faeb0187217cc"
+    },
+    "caffeineai-oql@0.3.0": {
+      "caffeineai-oql@0.3.0/src/BoolValue.mo": "6183eacb2dfd2cd3da631a398150b58a2f4079e4fb9537ec5e7e925f06b3a1e3",
+      "caffeineai-oql@0.3.0/src/Entity.mo": "cfe7eebff10a4cc228eefd9e9b4cf334084600e7ef298d779f93e301b1ea5340",
+      "caffeineai-oql@0.3.0/src/ArrayEntity.mo": "1d46698cd55b022394037f77a20be80db2bfe79acc7182d9157dea19c59365ed",
+      "caffeineai-oql@0.3.0/mops.toml": "548fd9a60405c7b900722e75e5cc209cb8ca6292b9e172a3544c2bc8ffaec104",
+      "caffeineai-oql@0.3.0/src/Expose.mo": "8a93db1a512dd2a78099b1bbef338796f24722d6352b2968da6780ef27bca87d",
+      "caffeineai-oql@0.3.0/README.md": "75c40cd6822859ddbe9edf9327465dfa0e2a00a07cbb5d58f558a6b642331bfb",
+      "caffeineai-oql@0.3.0/src/Auth.mo": "7d5c03b6625d60e65a704060a21ec3ce634df6f86fde470b87c9ea4d48ea1005",
+      "caffeineai-oql@0.3.0/src/Executor.mo": "d49f5b8d8053b8e76097e848950d217382daae6e2c6c1d46719d8397c7a7ab42",
+      "caffeineai-oql@0.3.0/src/FloatValue.mo": "9275cd950d597ca1b46f0ef3a1807c4f8430b54947f4ecdfc644c4c81030ece1",
+      "caffeineai-oql@0.3.0/src/IntValue.mo": "829a801852d0501272d06e37ad40a180e1252fe168df53a1aeb2c2f4b694a0d3",
+      "caffeineai-oql@0.3.0/src/Int8Value.mo": "d4504f565c2a86671d856f109a4f93d0a1700e14592cab1289ba32921e259389",
+      "caffeineai-oql@0.3.0/src/Json.mo": "c8086b54d28eefb67efe20b0660a1df435847e05abb5b87c19c2ab846c991805",
+      "caffeineai-oql@0.3.0/src/Int64Value.mo": "4fc51bdd3a36de76614180d3af42af88acdc27ed4c9b6d9f5f0b351782241ba4",
+      "caffeineai-oql@0.3.0/src/Int32Value.mo": "77cc53906230996ca6e1a0f92c8807f1b6e17373d5cc7ff4383cf99bed016ebb",
+      "caffeineai-oql@0.3.0/src/Int16Value.mo": "5b58a34e31c8490d37d5b7e70171b9ddc7eb3748188f453115460e3664fab7b3",
+      "caffeineai-oql@0.3.0/src/ListEntity.mo": "a1f091747793184845e8ac2d7232742b4beca84dbf34f1f4a3eb8a3364a18ebd",
+      "caffeineai-oql@0.3.0/src/MapEntity.mo": "442403b206fb9666a612be4316549bfceea87c7bde23072e33b4b46d66aaaacd",
+      "caffeineai-oql@0.3.0/src/Nat16Value.mo": "d75f14e670a27c59e7fe7eb4262b9e5e385b23f32a6a5abc798acbbb21f34d19",
+      "caffeineai-oql@0.3.0/src/Nat64Value.mo": "6211faf9b0c5c3700f2adc3321a74679ef8c182ff1ef50f204dece62bf79d029",
+      "caffeineai-oql@0.3.0/src/Nat32Value.mo": "b4002f6ff2dcf0add9eead0fed03996e754308e3f85394664be6bac9eb8d6669",
+      "caffeineai-oql@0.3.0/src/Predicate.mo": "149d48fcb129c1daaae1d15b5b54f468fae0c2d431274041d9341272e3c54504",
+      "caffeineai-oql@0.3.0/src/PrincipalValue.mo": "a85e3338e825061944217f84adbb95a097cd061be3dcb26633edb7cdf64a5522",
+      "caffeineai-oql@0.3.0/src/Nat8Value.mo": "f73ac5dce27397b48277d8c04c8f614522e68fd81303dd84cfd890be0c1f171a",
+      "caffeineai-oql@0.3.0/src/NatValue.mo": "0326cb16cfbb760f5a1a9587f62bb407d48eea442eee627e766cebb69b6ac609",
+      "caffeineai-oql@0.3.0/src/Query.mo": "db14b720bfaa563c01adcbcc15f5f19ab4d9613795673676b3b928f031ecd23d",
+      "caffeineai-oql@0.3.0/src/Registry.mo": "1ee0bb24049fac5b8067d94b9ab46525a4e40b4faecba67a5c9eb696aef660d1",
+      "caffeineai-oql@0.3.0/src/RecordValue.mo": "17a9b2770b9e6b85f39fdde45f7c98d2f1e860531d72e17f40486f75886b4039",
+      "caffeineai-oql@0.3.0/src/VarArrayEntity.mo": "439a5b12f21ba577902912dc32e02d1453e7eed0a491a00eefd3f48629b60440",
+      "caffeineai-oql@0.3.0/src/SetEntity.mo": "878b37e85a08c00e85651c4eade7faff5ccb406b1359b8b2cd5f673c76972668",
+      "caffeineai-oql@0.3.0/src/Types.mo": "0629a287e9bf17065302ec276c41fb1ae13172e430f7a66634b0ff1b5dee43fc",
+      "caffeineai-oql@0.3.0/src/TextValue.mo": "0631b2e81e0a669cffe0778b872c70ef7a9d0245b16c360b36e92cb69e497cfa",
+      "caffeineai-oql@0.3.0/src/Schema.mo": "c53c1bdecae657529606417166bb8c95e0edf85aeb15d3910ed49141d6ebf7a3",
+      "caffeineai-oql@0.3.0/src/lib.mo": "b37cf4362ce08104e6baf5a096b1121c8b204b54161f6f28c1d5244b02392b37"
     }
   }
 }

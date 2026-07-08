@@ -15,17 +15,31 @@ import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
+import Types "types";
+import Migration "migration";
+import OQL "mo:caffeineai-oql";
+import Expose "mo:caffeineai-oql/Expose";
 
+// The actor must be the only non-imported top-level declaration (M0141), so
+// all domain types live in the imported `Types` module and the migration
+// (OldActor/NewActor/OldPortfolio + the Historical* types it references)
+// lives in the imported `Migration` module. The migration drops the four
+// dead historical* arrays from each Portfolio — see migration.mo.
+(with migration = Migration.run) actor {
+  // Re-export the domain types from the imported Types module. This does two
+  // things: (1) brings the bare names into scope so the rest of the actor can
+  // reference them unqualified, and (2) keeps them in the Candid interface
+  // under the exact names the frontend bindings depend on. The type aliases
+  // are stable-compatible with the previously deployed signature.
+  public type UserProfile = Types.UserProfile;
+  public type Asset = Types.Asset;
+  public type Transaction = Types.Transaction;
+  public type Portfolio = Types.Portfolio;
+  public type MarketData = Types.MarketData;
+  public type PriorityAsset = Types.PriorityAsset;
+  public type TechnicalData = Types.TechnicalData;
+  public type MarketDataStatus = Types.MarketDataStatus;
 
-// An explicit migration is required for the Asset type change: the Asset
-// record gained two new fields (totalSoldCost and realizedProfitLossPercentage)
-// that did not exist in the previously deployed signature in
-// .old/src/backend/dist/backend.most. The migration (Migration.run) maps over
-// every portfolio's assets array and adds both fields with 0.0 defaults on
-// upgrade. recalculateAssets (next edit/delete) recomputes correct values, and
-// updateAssets accumulates correctly on subsequent sells, so the 0.0 defaults
-// are safe.
- actor {
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
    var accessControlState : {
     var adminAssigned : Bool;
@@ -115,13 +129,6 @@ import Error "mo:core/Error";
     AccessControl.hasPermission(_acState, caller, #user);
   };
 
-  public type UserProfile = {
-    name : Text;
-    theme : Text; // "light" or "dark"
-    language : Text; // "pl" or "en"
-    colorScheme : Text; // "default", "gray", "navy"
-  };
-
   public type AuthResult<T> = {
     #ok : T;
     #unauthorized : Text;
@@ -168,106 +175,6 @@ import Error "mo:core/Error";
     lastHealthCheck := Time.now();
   };
 
-  public type Portfolio = {
-    id : Nat;
-    name : Text;
-    createdAt : Int;
-    assets : [Asset];
-    transactions : [Transaction];
-    totalProfitLoss : Float;
-    unrealizedProfitLoss : Float;
-    historicalValues : [HistoricalValue];
-    historicalProfitLoss : [HistoricalProfitLoss];
-    historicalUnrealizedProfitLoss : [HistoricalUnrealizedProfitLoss];
-    totalPurchaseValue : Float;
-    historicalTotalValue : [HistoricalTotalValue];
-    trackedAssets : [Text];
-  };
-
-  public type Asset = {
-    symbol : Text;
-    name : Text;
-    amount : Float;
-    averagePrice : Float;
-    currentPrice : Float;
-    profitLoss : Float;
-    profitLossPercentage : Float;
-    purchaseValue : Float;
-    currentValue : Float;
-    realizedProfitLoss : Float;
-    averagePurchasePrice : Float;
-    totalSoldCost : Float;
-    realizedProfitLossPercentage : Float;
-  };
-
-  public type Transaction = {
-    id : Nat;
-    assetSymbol : Text;
-    assetName : Text;
-    amount : Float;
-    price : Float;
-    type_ : Text; // "buy" or "sell"
-    date : Int;
-    comment : Text;
-  };
-
-  public type MarketData = {
-    id : Nat;
-    symbol : Text;
-    name : Text;
-    price : Float;
-    marketCap : Float;
-    lastUpdated : Int;
-  };
-
-  public type HistoricalValue = {
-    timestamp : Int;
-    totalValue : Float;
-  };
-
-  public type HistoricalProfitLoss = {
-    timestamp : Int;
-    totalProfitLoss : Float;
-  };
-
-  public type HistoricalUnrealizedProfitLoss = {
-    timestamp : Int;
-    unrealizedProfitLoss : Float;
-  };
-
-  public type HistoricalTotalValue = {
-    timestamp : Int;
-    totalValue : Float;
-  };
-
-  public type PriorityAsset = {
-    id : Text;
-    symbol : Text;
-    name : Text;
-    price : Float;
-    marketCap : Float;
-    lastUpdated : Int;
-  };
-
-  public type TechnicalData = {
-    symbol : Text;
-    name : Text;
-    currentPrice : Float;
-    marketCap : Float;
-    change24h : Float;
-    volume24h : Float;
-    lastUpdated : Int;
-  };
-
-  public type MarketDataStatus = {
-    status : Text; // "loading", "connected", "error"
-    lastUpdated : Int;
-    calculationQuality : Float;
-    trackedAssetsCount : Nat;
-    apiHealth : Text; // "healthy", "degraded", "unavailable"
-    colorScheme : Text; // "default", "gray", "navy"
-  };
-
   transient let natMap = OrderedMap.Make<Nat>(Int.compare);
   var portfolios = principalMap.empty<[Portfolio]>();
   var migrationVersion : Nat = 0;
@@ -298,6 +205,198 @@ import Error "mo:core/Error";
   // --default-persistent-actors (same pattern as the state vars above).
   var customPriorityAssetIds : [Text] = [];
   var customTickerMap : [(Text, Text)] = [];
+
+  // OQL exposure — eight entities. User-scoped stores (userProfiles,
+  // portfolios) declare an `owner` column and use #controllerOrScoped so a
+  // non-controller caller only sees its own rows; admin-only stores use
+  // #controllerOnly. The portfolio entity flattens the per-user
+  // `[Portfolio]` array into one row per (owner, portfolio) pair so each
+  // portfolio is individually queryable.
+  include Expose({
+    entities = [
+      // (Principal, UserProfile) — one row per user.
+      OQL.Entity.manual<(Principal, Types.UserProfile)>(
+        "userProfile",
+        func() = principalMap.entries(userProfiles),
+        "UserProfile",
+        "owner",
+      )
+        .sample((Principal.fromText("aaaaa-aa"), {
+          name = "";
+          theme = "";
+          language = "pl";
+          colorScheme = "";
+        }))
+        .payload("owner", func(kv) = kv.0, OQL.PrincipalValue._toRow)
+        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
+        .payload("theme", func(kv) = kv.1.theme, OQL.TextValue._toRow)
+        .payload("language", func(kv) = kv.1.language, OQL.TextValue._toRow)
+        .payload("colorScheme", func(kv) = kv.1.colorScheme, OQL.TextValue._toRow)
+        .ownedBy("owner")
+        .controllerOrScoped()
+        .build(),
+
+      // (Principal, Portfolio) — flattened from portfolios : Map<Principal, [Portfolio]>.
+      OQL.Entity.manual<(Principal, Types.Portfolio)>(
+        "portfolio",
+        func() = Iter.flatten(
+          principalMap.entries(portfolios).map(
+            func(kv : (Principal, [Types.Portfolio])) : Iter.Iter<(Principal, Types.Portfolio)> =
+              Array.map<Types.Portfolio, (Principal, Types.Portfolio)>(
+                kv.1,
+                func(p : Types.Portfolio) : (Principal, Types.Portfolio) = (kv.0, p),
+              ).vals(),
+          ),
+        ),
+        "Portfolio",
+        "id",
+      )
+        .sample((Principal.fromText("aaaaa-aa"), {
+          id = 0;
+          name = "";
+          createdAt = 0;
+          assets = [];
+          transactions = [];
+          totalProfitLoss = 0.0;
+          unrealizedProfitLoss = 0.0;
+          totalPurchaseValue = 0.0;
+          trackedAssets = [];
+        }))
+        .payload("owner", func(kv) = kv.0, OQL.PrincipalValue._toRow)
+        .payload("id", func(kv) = kv.1.id, OQL.NatValue._toRow)
+        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
+        .payload("createdAt", func(kv) = kv.1.createdAt, OQL.IntValue._toRow)
+        .payload("totalProfitLoss", func(kv) = kv.1.totalProfitLoss, OQL.FloatValue._toRow)
+        .payload("unrealizedProfitLoss", func(kv) = kv.1.unrealizedProfitLoss, OQL.FloatValue._toRow)
+        .payload("totalPurchaseValue", func(kv) = kv.1.totalPurchaseValue, OQL.FloatValue._toRow)
+        .ownedBy("owner")
+        .controllerOrScoped()
+        .build(),
+
+      // MarketData — admin-only.
+      OQL.Entity.manual<(Nat, Types.MarketData)>(
+        "marketData",
+        func() = natMap.entries(marketData),
+        "MarketData",
+        "id",
+      )
+        .sample((0, {
+          id = 0;
+          symbol = "";
+          name = "";
+          price = 0.0;
+          marketCap = 0.0;
+          lastUpdated = 0;
+        }))
+        .payload("id", func(kv) = kv.1.id, OQL.NatValue._toRow)
+        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
+        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
+        .payload("price", func(kv) = kv.1.price, OQL.FloatValue._toRow)
+        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
+        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
+        .controllerOnly()
+        .build(),
+
+      // PriorityAsset — admin-only.
+      OQL.Entity.manual<(Nat, Types.PriorityAsset)>(
+        "priorityAsset",
+        func() = natMap.entries(priorityAssets),
+        "PriorityAsset",
+        "id",
+      )
+        .sample((0, {
+          id = "";
+          symbol = "";
+          name = "";
+          price = 0.0;
+          marketCap = 0.0;
+          lastUpdated = 0;
+        }))
+        .payload("id", func(kv) = kv.1.id, OQL.TextValue._toRow)
+        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
+        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
+        .payload("price", func(kv) = kv.1.price, OQL.FloatValue._toRow)
+        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
+        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
+        .controllerOnly()
+        .build(),
+
+      // TechnicalData — admin-only.
+      OQL.Entity.manual<(Nat, Types.TechnicalData)>(
+        "technicalData",
+        func() = natMap.entries(technicalData),
+        "TechnicalData",
+        "symbol",
+      )
+        .sample((0, {
+          symbol = "";
+          name = "";
+          currentPrice = 0.0;
+          marketCap = 0.0;
+          change24h = 0.0;
+          volume24h = 0.0;
+          lastUpdated = 0;
+        }))
+        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
+        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
+        .payload("currentPrice", func(kv) = kv.1.currentPrice, OQL.FloatValue._toRow)
+        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
+        .payload("change24h", func(kv) = kv.1.change24h, OQL.FloatValue._toRow)
+        .payload("volume24h", func(kv) = kv.1.volume24h, OQL.FloatValue._toRow)
+        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
+        .controllerOnly()
+        .build(),
+
+      // MarketDataStatus — admin-only (single-row table keyed at 0).
+      OQL.Entity.manual<(Nat, Types.MarketDataStatus)>(
+        "marketDataStatus",
+        func() = natMap.entries(marketDataStatus),
+        "MarketDataStatus",
+        "status",
+      )
+        .sample((0, {
+          status = "";
+          lastUpdated = 0;
+          calculationQuality = 0.0;
+          trackedAssetsCount = 0;
+          apiHealth = "";
+          colorScheme = "";
+        }))
+        .payload("status", func(kv) = kv.1.status, OQL.TextValue._toRow)
+        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
+        .payload("calculationQuality", func(kv) = kv.1.calculationQuality, OQL.FloatValue._toRow)
+        .payload("trackedAssetsCount", func(kv) = kv.1.trackedAssetsCount, OQL.NatValue._toRow)
+        .payload("apiHealth", func(kv) = kv.1.apiHealth, OQL.TextValue._toRow)
+        .payload("colorScheme", func(kv) = kv.1.colorScheme, OQL.TextValue._toRow)
+        .controllerOnly()
+        .build(),
+
+      // customPriorityAssetIds : [Text] — admin-only, one row per id.
+      OQL.Entity.manual<Text>(
+        "customPriorityAssetId",
+        func() = customPriorityAssetIds.vals(),
+        "Text",
+        "id",
+      )
+        .sample("")
+        .payload("id", func(t) = t, OQL.TextValue._toRow)
+        .controllerOnly()
+        .build(),
+
+      // customTickerMap : [(Text, Text)] — admin-only, one row per (id, ticker).
+      OQL.Entity.manual<(Text, Text)>(
+        "customTicker",
+        func() = customTickerMap.vals(),
+        "CustomTicker",
+        "coinGeckoId",
+      )
+        .sample(("", ""))
+        .payload("coinGeckoId", func(kv) = kv.0, OQL.TextValue._toRow)
+        .payload("tickerSymbol", func(kv) = kv.1, OQL.TextValue._toRow)
+        .controllerOnly()
+        .build(),
+    ];
+  });
 
   // JSON helper: walk a dot/bracket path (e.g. "market_data.current_price.usd")
   // via Json.get and return the #string value, or "" if absent/wrong type.
@@ -467,11 +566,7 @@ import Error "mo:core/Error";
       transactions = [];
       totalProfitLoss = 0.0;
       unrealizedProfitLoss = 0.0;
-      historicalValues = [];
-      historicalProfitLoss = [];
-      historicalUnrealizedProfitLoss = [];
       totalPurchaseValue = 0.0;
-      historicalTotalValue = [];
       trackedAssets = [];
     };
 
@@ -534,11 +629,7 @@ import Error "mo:core/Error";
           var updatedAssets = updateAssets(p.assets, transaction, p.transactions);
           var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
-          var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
-          var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
-          var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
           var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
-          var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
           // Update tracked assets
           var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -551,11 +642,7 @@ import Error "mo:core/Error";
             transactions = updatedTransactions;
             totalProfitLoss;
             unrealizedProfitLoss;
-            historicalValues;
-            historicalProfitLoss;
-            historicalUnrealizedProfitLoss;
             totalPurchaseValue;
-            historicalTotalValue;
             trackedAssets = updatedTrackedAssets;
           };
         } else {
@@ -603,11 +690,7 @@ import Error "mo:core/Error";
               var updatedAssets = recalculateAssets(updatedTransactions);
               var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
-              var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
-              var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
-              var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
               var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
-              var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
               // Update tracked assets
               var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -620,11 +703,7 @@ import Error "mo:core/Error";
                 transactions = updatedTransactions;
                 totalProfitLoss;
                 unrealizedProfitLoss;
-                historicalValues;
-                historicalProfitLoss;
-                historicalUnrealizedProfitLoss;
                 totalPurchaseValue;
-                historicalTotalValue;
                 trackedAssets = updatedTrackedAssets;
               };
             };
@@ -663,11 +742,7 @@ import Error "mo:core/Error";
               var updatedAssets = recalculateAssets(updatedTransactions);
               var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
-              var historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
-              var historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
-              var historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
               var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
-              var historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
               // Update tracked assets
               var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -680,11 +755,7 @@ import Error "mo:core/Error";
                 transactions = updatedTransactions;
                 totalProfitLoss;
                 unrealizedProfitLoss;
-                historicalValues;
-                historicalProfitLoss;
-                historicalUnrealizedProfitLoss;
                 totalPurchaseValue;
-                historicalTotalValue;
                 trackedAssets = updatedTrackedAssets;
               };
             };
@@ -899,74 +970,12 @@ import Error "mo:core/Error";
     total;
   };
 
-  func updateHistoricalValues(historicalValues : [HistoricalValue], assets : [Asset]) : [HistoricalValue] {
-    let totalValue = Array.foldLeft(
-      assets,
-      0.0,
-      func(acc, asset) {
-        if (asset.amount >= 0.0 and asset.currentPrice >= 0.0) {
-          acc + (asset.amount * asset.currentPrice);
-        } else {
-          acc;
-        };
-      },
-    );
-
-    let newHistoricalValue : HistoricalValue = {
-      timestamp = Time.now();
-      totalValue;
-    };
-
-    Array.append(historicalValues, [newHistoricalValue]);
-  };
-
-  func updateHistoricalProfitLoss(historicalProfitLoss : [HistoricalProfitLoss], totalProfitLoss : Float) : [HistoricalProfitLoss] {
-    let newHistoricalProfitLoss : HistoricalProfitLoss = {
-      timestamp = Time.now();
-      totalProfitLoss;
-    };
-
-    Array.append(historicalProfitLoss, [newHistoricalProfitLoss]);
-  };
-
-  func updateHistoricalUnrealizedProfitLoss(historicalUnrealizedProfitLoss : [HistoricalUnrealizedProfitLoss], unrealizedProfitLoss : Float) : [HistoricalUnrealizedProfitLoss] {
-    let newHistoricalUnrealizedProfitLoss : HistoricalUnrealizedProfitLoss = {
-      timestamp = Time.now();
-      unrealizedProfitLoss;
-    };
-
-    Array.append(historicalUnrealizedProfitLoss, [newHistoricalUnrealizedProfitLoss]);
-  };
-
   func calculateTotalPurchaseValue(assets : [Asset]) : Float {
     Array.foldLeft(
       assets,
       0.0,
       func(acc, asset) { acc + asset.purchaseValue },
     );
-  };
-
-  func updateHistoricalTotalValue(historicalTotalValue : [HistoricalTotalValue], assets : [Asset], totalProfitLoss : Float) : [HistoricalTotalValue] {
-    let currentHoldingsValue = Array.foldLeft(
-      assets,
-      0.0,
-      func(acc, asset) {
-        if (asset.amount >= 0.0 and asset.currentPrice >= 0.0) {
-          acc + (asset.amount * asset.currentPrice);
-        } else {
-          acc;
-        };
-      },
-    );
-
-    let totalValue = currentHoldingsValue;
-
-    let newHistoricalTotalValue : HistoricalTotalValue = {
-      timestamp = Time.now();
-      totalValue;
-    };
-
-    Array.append(historicalTotalValue, [newHistoricalTotalValue]);
   };
 
   func updateTrackedAssets(currentTrackedAssets : [Text], assets : [Asset]) : [Text] {
@@ -1058,8 +1067,24 @@ import Error "mo:core/Error";
           };
           #object_([("error", #string(errMsg))]);
         } else if (_hasKey(entries, "market_data")) {
-          // /coins/{id} single coin object
-          _canonicalizeCoinDetail(json);
+          // Distinguish /coins/{id} (detail) from /coins/{id}/history by
+          // inspecting the market_data object: the detail response has a
+          // market_cap key, the /history response does NOT. If market_cap is
+          // present, canonicalize as a coin detail; otherwise canonicalize as
+          // a coin history (extracts only current_price.usd).
+          let marketDataJson = switch (Json.get(json, "market_data")) {
+            case (?md) { md };
+            case null { json };
+          };
+          let hasMarketCap = switch (marketDataJson) {
+            case (#object_(mdEntries)) { _hasKey(mdEntries, "market_cap") };
+            case _ { false };
+          };
+          if (hasMarketCap) {
+            _canonicalizeCoinDetail(json);
+          } else {
+            _canonicalizeCoinHistory(json);
+          };
         } else if (_hasKey(entries, "coins")) {
           // /api/v3/search response: { "coins": [ { "id", "symbol", "name", ... }, ... ], ... }
           // Canonicalize to keep only id/symbol/name per coin (strings only, no floats).
@@ -1214,6 +1239,18 @@ import Error "mo:core/Error";
         ("change_24h", _round8(change24h)),
         ("volume_24h", _round8(volume24h)),
       ])),
+    ]);
+  };
+
+  // /coins/{id}/history: extract only market_data.current_price.usd and
+  // return a JSON object {"usd": <price rounded via _round8>}. The /history
+  // response shape is { ..., "market_data": { "current_price": { "usd": ... } }, ... }
+  // and does NOT include market_cap (which is how transform() distinguishes it
+  // from /coins/{id} detail). Used by _fetchHistoricalPrice.
+  private func _canonicalizeCoinHistory(json : Json.Json) : Json.Json {
+    let price = _getFloat(json, "market_data.current_price.usd");
+    #object_([
+      ("market_data", #object_([("usd", _round8(price))])),
     ]);
   };
 
@@ -1590,6 +1627,66 @@ import Error "mo:core/Error";
     };
   };
 
+  // Format an Int timestamp (nanoseconds since epoch) as a DD-MM-YYYY date
+  // string for the CoinGecko /coins/{id}/history endpoint. CoinGecko expects
+  // dd-mm-yyyy. We convert ns -> seconds -> days since 1970-01-01 and walk a
+  // civil-calendar conversion (no Time/Date library dependency) to extract
+  // day/month/year. Used by _fetchHistoricalPrice.
+  private func _formatDateDDMMYYYY(timestamp : Int) : Text {
+    // Whole seconds since epoch.
+    let totalSeconds = timestamp / 1_000_000_000;
+    // Whole days since 1970-01-01 (floor toward negative infinity for pre-1970).
+    let daysSinceEpoch = totalSeconds / 86_400;
+    // Use Float arithmetic for the civil-calendar conversion (Howard Hinnant
+    // date algorithm). daysSinceEpoch is the count of days since 1970-01-01.
+    let daysFloat = Float.fromInt(daysSinceEpoch);
+    let z = daysFloat + 719468.0;
+    let era = Float.nearest(Float.floor(z / 146097.0));
+    let doe = z - era * 146097.0; // [0, 146096]
+    let yoe = Float.nearest(Float.floor((doe - Float.nearest(Float.floor(doe / 1460.0)) + Float.nearest(Float.floor(doe / 36524.0)) - Float.nearest(Float.floor(doe / 146096.0))) / 365.0)); // [0, 399]
+    let y = yoe + era * 400.0;
+    let doy = doe - (365.0 * yoe + Float.nearest(Float.floor(yoe / 4.0)) - Float.nearest(Float.floor(yoe / 100.0))); // [0, 365]
+    let mp = Float.nearest(Float.floor((5.0 * doy + 2.0) / 153.0)); // [0, 11]
+    let d = doy - (153.0 * mp + 2.0) / 5.0 + 1.0; // [1, 31]
+    let m = if (mp < 10.0) { mp + 3.0 } else { mp - 9.0 }; // [1, 12]
+    let year = if (m <= 2.0) { y + 1.0 } else { y };
+    let dayInt = Int.abs(Float.toInt(Float.nearest(d)));
+    let monthInt = Int.abs(Float.toInt(Float.nearest(m)));
+    let yearInt = Int.abs(Float.toInt(Float.nearest(year)));
+    // Zero-pad day and month to 2 digits.
+    let dayStr = if (dayInt < 10) { "0" # Int.toText(dayInt) } else { Int.toText(dayInt) };
+    let monthStr = if (monthInt < 10) { "0" # Int.toText(monthInt) } else { Int.toText(monthInt) };
+    let yearStr = Int.toText(yearInt);
+    dayStr # "-" # monthStr # "-" # yearStr;
+  };
+
+  // Fetch the USD price of a CoinGecko asset at a historical date. Uses the
+  // /coins/{id}/history endpoint with the same OutCall http-get pattern as the
+  // other CoinGecko fetches in this file. Parses market_data.current_price.usd
+  // from the transformed response. On ANY error (outcall trap, parse failure,
+  // missing field), returns 0.0 — graceful degradation, never traps. This
+  // matches the existing behavior where a missing/zero price falls back to the
+  // current market price at the transaction-submission call site.
+  private func _fetchHistoricalPrice(coinGeckoId : Text, date : Int) : async Float {
+    try {
+      let dateString = _formatDateDDMMYYYY(date);
+      let url = "https://api.coingecko.com/api/v3/coins/" # coinGeckoId # "/history?date=" # dateString # "&localization=false";
+      let response = await OutCall.httpGetRequest(url, [], transform);
+      let json = switch (Json.parse(response)) {
+        case (#err(_)) { return 0.0 };
+        case (#ok(j)) { j };
+      };
+      // transform() canonicalizes /coins/{id}/history to {"market_data":
+      // {"usd": <price>}} via _canonicalizeCoinHistory (the /history response
+      // has no market_cap, which is how transform distinguishes it from
+      // /coins/{id} detail). Extract the usd price.
+      let price = _getFloat(json, "market_data.usd");
+      price;
+    } catch (_err) {
+      0.0;
+    };
+  };
+
   public query ({ caller }) func getMarketData() : async [MarketData] {
     // Only authenticated users can view market data
     if (not (AccessControl.hasPermission(_acState, caller, #user))) {
@@ -1734,6 +1831,50 @@ import Error "mo:core/Error";
     { success = true; error = null };
   };
 
+  // Admin-only: remove a CoinGecko token id from the priorityAssets rotation.
+  // Mirrors addCustomPriorityAsset's admin-gating and case-insensitive matching.
+  // Filters the id out of customPriorityAssetIds and its ticker out of
+  // customTickerMap, then triggers an immediate _refreshPriorityAssetPrices()
+  // so the removed token's price is dropped from the stored map right away.
+  // Returns {success=true; error=null} on success, or {success=false;
+  // error=?"<reason>"} on auth failure or not-found.
+  public shared ({ caller }) func removeCustomPriorityAsset(coinGeckoId : Text) : async {
+    success : Bool;
+    error : ?Text;
+  } {
+    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
+      return { success = false; error = ?"Unauthorized: admin permission required" };
+    };
+    // Case-insensitive match against customPriorityAssetIds.
+    var found = false;
+    for (existingId in customPriorityAssetIds.vals()) {
+      if (_textEqualIgnoreCase(existingId, coinGeckoId)) { found := true };
+    };
+    if (not found) {
+      return { success = false; error = ?(coinGeckoId # " is not a custom priority asset") };
+    };
+    // Filter the id out of customPriorityAssetIds (case-insensitive).
+    customPriorityAssetIds := Array.filter(
+      customPriorityAssetIds,
+      func(id) { not (_textEqualIgnoreCase(id, coinGeckoId)) },
+    );
+    // Filter its ticker entry out of customTickerMap (case-insensitive on the id).
+    customTickerMap := Array.filter(
+      customTickerMap,
+      func((cgId, _ticker)) { not (_textEqualIgnoreCase(cgId, coinGeckoId)) },
+    );
+    // Trigger an immediate refresh so the removed token's price is dropped now.
+    try {
+      await _refreshPriorityAssetPrices();
+    } catch (err) {
+      // The removal already succeeded; the refresh failure is non-fatal because
+      // the next scheduled refresh will pick up the removal. Surface the error
+      // but report success since the asset was removed.
+      return { success = true; error = ?("Removed, but refresh failed: " # err.message()) };
+    };
+    { success = true; error = null };
+  };
+
   // Admin-only: returns the current customPriorityAssetIds paired with their
   // ticker (id, ticker) so the frontend can display what's already been added.
   // The ticker is resolved from customTickerMap (case-insensitive); if no
@@ -1752,6 +1893,17 @@ import Error "mo:core/Error";
         (id, ticker);
       },
     );
+  };
+
+  // Public (any authenticated user): fetch the historical USD price of a
+  // CoinGecko asset at a given date (Int nanoseconds since epoch). Delegates to
+  // _fetchHistoricalPrice, which degrades gracefully to 0.0 on any error
+  // rather than trapping. NOT admin-gated — any authenticated user can call it.
+  public shared ({ caller }) func getHistoricalPrice(coinGeckoId : Text, date : Int) : async Float {
+    if (not (AccessControl.hasPermission(_acState, caller, #user))) {
+      return 0.0;
+    };
+    await _fetchHistoricalPrice(coinGeckoId, date);
   };
 
   public shared ({ caller }) func updateAssetPrices(portfolioId : Nat) : async () {
@@ -1826,10 +1978,6 @@ import Error "mo:core/Error";
 
           let totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           let unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
-          let historicalValues = updateHistoricalValues(p.historicalValues, updatedAssets);
-          let historicalProfitLoss = updateHistoricalProfitLoss(p.historicalProfitLoss, totalProfitLoss);
-          let historicalUnrealizedProfitLoss = updateHistoricalUnrealizedProfitLoss(p.historicalUnrealizedProfitLoss, unrealizedProfitLoss);
-          let historicalTotalValue = updateHistoricalTotalValue(p.historicalTotalValue, updatedAssets, totalProfitLoss);
 
           {
             id = p.id;
@@ -1839,11 +1987,7 @@ import Error "mo:core/Error";
             transactions = p.transactions;
             totalProfitLoss;
             unrealizedProfitLoss;
-            historicalValues;
-            historicalProfitLoss;
-            historicalUnrealizedProfitLoss;
             totalPurchaseValue = p.totalPurchaseValue;
-            historicalTotalValue;
             trackedAssets = p.trackedAssets;
           };
         } else {
@@ -1854,99 +1998,6 @@ import Error "mo:core/Error";
 
     portfolios := principalMap.put(portfolios, caller, updatedPortfolios);
     lastHealthCheck := Time.now();
-  };
-
-  public query ({ caller }) func getPortfolioHistoricalValues(portfolioId : Nat) : async [HistoricalValue] {
-    // Verify ownership and authentication (done inside verifyPortfolioOwnershipQuery)
-    let userPortfolios = switch (verifyPortfolioOwnershipQuery(caller, portfolioId)) {
-      case null { return [] };
-      case (?p) { p };
-    };
-
-    let portfolio = Array.find(
-      userPortfolios,
-      func(p) { p.id == portfolioId },
-    );
-
-    switch (portfolio) {
-      case null { [] };
-      case (?p) {
-        if (p.historicalValues.size() == 0) {
-          let defaultValue : HistoricalValue = {
-            timestamp = Time.now();
-            totalValue = 0.0;
-          };
-          [defaultValue];
-        } else if (p.historicalValues.size() == 1) {
-          let singleValue = p.historicalValues[0];
-          [singleValue, singleValue];
-        } else {
-          p.historicalValues;
-        };
-      };
-    };
-  };
-
-  public query ({ caller }) func getPortfolioHistoricalProfitLoss(portfolioId : Nat) : async [HistoricalProfitLoss] {
-    // Verify ownership and authentication (done inside verifyPortfolioOwnershipQuery)
-    let userPortfolios = switch (verifyPortfolioOwnershipQuery(caller, portfolioId)) {
-      case null { return [] };
-      case (?p) { p };
-    };
-
-    let portfolio = Array.find(
-      userPortfolios,
-      func(p) { p.id == portfolioId },
-    );
-
-    switch (portfolio) {
-      case null { [] };
-      case (?p) {
-        if (p.historicalProfitLoss.size() == 0) {
-          let defaultValue : HistoricalProfitLoss = {
-            timestamp = Time.now();
-            totalProfitLoss = 0.0;
-          };
-          [defaultValue];
-        } else if (p.historicalProfitLoss.size() == 1) {
-          let singleValue = p.historicalProfitLoss[0];
-          [singleValue, singleValue];
-        } else {
-          p.historicalProfitLoss;
-        };
-      };
-    };
-  };
-
-  public query ({ caller }) func getPortfolioHistoricalUnrealizedProfitLoss(portfolioId : Nat) : async [HistoricalUnrealizedProfitLoss] {
-    // Verify ownership and authentication (done inside verifyPortfolioOwnershipQuery)
-    let userPortfolios = switch (verifyPortfolioOwnershipQuery(caller, portfolioId)) {
-      case null { return [] };
-      case (?p) { p };
-    };
-
-    let portfolio = Array.find(
-      userPortfolios,
-      func(p) { p.id == portfolioId },
-    );
-
-    switch (portfolio) {
-      case null { [] };
-      case (?p) {
-        if (p.historicalUnrealizedProfitLoss.size() == 0) {
-          let defaultValue : HistoricalUnrealizedProfitLoss = {
-            timestamp = Time.now();
-            unrealizedProfitLoss = 0.0;
-          };
-          [defaultValue];
-        } else if (p.historicalUnrealizedProfitLoss.size() == 1) {
-          let singleValue = p.historicalUnrealizedProfitLoss[0];
-          [singleValue, singleValue];
-        } else {
-          p.historicalUnrealizedProfitLoss;
-        };
-      };
-    };
   };
 
   public query ({ caller }) func getPortfolioTransactions(portfolioId : Nat) : async [Transaction] {
@@ -2022,37 +2073,6 @@ import Error "mo:core/Error";
           totalProfitLoss = p.totalProfitLoss;
           unrealizedProfitLoss = p.unrealizedProfitLoss;
           totalPurchaseValue = p.totalPurchaseValue;
-        };
-      };
-    };
-  };
-
-  public query ({ caller }) func getPortfolioHistoricalTotalValue(portfolioId : Nat) : async [HistoricalTotalValue] {
-    // Verify ownership and authentication (done inside verifyPortfolioOwnershipQuery)
-    let userPortfolios = switch (verifyPortfolioOwnershipQuery(caller, portfolioId)) {
-      case null { return [] };
-      case (?p) { p };
-    };
-
-    let portfolio = Array.find(
-      userPortfolios,
-      func(p) { p.id == portfolioId },
-    );
-
-    switch (portfolio) {
-      case null { [] };
-      case (?p) {
-        if (p.historicalTotalValue.size() == 0) {
-          let defaultValue : HistoricalTotalValue = {
-            timestamp = Time.now();
-            totalValue = 0.0;
-          };
-          [defaultValue];
-        } else if (p.historicalTotalValue.size() == 1) {
-          let singleValue = p.historicalTotalValue[0];
-          [singleValue, singleValue];
-        } else {
-          p.historicalTotalValue;
         };
       };
     };

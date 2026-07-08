@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import type { Asset, MarketData, PriorityAsset } from "../backend";
 import {
   useAddTransaction,
+  useGetHistoricalPrice,
   useGetMarketData,
   useGetPriorityAssets,
 } from "../hooks/useQueries";
@@ -83,8 +84,11 @@ const translations = {
     fillAll: "Wypełnij wszystkie pola",
     loadingMarketData: "Ładowanie danych rynkowych...",
     insufficientBalance: "Niewystarczająca ilość do sprzedaży",
+    insufficientHoldings:
+      "Nie posiadasz wystarczającej ilości {symbol} do sprzedaży (masz {held}, próbujesz sprzedać {sell})",
     available: "Dostępne",
-    freeTokenNote: "Cena $0 - użyto aktualnej ceny rynkowej",
+    freeTokenNoteMarket: "Cena $0 - użyto aktualnej ceny rynkowej",
+    freeTokenNoteHistorical: "Cena $0 - użyto ceny historycznej",
     refreshAssets: "Odśwież listę aktywów",
     assetsLoaded: "Załadowano aktywów",
     close: "Zamknij",
@@ -119,8 +123,11 @@ const translations = {
     fillAll: "Fill all fields",
     loadingMarketData: "Loading market data...",
     insufficientBalance: "Insufficient amount to sell",
+    insufficientHoldings:
+      "Insufficient {symbol} to sell (you have {held}, attempting to sell {sell})",
     available: "Available",
-    freeTokenNote: "Price $0 - current market price used",
+    freeTokenNoteMarket: "Price $0 - current market price used",
+    freeTokenNoteHistorical: "Price $0 - historical price used",
     refreshAssets: "Refresh asset list",
     assetsLoaded: "assets loaded",
     close: "Close",
@@ -157,6 +164,11 @@ export default function TransactionDialog({
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  // Tracks which price source was used for the most recent free-token buy so
+  // the freeTokenNote can reflect it accurately. null when not a free token.
+  const [freeTokenPriceSource, setFreeTokenPriceSource] = useState<
+    "market" | "historical" | null
+  >(null);
   const addTransaction = useAddTransaction();
   const {
     data: marketData,
@@ -165,6 +177,7 @@ export default function TransactionDialog({
     isFetching: marketDataFetching,
   } = useGetMarketData();
   const { data: priorityAssets } = useGetPriorityAssets();
+  const getHistoricalPrice = useGetHistoricalPrice();
   const t = translations[language];
 
   useEffect(() => {
@@ -242,11 +255,54 @@ export default function TransactionDialog({
     let priceNum = Number.parseFloat(price);
 
     if (type === "buy" && priceNum === 0 && selectedAsset) {
-      priceNum = selectedAsset.price;
+      // Free-token buy: prefer historical price when the transaction date is
+      // not today, falling back to the current market price on any miss.
+      // Graceful degradation — never reject the submission.
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      const txMidnight = new Date(date);
+      txMidnight.setHours(0, 0, 0, 0);
+      const isHistoricalDate = txMidnight.getTime() !== todayMidnight.getTime();
+
+      let resolvedPrice = 0;
+      let source: "market" | "historical" = "market";
+
+      if (isHistoricalDate) {
+        const coinGeckoId = (priorityAssets || []).find(
+          (coin) =>
+            coin.symbol.toUpperCase() === selectedAsset.symbol.toUpperCase(),
+        )?.id;
+
+        if (coinGeckoId) {
+          try {
+            const historical = await getHistoricalPrice(
+              coinGeckoId,
+              BigInt(txMidnight.getTime() * 1000000),
+            );
+            if (historical && historical > 0) {
+              resolvedPrice = historical;
+              source = "historical";
+            }
+          } catch (error) {
+            console.error("Historical price lookup failed:", error);
+          }
+        }
+      }
+
+      if (resolvedPrice === 0) {
+        resolvedPrice = selectedAsset.price;
+        source = "market";
+      }
+
+      priceNum = resolvedPrice;
+      setFreeTokenPriceSource(source);
+
       if (priceNum === 0) {
         toast.error(t.fillAll);
         return;
       }
+    } else {
+      setFreeTokenPriceSource(null);
     }
 
     if (Number.isNaN(amountNum) || Number.isNaN(priceNum) || amountNum <= 0) {
@@ -306,7 +362,24 @@ export default function TransactionDialog({
       onClose();
     } catch (error) {
       console.error("Add transaction error:", error);
-      toast.error(t.error);
+      const message =
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: unknown }).message)
+          : String(error);
+      const match = message.match(
+        /Insufficient holdings: cannot sell (\S+) (\S+) when only (\S+) are held/,
+      );
+      if (match) {
+        const [, sell, symbol, held] = match;
+        toast.error(
+          t.insufficientHoldings
+            .replace("{symbol}", symbol)
+            .replace("{held}", held)
+            .replace("{sell}", sell),
+        );
+      } else {
+        toast.error(t.error);
+      }
     }
   };
 
@@ -533,10 +606,13 @@ export default function TransactionDialog({
             />
           </div>
 
-          {isFreeToken && (
+          {isFreeToken && freeTokenPriceSource && (
             <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
               <p className="text-xs text-blue-600 dark:text-blue-400">
-                {t.freeTokenNote}: {formatCurrency(selectedAsset?.price || 0)}
+                {freeTokenPriceSource === "historical"
+                  ? t.freeTokenNoteHistorical
+                  : t.freeTokenNoteMarket}
+                : {formatCurrency(selectedAsset?.price || 0)}
               </p>
             </div>
           )}

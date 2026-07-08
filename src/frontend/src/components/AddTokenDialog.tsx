@@ -13,10 +13,11 @@ import { Label } from "@/components/ui/label";
 import {
   useAddCustomPriorityAsset,
   useGetCustomPriorityAssets,
+  useRemoveCustomPriorityAsset,
   useSearchCoinGeckoTokens,
 } from "@/hooks/useQueries";
 import type { CoinGeckoSearchResult } from "@/hooks/useQueries";
-import { Check, Loader2, Plus, Search, X } from "lucide-react";
+import { Check, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -49,6 +50,8 @@ const translations = {
     loadingCustom: "Ładowanie...",
     selectResultHint: "Wybierz wynik, aby kontynuować.",
     tickerRequired: "Ticker nie może być pusty.",
+    remove: "Usuń",
+    removeError: "Błąd usuwania tokenu",
   },
   en: {
     title: "Add token",
@@ -72,6 +75,8 @@ const translations = {
     loadingCustom: "Loading...",
     selectResultHint: "Select a result to continue.",
     tickerRequired: "Ticker cannot be empty.",
+    remove: "Remove",
+    removeError: "Error removing token",
   },
 };
 
@@ -94,6 +99,7 @@ export default function AddTokenDialog({
 
   const searchTokensMutation = useSearchCoinGeckoTokens();
   const addAssetMutation = useAddCustomPriorityAsset();
+  const removeAssetMutation = useRemoveCustomPriorityAsset();
   const customAssetsQuery = useGetCustomPriorityAssets();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,6 +199,22 @@ export default function AddTokenDialog({
       console.error("Error adding custom priority asset:", error);
       const message = error instanceof Error ? error.message : t.addError;
       setAddError(message);
+      toast.error(message);
+    }
+  };
+
+  const handleRemoveAsset = async (coinGeckoId: string) => {
+    try {
+      const response = await removeAssetMutation.mutateAsync(coinGeckoId);
+      if (response.success) {
+        await customAssetsQuery.refetch();
+      } else {
+        const message = response.error || t.removeError;
+        toast.error(message);
+      }
+    } catch (error) {
+      console.error("Error removing custom priority asset:", error);
+      const message = error instanceof Error ? error.message : t.removeError;
       toast.error(message);
     }
   };
@@ -404,16 +426,38 @@ export default function AddTokenDialog({
               className="flex flex-wrap gap-1.5"
               data-ocid="add_token.custom_assets_list"
             >
-              {customAssetsQuery.data.map(([assetId, assetTicker], index) => (
-                <Badge
-                  key={`${assetId}-${assetTicker}`}
-                  variant="outline"
-                  className="rounded-terminal border-terminal-green/20 bg-terminal-green/10 font-terminal text-terminal-green"
-                  data-ocid={`add_token.custom_asset.item.${index + 1}`}
-                >
-                  {assetId} ({assetTicker})
-                </Badge>
-              ))}
+              {customAssetsQuery.data.map(([assetId, assetTicker], index) => {
+                const isRemoving =
+                  removeAssetMutation.isPending &&
+                  removeAssetMutation.variables === assetId;
+                return (
+                  <Badge
+                    key={`${assetId}-${assetTicker}`}
+                    variant="outline"
+                    className="gap-1 rounded-terminal border-terminal-green/20 bg-terminal-green/10 py-1 pl-2 pr-1 font-terminal text-terminal-green"
+                    data-ocid={`add_token.custom_asset.item.${index + 1}`}
+                  >
+                    <span>
+                      {assetId} ({assetTicker})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAsset(assetId)}
+                      disabled={isRemoving}
+                      aria-label={t.remove}
+                      title={t.remove}
+                      className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-terminal text-terminal-muted transition-colors hover:text-terminal-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terminal-red/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      data-ocid={`add_token.delete_button.${index + 1}`}
+                    >
+                      {isRemoving ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </button>
+                  </Badge>
+                );
+              })}
             </div>
           ) : (
             <p

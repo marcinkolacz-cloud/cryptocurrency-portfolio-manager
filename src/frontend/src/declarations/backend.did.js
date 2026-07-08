@@ -23,6 +23,19 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Value = IDL.Variant({
+  'int' : IDL.Int,
+  'nat' : IDL.Nat,
+  'float' : IDL.Float64,
+  'bool' : IDL.Bool,
+  'null' : IDL.Null,
+  'text' : IDL.Text,
+});
+export const Cell = IDL.Record({ 'value' : Value, 'name' : IDL.Text });
+export const Result = IDL.Record({
+  'hasMore' : IDL.Bool,
+  'rows' : IDL.Vec(IDL.Vec(Cell)),
+});
 export const UserProfile = IDL.Record({
   'theme' : IDL.Text,
   'name' : IDL.Text,
@@ -65,32 +78,12 @@ export const Asset = IDL.Record({
   'realizedProfitLoss' : IDL.Float64,
   'symbol' : IDL.Text,
 });
-export const HistoricalProfitLoss = IDL.Record({
-  'totalProfitLoss' : IDL.Float64,
-  'timestamp' : IDL.Int,
-});
-export const HistoricalTotalValue = IDL.Record({
-  'totalValue' : IDL.Float64,
-  'timestamp' : IDL.Int,
-});
-export const HistoricalUnrealizedProfitLoss = IDL.Record({
-  'timestamp' : IDL.Int,
-  'unrealizedProfitLoss' : IDL.Float64,
-});
-export const HistoricalValue = IDL.Record({
-  'totalValue' : IDL.Float64,
-  'timestamp' : IDL.Int,
-});
 export const Portfolio = IDL.Record({
   'id' : IDL.Nat,
-  'historicalUnrealizedProfitLoss' : IDL.Vec(HistoricalUnrealizedProfitLoss),
-  'historicalValues' : IDL.Vec(HistoricalValue),
   'totalProfitLoss' : IDL.Float64,
-  'historicalTotalValue' : IDL.Vec(HistoricalTotalValue),
   'name' : IDL.Text,
   'createdAt' : IDL.Int,
   'assets' : IDL.Vec(Asset),
-  'historicalProfitLoss' : IDL.Vec(HistoricalProfitLoss),
   'trackedAssets' : IDL.Vec(IDL.Text),
   'totalPurchaseValue' : IDL.Float64,
   'transactions' : IDL.Vec(Transaction),
@@ -147,6 +140,7 @@ export const idlService = IDL.Service({
   'deletePortfolio' : IDL.Func([IDL.Nat], [], []),
   'deleteTransaction' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
   'editTransaction' : IDL.Func([IDL.Nat, IDL.Nat, Transaction], [], []),
+  'execute' : IDL.Func([IDL.Text], [Result], ['query']),
   'fetchHistoricalPriceData' : IDL.Func([IDL.Text], [IDL.Text], []),
   'fetchMarketData' : IDL.Func([], [], []),
   'fetchPriorityAssetPrices' : IDL.Func([], [], []),
@@ -160,6 +154,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
       ['query'],
     ),
+  'getHistoricalPrice' : IDL.Func([IDL.Text, IDL.Int], [IDL.Float64], []),
   'getLastFetchError' : IDL.Func(
       [],
       [
@@ -180,26 +175,6 @@ export const idlService = IDL.Service({
   'getMarketData' : IDL.Func([], [IDL.Vec(MarketData)], ['query']),
   'getMarketDataStatus' : IDL.Func([], [IDL.Opt(MarketDataStatus)], ['query']),
   'getPortfolioAssets' : IDL.Func([IDL.Nat], [IDL.Vec(Asset)], ['query']),
-  'getPortfolioHistoricalProfitLoss' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Vec(HistoricalProfitLoss)],
-      ['query'],
-    ),
-  'getPortfolioHistoricalTotalValue' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Vec(HistoricalTotalValue)],
-      ['query'],
-    ),
-  'getPortfolioHistoricalUnrealizedProfitLoss' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Vec(HistoricalUnrealizedProfitLoss)],
-      ['query'],
-    ),
-  'getPortfolioHistoricalValues' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Vec(HistoricalValue)],
-      ['query'],
-    ),
   'getPortfolioSummary' : IDL.Func(
       [IDL.Nat],
       [
@@ -251,7 +226,13 @@ export const idlService = IDL.Service({
   'initializeAccessControl' : IDL.Func([], [], []),
   'isAuthenticated' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'removeCustomPriorityAsset' : IDL.Func(
+      [IDL.Text],
+      [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
+      [],
+    ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'schema' : IDL.Func([], [IDL.Text], ['query']),
   'searchCoinGeckoTokens' : IDL.Func(
       [IDL.Text],
       [
@@ -295,6 +276,19 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const Value = IDL.Variant({
+    'int' : IDL.Int,
+    'nat' : IDL.Nat,
+    'float' : IDL.Float64,
+    'bool' : IDL.Bool,
+    'null' : IDL.Null,
+    'text' : IDL.Text,
+  });
+  const Cell = IDL.Record({ 'value' : Value, 'name' : IDL.Text });
+  const Result = IDL.Record({
+    'hasMore' : IDL.Bool,
+    'rows' : IDL.Vec(IDL.Vec(Cell)),
+  });
   const UserProfile = IDL.Record({
     'theme' : IDL.Text,
     'name' : IDL.Text,
@@ -337,32 +331,12 @@ export const idlFactory = ({ IDL }) => {
     'realizedProfitLoss' : IDL.Float64,
     'symbol' : IDL.Text,
   });
-  const HistoricalProfitLoss = IDL.Record({
-    'totalProfitLoss' : IDL.Float64,
-    'timestamp' : IDL.Int,
-  });
-  const HistoricalTotalValue = IDL.Record({
-    'totalValue' : IDL.Float64,
-    'timestamp' : IDL.Int,
-  });
-  const HistoricalUnrealizedProfitLoss = IDL.Record({
-    'timestamp' : IDL.Int,
-    'unrealizedProfitLoss' : IDL.Float64,
-  });
-  const HistoricalValue = IDL.Record({
-    'totalValue' : IDL.Float64,
-    'timestamp' : IDL.Int,
-  });
   const Portfolio = IDL.Record({
     'id' : IDL.Nat,
-    'historicalUnrealizedProfitLoss' : IDL.Vec(HistoricalUnrealizedProfitLoss),
-    'historicalValues' : IDL.Vec(HistoricalValue),
     'totalProfitLoss' : IDL.Float64,
-    'historicalTotalValue' : IDL.Vec(HistoricalTotalValue),
     'name' : IDL.Text,
     'createdAt' : IDL.Int,
     'assets' : IDL.Vec(Asset),
-    'historicalProfitLoss' : IDL.Vec(HistoricalProfitLoss),
     'trackedAssets' : IDL.Vec(IDL.Text),
     'totalPurchaseValue' : IDL.Float64,
     'transactions' : IDL.Vec(Transaction),
@@ -419,6 +393,7 @@ export const idlFactory = ({ IDL }) => {
     'deletePortfolio' : IDL.Func([IDL.Nat], [], []),
     'deleteTransaction' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
     'editTransaction' : IDL.Func([IDL.Nat, IDL.Nat, Transaction], [], []),
+    'execute' : IDL.Func([IDL.Text], [Result], ['query']),
     'fetchHistoricalPriceData' : IDL.Func([IDL.Text], [IDL.Text], []),
     'fetchMarketData' : IDL.Func([], [], []),
     'fetchPriorityAssetPrices' : IDL.Func([], [], []),
@@ -432,6 +407,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
+    'getHistoricalPrice' : IDL.Func([IDL.Text, IDL.Int], [IDL.Float64], []),
     'getLastFetchError' : IDL.Func(
         [],
         [
@@ -456,26 +432,6 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPortfolioAssets' : IDL.Func([IDL.Nat], [IDL.Vec(Asset)], ['query']),
-    'getPortfolioHistoricalProfitLoss' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Vec(HistoricalProfitLoss)],
-        ['query'],
-      ),
-    'getPortfolioHistoricalTotalValue' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Vec(HistoricalTotalValue)],
-        ['query'],
-      ),
-    'getPortfolioHistoricalUnrealizedProfitLoss' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Vec(HistoricalUnrealizedProfitLoss)],
-        ['query'],
-      ),
-    'getPortfolioHistoricalValues' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Vec(HistoricalValue)],
-        ['query'],
-      ),
     'getPortfolioSummary' : IDL.Func(
         [IDL.Nat],
         [
@@ -527,7 +483,13 @@ export const idlFactory = ({ IDL }) => {
     'initializeAccessControl' : IDL.Func([], [], []),
     'isAuthenticated' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'removeCustomPriorityAsset' : IDL.Func(
+        [IDL.Text],
+        [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
+        [],
+      ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'schema' : IDL.Func([], [IDL.Text], ['query']),
     'searchCoinGeckoTokens' : IDL.Func(
         [IDL.Text],
         [

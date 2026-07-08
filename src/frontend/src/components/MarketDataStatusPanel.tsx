@@ -29,7 +29,6 @@ interface MarketDataStatusPanelProps {
   trackedAssetsCount: number;
   lastUpdated: Date | null;
   calculationQuality: number;
-  isAdmin?: boolean;
 }
 
 const translations = {
@@ -83,7 +82,6 @@ export default function MarketDataStatusPanel({
   trackedAssetsCount,
   lastUpdated,
   calculationQuality,
-  isAdmin = false,
 }: MarketDataStatusPanelProps) {
   const t = translations[language];
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -92,8 +90,7 @@ export default function MarketDataStatusPanel({
   const [addTokenOpen, setAddTokenOpen] = useState(false);
 
   const lastFetchErrorQuery = useGetLastFetchError();
-  const isAdminQuery = useGetIsAdmin();
-  const showDebug = isAdmin || isAdminQuery;
+  const showDebug = useGetIsAdmin();
 
   const fetchMarketDataMutation = useFetchMarketData();
   const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();

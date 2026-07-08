@@ -31,19 +31,7 @@ export type AuthResult = { 'ok' : Array<Portfolio> } |
 export type AuthResult_1 = { 'ok' : UserProfile } |
   { 'notFound' : string } |
   { 'unauthorized' : string };
-export interface HistoricalProfitLoss {
-  'totalProfitLoss' : number,
-  'timestamp' : bigint,
-}
-export interface HistoricalTotalValue {
-  'totalValue' : number,
-  'timestamp' : bigint,
-}
-export interface HistoricalUnrealizedProfitLoss {
-  'timestamp' : bigint,
-  'unrealizedProfitLoss' : number,
-}
-export interface HistoricalValue { 'totalValue' : number, 'timestamp' : bigint }
+export interface Cell { 'value' : Value, 'name' : string }
 export interface HttpHeader { 'value' : string, 'name' : string }
 export interface HttpRequestResult {
   'status' : bigint,
@@ -68,14 +56,10 @@ export interface MarketDataStatus {
 }
 export interface Portfolio {
   'id' : bigint,
-  'historicalUnrealizedProfitLoss' : Array<HistoricalUnrealizedProfitLoss>,
-  'historicalValues' : Array<HistoricalValue>,
   'totalProfitLoss' : number,
-  'historicalTotalValue' : Array<HistoricalTotalValue>,
   'name' : string,
   'createdAt' : bigint,
   'assets' : Array<Asset>,
-  'historicalProfitLoss' : Array<HistoricalProfitLoss>,
   'trackedAssets' : Array<string>,
   'totalPurchaseValue' : number,
   'transactions' : Array<Transaction>,
@@ -89,6 +73,7 @@ export interface PriorityAsset {
   'price' : number,
   'symbol' : string,
 }
+export interface Result { 'hasMore' : boolean, 'rows' : Array<Array<Cell>> }
 export interface TechnicalData {
   'currentPrice' : number,
   'change24h' : number,
@@ -126,6 +111,12 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export type Value = { 'int' : bigint } |
+  { 'nat' : bigint } |
+  { 'float' : number } |
+  { 'bool' : boolean } |
+  { 'null' : null } |
+  { 'text' : string };
 export interface _SERVICE {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'addCustomPriorityAsset' : ActorMethod<
@@ -138,6 +129,7 @@ export interface _SERVICE {
   'deletePortfolio' : ActorMethod<[bigint], undefined>,
   'deleteTransaction' : ActorMethod<[bigint, bigint], undefined>,
   'editTransaction' : ActorMethod<[bigint, bigint, Transaction], undefined>,
+  'execute' : ActorMethod<[string], Result>,
   'fetchHistoricalPriceData' : ActorMethod<[string], string>,
   'fetchMarketData' : ActorMethod<[], undefined>,
   'fetchPriorityAssetPrices' : ActorMethod<[], undefined>,
@@ -147,6 +139,7 @@ export interface _SERVICE {
   'getCallerUserProfileWithStatus' : ActorMethod<[], AuthResult_1>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCustomPriorityAssets' : ActorMethod<[], Array<[string, string]>>,
+  'getHistoricalPrice' : ActorMethod<[string, bigint], number>,
   'getLastFetchError' : ActorMethod<
     [],
     {
@@ -158,22 +151,6 @@ export interface _SERVICE {
   'getMarketData' : ActorMethod<[], Array<MarketData>>,
   'getMarketDataStatus' : ActorMethod<[], [] | [MarketDataStatus]>,
   'getPortfolioAssets' : ActorMethod<[bigint], Array<Asset>>,
-  'getPortfolioHistoricalProfitLoss' : ActorMethod<
-    [bigint],
-    Array<HistoricalProfitLoss>
-  >,
-  'getPortfolioHistoricalTotalValue' : ActorMethod<
-    [bigint],
-    Array<HistoricalTotalValue>
-  >,
-  'getPortfolioHistoricalUnrealizedProfitLoss' : ActorMethod<
-    [bigint],
-    Array<HistoricalUnrealizedProfitLoss>
-  >,
-  'getPortfolioHistoricalValues' : ActorMethod<
-    [bigint],
-    Array<HistoricalValue>
-  >,
   'getPortfolioSummary' : ActorMethod<
     [bigint],
     [] | [
@@ -199,7 +176,12 @@ export interface _SERVICE {
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isAuthenticated' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'removeCustomPriorityAsset' : ActorMethod<
+    [string],
+    { 'error' : [] | [string], 'success' : boolean }
+  >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'schema' : ActorMethod<[], string>,
   'searchCoinGeckoTokens' : ActorMethod<
     [string],
     {

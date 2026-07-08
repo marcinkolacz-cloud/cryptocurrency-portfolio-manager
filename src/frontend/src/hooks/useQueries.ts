@@ -590,6 +590,72 @@ export function useGetCustomPriorityAssets() {
   });
 }
 
+export interface RemoveCustomPriorityAssetResponse {
+  success: boolean;
+  error?: string;
+}
+
+export function useRemoveCustomPriorityAsset() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      coinGeckoId: string,
+    ): Promise<RemoveCustomPriorityAssetResponse> => {
+      if (!actor) throw new Error("Backend connection not available");
+      console.log("Removing custom priority asset:", coinGeckoId);
+      const result = await actor.removeCustomPriorityAsset(coinGeckoId);
+      return {
+        success: result?.success === true,
+        error: result?.error,
+      };
+    },
+    onSuccess: () => {
+      console.log("Custom priority asset removed successfully");
+      queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
+      queryClient.invalidateQueries({ queryKey: ["customPriorityAssets"] });
+    },
+    onError: (error) => {
+      console.error("Error removing custom priority asset:", error);
+    },
+  });
+}
+
+/**
+ * On-demand historical price fetch for backdated free-token buys.
+ * Called from TransactionDialog when a buy transaction is backdated and
+ * has price = 0 (free token). Returns the CoinGecko historical price for
+ * the given coinGeckoId on the given date (unix ms), or null on failure
+ * so callers can fall back to the current market price gracefully.
+ *
+ * Not a cached useQuery — it's a plain async helper bound to the current
+ * actor, mirroring how other on-demand fetches are structured here.
+ */
+export function useGetHistoricalPrice() {
+  const { actor } = useActor();
+
+  return async (coinGeckoId: string, date: bigint): Promise<number | null> => {
+    if (!actor) {
+      console.error("Actor not available for historical price fetch");
+      return null;
+    }
+    try {
+      const price = await actor.getHistoricalPrice(coinGeckoId, date);
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+        console.warn(
+          `Historical price for ${coinGeckoId} on ${date} was invalid (${price}); falling back`,
+        );
+        return null;
+      }
+      return price;
+    } catch (error) {
+      console.error("Error fetching historical price:", error);
+      return null;
+    }
+  };
+}
+
 export function updatePortfolioWithMarketPrices(
   portfolio: Portfolio | null | undefined,
   marketData: MarketData[] | null | undefined,
