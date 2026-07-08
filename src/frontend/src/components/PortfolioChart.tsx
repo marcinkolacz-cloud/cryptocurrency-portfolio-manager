@@ -97,11 +97,13 @@ const translations = {
   },
 };
 
+// Terminal ticker palette: neon green for value/profit, red for loss.
+// Other series keep distinct hues but stay saturated against the dark canvas.
 const LINE_COLORS = {
-  totalValue: "#10b981",
-  totalProfitLoss: "oklch(0.646 0.222 145)",
-  unrealizedProfitLoss: "oklch(0.6 0.118 220)",
-  totalPurchaseValue: "oklch(0.65 0.24 300)",
+  totalValue: "#00ff88",
+  totalProfitLoss: "#00ff88",
+  unrealizedProfitLoss: "#ff3b30",
+  totalPurchaseValue: "#3b82f6",
 } as const;
 
 export default function PortfolioChart({
@@ -339,47 +341,41 @@ export default function PortfolioChart({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Shared period filter controls — controls both charts */}
-      <Card className="border-2">
-        <CardHeader>
-          <div className="flex flex-col gap-4">
-            <CardTitle className="text-xl font-bold">
-              {t.portfolioValue}
-            </CardTitle>
-            <div className="flex flex-wrap gap-2">
-              {rangeButtons.map((btn) => (
-                <Button
-                  key={btn.key}
-                  variant={dateRange === btn.key ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleRangeChange(btn.key)}
-                >
-                  {btn.label}
-                </Button>
-              ))}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "PPP") : t.selectDate}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setSelectedDate(date);
-                      setDateRange("max");
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </CardHeader>
+    <div className="space-y-2">
+      {/* Compact period-filter toolbar — no title (title lives on the ValueChart card) */}
+      <Card className="border border-terminal bg-terminal-card p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {rangeButtons.map((btn) => (
+            <Button
+              key={btn.key}
+              variant={dateRange === btn.key ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleRangeChange(btn.key)}
+              className="font-terminal"
+            >
+              {btn.label}
+            </Button>
+          ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="font-terminal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : t.selectDate}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  setDateRange("max");
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </Card>
 
       {/* Chart 1: Portfolio value over time */}
@@ -458,14 +454,14 @@ function ValueChart({
       name: totalValueName,
       color: LINE_COLORS.totalValue,
       gradientId: "colorTotalValue",
-      strokeWidth: 4,
+      strokeWidth: 2,
     },
     {
       key: "totalPurchaseValue",
       name: totalPurchaseValueName,
       color: LINE_COLORS.totalPurchaseValue,
       gradientId: "colorPurchaseValue",
-      strokeWidth: 3,
+      strokeWidth: 1.5,
     },
   ];
 
@@ -477,30 +473,30 @@ function ValueChart({
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
 
   return (
-    <Card className="border-2">
-      <CardHeader>
-        <div className="flex flex-col gap-4">
-          <CardTitle className="text-xl font-bold">{title}</CardTitle>
-          <div className="flex flex-wrap gap-4">
-            <CheckboxLine
-              id="show-total-value"
-              checked={showTotalValue}
-              onCheckedChange={onToggleTotalValue}
-              label={showTotalValueLabel}
-              color={LINE_COLORS.totalValue}
-              bold
-            />
-            <CheckboxLine
-              id="show-purchase-value"
-              checked={showTotalPurchaseValue}
-              onCheckedChange={onToggleTotalPurchaseValue}
-              label={showTotalPurchaseValueLabel}
-              color={LINE_COLORS.totalPurchaseValue}
-            />
-          </div>
+    <Card className="border border-terminal bg-terminal-card p-3">
+      <CardHeader className="gap-2 p-3">
+        <CardTitle className="text-base font-bold text-terminal">
+          {title}
+        </CardTitle>
+        <div className="flex flex-wrap gap-4">
+          <CheckboxLine
+            id="show-total-value"
+            checked={showTotalValue}
+            onCheckedChange={onToggleTotalValue}
+            label={showTotalValueLabel}
+            color={LINE_COLORS.totalValue}
+            bold
+          />
+          <CheckboxLine
+            id="show-purchase-value"
+            checked={showTotalPurchaseValue}
+            onCheckedChange={onToggleTotalPurchaseValue}
+            label={showTotalPurchaseValueLabel}
+            color={LINE_COLORS.totalPurchaseValue}
+          />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         <ChartCanvas
           data={data}
           hasData={hasData}
@@ -552,14 +548,14 @@ function ProfitLossChart({
       name: totalProfitLossName,
       color: LINE_COLORS.totalProfitLoss,
       gradientId: "colorTotalPL",
-      strokeWidth: 3,
+      strokeWidth: 1.5,
     },
     {
       key: "unrealizedProfitLoss",
       name: unrealizedProfitLossName,
       color: LINE_COLORS.unrealizedProfitLoss,
       gradientId: "colorUnrealizedPL",
-      strokeWidth: 3,
+      strokeWidth: 1.5,
     },
   ];
 
@@ -571,30 +567,30 @@ function ProfitLossChart({
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
 
   return (
-    <Card className="border-2">
-      <CardHeader>
-        <div className="flex flex-col gap-4">
-          <CardTitle className="text-xl font-bold">{title}</CardTitle>
-          <div className="flex flex-wrap gap-4">
-            <CheckboxLine
-              id="show-total-pl"
-              checked={showTotalProfitLoss}
-              onCheckedChange={onToggleTotalProfitLoss}
-              label={showTotalProfitLossLabel}
-              color={LINE_COLORS.totalProfitLoss}
-              bold
-            />
-            <CheckboxLine
-              id="show-unrealized-pl"
-              checked={showUnrealizedProfitLoss}
-              onCheckedChange={onToggleUnrealizedProfitLoss}
-              label={showUnrealizedProfitLossLabel}
-              color={LINE_COLORS.unrealizedProfitLoss}
-            />
-          </div>
+    <Card className="border border-terminal bg-terminal-card p-3">
+      <CardHeader className="gap-2 p-3">
+        <CardTitle className="text-base font-bold text-terminal">
+          {title}
+        </CardTitle>
+        <div className="flex flex-wrap gap-4">
+          <CheckboxLine
+            id="show-total-pl"
+            checked={showTotalProfitLoss}
+            onCheckedChange={onToggleTotalProfitLoss}
+            label={showTotalProfitLossLabel}
+            color={LINE_COLORS.totalProfitLoss}
+            bold
+          />
+          <CheckboxLine
+            id="show-unrealized-pl"
+            checked={showUnrealizedProfitLoss}
+            onCheckedChange={onToggleUnrealizedProfitLoss}
+            label={showUnrealizedProfitLossLabel}
+            color={LINE_COLORS.unrealizedProfitLoss}
+          />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         <ChartCanvas
           data={data}
           hasData={hasData}
@@ -635,7 +631,7 @@ function CheckboxLine({
       />
       <Label
         htmlFor={id}
-        className={`text-sm ${bold ? "font-bold" : "font-medium"} leading-none cursor-pointer`}
+        className={`font-terminal text-xs ${bold ? "font-bold" : "font-medium"} leading-none cursor-pointer`}
         style={{ color }}
       >
         {label}
@@ -665,56 +661,49 @@ function ChartCanvas({
 }: ChartCanvasProps) {
   if (!hasData) {
     return (
-      <div className="flex h-[400px] w-full items-center justify-center text-muted-foreground">
+      <div className="flex h-[400px] w-full items-center justify-center text-terminal-muted font-terminal text-sm">
         {noDataLabel}
       </div>
     );
   }
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[400px] w-full bg-terminal">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <defs>
-            {visibleLines.map((line) => (
-              <linearGradient
-                key={line.gradientId}
-                id={line.gradientId}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="5%" stopColor={line.color} stopOpacity={0.1} />
-                <stop offset="95%" stopColor={line.color} stopOpacity={0} />
-              </linearGradient>
-            ))}
-          </defs>
           <CartesianGrid
-            strokeDasharray="3 3"
-            className="chart-grid-light dark:chart-grid-dark"
+            stroke="rgba(0,255,136,0.08)"
+            strokeWidth={1}
             vertical={true}
             horizontal={true}
           />
           <XAxis
             dataKey="date"
             tickFormatter={(timestamp) => format(new Date(timestamp), "MMM d")}
-            className="chart-axis-light dark:chart-axis-dark"
-            tick={{ fontSize: 12 }}
+            stroke="rgba(0,255,136,0.45)"
+            tick={{
+              fontSize: 11,
+              fontFamily: "var(--font-mono-terminal)",
+              fill: "rgba(0,255,136,0.75)",
+            }}
           />
           <YAxis
             tickFormatter={(value) => formatCurrency(value)}
-            className="chart-axis-light dark:chart-axis-dark"
             domain={[yAxisMin, yAxisMax]}
-            tick={{ fontSize: 12 }}
+            stroke="rgba(0,255,136,0.45)"
+            tick={{
+              fontSize: 11,
+              fontFamily: "var(--font-mono-terminal)",
+              fill: "rgba(0,255,136,0.75)",
+            }}
             label={{
               value: "USD ($)",
               angle: -90,
               position: "insideLeft",
-              className: "chart-axis-label-light dark:chart-axis-label-dark",
+              className: "chart-axis-label-terminal",
               style: {
                 textAnchor: "middle",
-                fontSize: "12px",
+                fontSize: "11px",
                 fontWeight: 600,
               },
             }}
@@ -724,14 +713,14 @@ function ChartCanvas({
               if (active && payload && payload.length) {
                 const point = payload[0]?.payload as ChartPoint | undefined;
                 return (
-                  <div className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl">
-                    <p className="text-sm font-medium mb-2">
+                  <div className="rounded-md border border-terminal bg-terminal-card p-3 shadow-xl">
+                    <p className="font-terminal text-xs text-terminal-muted mb-2">
                       {format(new Date(point?.date || Date.now()), "PPP")}
                     </p>
                     {visibleLines.map((line) => (
                       <p
                         key={line.key}
-                        className="text-sm font-bold mb-1 last:mb-0"
+                        className="font-terminal text-xs font-bold mb-1 last:mb-0"
                         style={{ color: line.color }}
                       >
                         {line.name}: {formatCurrency(point?.[line.key] || 0)}
@@ -743,7 +732,13 @@ function ChartCanvas({
               return null;
             }}
           />
-          <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />
+          <Legend
+            wrapperStyle={{ paddingTop: "8px" }}
+            iconType="line"
+            formatter={(value) => (
+              <span className="font-terminal text-xs">{value}</span>
+            )}
+          />
           {visibleLines.map((line) => (
             <Line
               key={line.key}
@@ -754,7 +749,7 @@ function ChartCanvas({
               strokeWidth={line.strokeWidth}
               dot={false}
               connectNulls
-              activeDot={{ r: 6, strokeWidth: 2 }}
+              activeDot={{ r: 4, strokeWidth: 1 }}
             />
           ))}
         </LineChart>

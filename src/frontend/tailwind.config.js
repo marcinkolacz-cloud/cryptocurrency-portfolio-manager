@@ -15,12 +15,25 @@ export default {
             }
         },
         extend: {
+            fontFamily: {
+                terminal: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+            },
             colors: {
                 border: 'oklch(var(--border))',
                 input: 'oklch(var(--input))',
                 ring: 'oklch(var(--ring) / <alpha-value>)',
                 background: 'oklch(var(--background))',
                 foreground: 'oklch(var(--foreground))',
+                terminal: {
+                    bg: 'var(--terminal-bg)',
+                    card: 'var(--terminal-card)',
+                    border: 'var(--terminal-border)',
+                    green: 'var(--terminal-green)',
+                    red: 'var(--terminal-red)',
+                    grid: 'var(--terminal-grid)',
+                    text: 'var(--terminal-text)',
+                    muted: 'var(--terminal-text-muted)'
+                },
                 primary: {
                     DEFAULT: 'oklch(var(--primary) / <alpha-value>)',
                     foreground: 'oklch(var(--primary-foreground))'

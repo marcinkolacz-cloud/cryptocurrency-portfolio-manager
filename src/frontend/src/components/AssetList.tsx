@@ -306,72 +306,72 @@ export default function AssetList({
     className?: string;
   }) => (
     <TableHead
-      className={`cursor-pointer select-none border-r border-border/50 last:border-r-0 text-center ${className}`}
+      className={`cursor-pointer select-none border-r border-terminal last:border-r-0 text-center text-terminal-muted ${className}`}
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center justify-center gap-1">
         {children}
         <ArrowUpDown
-          className={`h-3 w-3 ${sortField === field ? "opacity-100" : "opacity-50"}`}
+          className={`h-3 w-3 ${sortField === field ? "opacity-100 text-terminal-green" : "opacity-50"}`}
         />
       </div>
     </TableHead>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+    <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border border-terminal bg-terminal-card p-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
+            <CardTitle className="text-xs font-medium text-terminal-muted">
               {t.totalValue}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 pt-1">
+            <div className="font-terminal text-xl font-bold text-terminal">
               {formatCurrency(totalValue)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="border border-terminal bg-terminal-card p-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
+            <CardTitle className="text-xs font-medium text-terminal-muted">
               {t.totalProfitLoss}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-1">
             <div
-              className={`text-2xl font-bold ${totalProfitLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              className={`font-terminal text-xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
             >
               {formatCurrency(totalProfitLoss)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="border border-terminal bg-terminal-card p-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
+            <CardTitle className="text-xs font-medium text-terminal-muted">
               {t.unrealizedProfitLoss}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-1">
             <div
-              className={`text-2xl font-bold ${unrealizedProfitLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              className={`font-terminal text-xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
             >
               {formatCurrency(unrealizedProfitLoss)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="border border-terminal bg-terminal-card p-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3">
+            <CardTitle className="text-xs font-medium text-terminal-muted">
               {t.totalPurchaseValue}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 pt-1">
+            <div className="font-terminal text-xl font-bold text-terminal">
               {formatCurrency(totalPurchaseValue)}
             </div>
           </CardContent>
@@ -379,7 +379,7 @@ export default function AssetList({
       </div>
 
       {updatedPortfolio && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <PortfolioChart
             portfolio={updatedPortfolio}
             language={language}
@@ -392,44 +392,58 @@ export default function AssetList({
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>{t.assets}</CardTitle>
+      <Card className="border border-terminal bg-terminal-card p-3">
+        <CardHeader className="p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base font-bold text-terminal">
+              {t.assets}
+            </CardTitle>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setHistoryModalOpen(true)}
+                className="font-terminal"
               >
                 <History className="mr-2 h-4 w-4" />
                 {t.transactionHistory}
               </Button>
-              <Button size="sm" onClick={() => handleBuyClick()}>
+              <Button
+                size="sm"
+                onClick={() => handleBuyClick()}
+                className="font-terminal"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {t.addTransaction}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="mb-4">
+        <CardContent className="p-3">
+          <div className="mb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-terminal-muted" />
               <Input
                 placeholder={t.searchAssets}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted pl-9"
               />
             </div>
           </div>
 
           {filteredAndSortedAssets.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-muted-foreground">{t.noAssets}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{t.addFirst}</p>
-              <Button className="mt-4" onClick={() => handleBuyClick()}>
+              <p className="text-terminal-muted font-terminal text-sm">
+                {t.noAssets}
+              </p>
+              <p className="mt-2 font-terminal text-xs text-terminal-muted">
+                {t.addFirst}
+              </p>
+              <Button
+                className="mt-4 font-terminal"
+                onClick={() => handleBuyClick()}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {t.addTransaction}
               </Button>
@@ -438,7 +452,7 @@ export default function AssetList({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b-2">
+                  <TableRow className="border-b border-terminal hover:bg-transparent">
                     <SortableHeader field="name">{t.name}</SortableHeader>
                     <SortableHeader field="symbol">{t.symbol}</SortableHeader>
                     <SortableHeader field="price">{t.price}</SortableHeader>
@@ -461,7 +475,7 @@ export default function AssetList({
                     <SortableHeader field="realizedProfitLossPercent">
                       {t.realizedProfitLossPercent}
                     </SortableHeader>
-                    <TableHead className="text-center border-r-0">
+                    <TableHead className="text-center border-r-0 text-terminal-muted">
                       {t.actions}
                     </TableHead>
                   </TableRow>
@@ -483,37 +497,42 @@ export default function AssetList({
                     return (
                       <TableRow
                         key={asset.symbol}
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer border-b border-terminal/50 hover:bg-terminal-green/5"
                         onClick={() => handleAssetClick(asset)}
                       >
-                        <TableCell className="font-medium border-r border-border/50 text-center">
+                        <TableCell className="font-medium border-r border-terminal/50 text-center text-terminal py-1.5 px-2">
                           {asset.name}
                         </TableCell>
-                        <TableCell className="border-r border-border/50 text-center">
+                        <TableCell className="border-r border-terminal/50 text-center py-1.5 px-2">
                           <div className="flex justify-center">
-                            <Badge variant="outline">{asset.symbol}</Badge>
+                            <Badge
+                              variant="outline"
+                              className="border-terminal text-terminal-muted font-terminal"
+                            >
+                              {asset.symbol}
+                            </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center font-mono border-r border-border/50">
+                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
                           {formatCurrency(asset.currentPrice || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-mono border-r border-border/50">
+                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
                           {formatCurrency(asset.averagePurchasePrice || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-mono border-r border-border/50">
+                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
                           {formatNumber(asset.amount || 0)}
                         </TableCell>
-                        <TableCell className="text-center font-mono font-semibold border-r border-border/50">
+                        <TableCell className="text-center font-terminal font-semibold border-r border-terminal/50 text-terminal py-1.5 px-2">
                           {formatCurrency(
                             (asset.amount || 0) * (asset.currentPrice || 0),
                           )}
                         </TableCell>
-                        <TableCell className="text-center font-mono border-r border-border/50">
+                        <TableCell className="text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2">
                           {formatCurrency(asset.purchaseValue || 0)}
                         </TableCell>
-                        <TableCell className="text-center border-r border-border/50">
+                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
                           <div
-                            className={`flex items-center justify-center gap-1 font-semibold font-mono ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                            className={`flex items-center justify-center gap-1 font-semibold font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
                           >
                             {isPositive ? (
                               <TrendingUp className="h-3 w-3" />
@@ -523,35 +542,35 @@ export default function AssetList({
                             {formatCurrency(Math.abs(profitLoss))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center border-r border-border/50">
+                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
                           <div
-                            className={`font-medium font-mono ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                            className={`font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`}
                           >
                             {formatPercent(profitLossPercentage)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center border-r border-border/50">
+                        <TableCell className="text-center border-r border-terminal/50 py-1.5 px-2">
                           {hasSellHistory ? (
                             <div
-                              className={`font-medium font-mono ${isRealizedPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                              className={`font-medium font-terminal ${isRealizedPositive ? "text-terminal-green" : "text-terminal-red"}`}
                             >
                               {formatPercent(realizedPercentage)}
                             </div>
                           ) : (
-                            <div className="font-mono text-muted-foreground">
+                            <div className="font-terminal text-terminal-muted">
                               —
                             </div>
                           )}
                         </TableCell>
                         <TableCell
-                          className="text-center"
+                          className="text-center py-1.5 px-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-center gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 hover:bg-terminal-green/10"
                               onClick={() => handleBuyClick(asset)}
                               title={t.buy}
                             >
@@ -564,7 +583,7 @@ export default function AssetList({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 hover:bg-terminal-red/10"
                               onClick={() => handleSellClick(asset)}
                               title={t.sell}
                             >

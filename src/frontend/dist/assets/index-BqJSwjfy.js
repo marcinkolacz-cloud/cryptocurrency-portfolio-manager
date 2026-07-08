@@ -60711,8 +60711,8 @@ const translations$c = {
   }
 };
 const COLORS = [
-  "#10b981",
-  // green
+  "#00ff88",
+  // terminal green
   "#3b82f6",
   // blue
   "#f59e0b",
@@ -60780,17 +60780,19 @@ function AssetAllocationChart({
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-bold mb-2", children: data.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm mb-1", children: [
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-md border border-terminal bg-terminal-card p-3 shadow-xl", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-terminal text-xs font-bold text-terminal mb-2", children: data.name }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-terminal text-xs text-terminal-muted mb-1", children: [
           t2.value,
-          ": ",
-          formatCurrency(data.value)
+          ":",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-terminal", children: formatCurrency(data.value) })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-terminal text-xs text-terminal-muted", children: [
           t2.percentage,
-          ": ",
-          formatPercent(data.percentage)
+          ":",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-terminal", children: formatPercent(data.percentage) })
         ] })
       ] });
     }
@@ -60804,15 +60806,16 @@ function AssetAllocationChart({
         y: 0,
         dy: 4,
         textAnchor: "end",
-        fill: "currentColor",
-        className: "text-xs fill-foreground",
+        fill: "rgba(0,255,136,0.75)",
+        className: "font-terminal text-xs",
+        style: { fontFamily: "var(--font-mono-terminal)" },
         children: showPercentage ? `${payload.value}%` : formatCurrency(payload.value)
       }
     ) });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col gap-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: t2.assetAllocation }),
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "gap-2 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base font-bold text-terminal", children: t2.assetAllocation }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Button$1,
@@ -60820,6 +60823,7 @@ function AssetAllocationChart({
             variant: showPercentage ? "outline" : "default",
             size: "sm",
             onClick: () => setShowPercentage(false),
+            className: "font-terminal",
             children: t2.showDollar
           }
         ),
@@ -60829,21 +60833,22 @@ function AssetAllocationChart({
             variant: showPercentage ? "default" : "outline",
             size: "sm",
             onClick: () => setShowPercentage(true),
+            className: "font-terminal",
             children: t2.showPercentage
           }
         )
       ] })
-    ] }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !hasData ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-[400px] flex flex-col items-center justify-center text-center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: t2.noAssets }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: t2.addAssets })
-    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[500px] w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3", children: !hasData ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-[400px] flex flex-col items-center justify-center text-center bg-terminal", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-terminal-muted font-terminal text-sm", children: t2.noAssets }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-terminal text-xs text-terminal-muted", children: t2.addAssets })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[500px] w-full bg-terminal", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
       BarChart,
       {
         data: chartData,
         margin: { top: 20, right: 30, left: 20, bottom: 60 },
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(CartesianGrid, { strokeDasharray: "3 3", className: "stroke-muted" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CartesianGrid, { stroke: "rgba(0,255,136,0.08)", strokeWidth: 1 }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             XAxis,
             {
@@ -60852,23 +60857,28 @@ function AssetAllocationChart({
               textAnchor: "end",
               height: 80,
               interval: 0,
-              tick: { fill: "currentColor", fontSize: 12 },
-              className: "fill-foreground"
+              stroke: "rgba(0,255,136,0.45)",
+              tick: {
+                fill: "rgba(0,255,136,0.75)",
+                fontSize: 11,
+                fontFamily: "var(--font-mono-terminal)"
+              }
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             YAxis,
             {
               tick: /* @__PURE__ */ jsxRuntimeExports.jsx(CustomYAxisTick, {}),
-              width: showPercentage ? 60 : 100
+              width: showPercentage ? 60 : 100,
+              stroke: "rgba(0,255,136,0.45)"
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: /* @__PURE__ */ jsxRuntimeExports.jsx(CustomTooltip, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Legend,
             {
-              wrapperStyle: { paddingTop: "20px" },
-              formatter: () => showPercentage ? t2.percentage : t2.value
+              wrapperStyle: { paddingTop: "8px" },
+              formatter: (value) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs", children: value })
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -67915,10 +67925,10 @@ const translations$a = {
   }
 };
 const LINE_COLORS = {
-  totalValue: "#10b981",
-  totalProfitLoss: "oklch(0.646 0.222 145)",
-  unrealizedProfitLoss: "oklch(0.6 0.118 220)",
-  totalPurchaseValue: "oklch(0.65 0.24 300)"
+  totalValue: "#00ff88",
+  totalProfitLoss: "#00ff88",
+  unrealizedProfitLoss: "#ff3b30",
+  totalPurchaseValue: "#3b82f6"
 };
 function PortfolioChart({
   portfolio,
@@ -68115,40 +68125,38 @@ function PortfolioChart({
     setDateRange(range3);
     setSelectedDate(void 0);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "border-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: t2.portfolioValue }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
-        rangeButtons.map((btn) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "border border-terminal bg-terminal-card p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
+      rangeButtons.map((btn) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          variant: dateRange === btn.key ? "default" : "outline",
+          size: "sm",
+          onClick: () => handleRangeChange(btn.key),
+          className: "font-terminal",
+          children: btn.label
+        },
+        btn.key
+      )),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Popover, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Button$1, { variant: "outline", size: "sm", className: "font-terminal", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Calendar$1, { className: "mr-2 h-4 w-4" }),
+          selectedDate ? format(selectedDate, "PPP") : t2.selectDate
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(PopoverContent, { className: "w-auto p-0", align: "start", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Calendar,
           {
-            variant: dateRange === btn.key ? "default" : "outline",
-            size: "sm",
-            onClick: () => handleRangeChange(btn.key),
-            children: btn.label
-          },
-          btn.key
-        )),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(Popover, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Button$1, { variant: "outline", size: "sm", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Calendar$1, { className: "mr-2 h-4 w-4" }),
-            selectedDate ? format(selectedDate, "PPP") : t2.selectDate
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(PopoverContent, { className: "w-auto p-0", align: "start", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Calendar,
-            {
-              mode: "single",
-              selected: selectedDate,
-              onSelect: (date2) => {
-                setSelectedDate(date2);
-                setDateRange("max");
-              },
-              initialFocus: true
-            }
-          ) })
-        ] })
+            mode: "single",
+            selected: selectedDate,
+            onSelect: (date2) => {
+              setSelectedDate(date2);
+              setDateRange("max");
+            },
+            initialFocus: true
+          }
+        ) })
       ] })
-    ] }) }) }),
+    ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       ValueChart,
       {
@@ -68208,14 +68216,14 @@ function ValueChart({
       name: totalValueName,
       color: LINE_COLORS.totalValue,
       gradientId: "colorTotalValue",
-      strokeWidth: 4
+      strokeWidth: 2
     },
     {
       key: "totalPurchaseValue",
       name: totalPurchaseValueName,
       color: LINE_COLORS.totalPurchaseValue,
       gradientId: "colorPurchaseValue",
-      strokeWidth: 3
+      strokeWidth: 1.5
     }
   ];
   const visibleLines = lines.filter((line) => {
@@ -68223,9 +68231,9 @@ function ValueChart({
     return showTotalPurchaseValue;
   });
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: title }),
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardHeader, { className: "gap-2 p-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base font-bold text-terminal", children: title }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           CheckboxLine,
@@ -68249,8 +68257,8 @@ function ValueChart({
           }
         )
       ] })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       ChartCanvas,
       {
         data,
@@ -68285,14 +68293,14 @@ function ProfitLossChart({
       name: totalProfitLossName,
       color: LINE_COLORS.totalProfitLoss,
       gradientId: "colorTotalPL",
-      strokeWidth: 3
+      strokeWidth: 1.5
     },
     {
       key: "unrealizedProfitLoss",
       name: unrealizedProfitLossName,
       color: LINE_COLORS.unrealizedProfitLoss,
       gradientId: "colorUnrealizedPL",
-      strokeWidth: 3
+      strokeWidth: 1.5
     }
   ];
   const visibleLines = lines.filter((line) => {
@@ -68300,9 +68308,9 @@ function ProfitLossChart({
     return showUnrealizedProfitLoss;
   });
   const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: title }),
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardHeader, { className: "gap-2 p-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base font-bold text-terminal", children: title }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           CheckboxLine,
@@ -68326,8 +68334,8 @@ function ProfitLossChart({
           }
         )
       ] })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       ChartCanvas,
       {
         data,
@@ -68362,7 +68370,7 @@ function CheckboxLine({
       Label,
       {
         htmlFor: id,
-        className: `text-sm ${bold ? "font-bold" : "font-medium"} leading-none cursor-pointer`,
+        className: `font-terminal text-xs ${bold ? "font-bold" : "font-medium"} leading-none cursor-pointer`,
         style: { color: color2 },
         children: label
       }
@@ -68379,29 +68387,14 @@ function ChartCanvas({
   noDataLabel
 }) {
   if (!hasData) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[400px] w-full items-center justify-center text-muted-foreground", children: noDataLabel });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[400px] w-full items-center justify-center text-terminal-muted font-terminal text-sm", children: noDataLabel });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[400px] w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LineChart, { data, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("defs", { children: visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      "linearGradient",
-      {
-        id: line.gradientId,
-        x1: "0",
-        y1: "0",
-        x2: "0",
-        y2: "1",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "5%", stopColor: line.color, stopOpacity: 0.1 }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "95%", stopColor: line.color, stopOpacity: 0 })
-        ]
-      },
-      line.gradientId
-    )) }),
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[400px] w-full bg-terminal", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LineChart, { data, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       CartesianGrid,
       {
-        strokeDasharray: "3 3",
-        className: "chart-grid-light dark:chart-grid-dark",
+        stroke: "rgba(0,255,136,0.08)",
+        strokeWidth: 1,
         vertical: true,
         horizontal: true
       }
@@ -68411,25 +68404,33 @@ function ChartCanvas({
       {
         dataKey: "date",
         tickFormatter: (timestamp) => format(new Date(timestamp), "MMM d"),
-        className: "chart-axis-light dark:chart-axis-dark",
-        tick: { fontSize: 12 }
+        stroke: "rgba(0,255,136,0.45)",
+        tick: {
+          fontSize: 11,
+          fontFamily: "var(--font-mono-terminal)",
+          fill: "rgba(0,255,136,0.75)"
+        }
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       YAxis,
       {
         tickFormatter: (value) => formatCurrency(value),
-        className: "chart-axis-light dark:chart-axis-dark",
         domain: [yAxisMin, yAxisMax],
-        tick: { fontSize: 12 },
+        stroke: "rgba(0,255,136,0.45)",
+        tick: {
+          fontSize: 11,
+          fontFamily: "var(--font-mono-terminal)",
+          fill: "rgba(0,255,136,0.75)"
+        },
         label: {
           value: "USD ($)",
           angle: -90,
           position: "insideLeft",
-          className: "chart-axis-label-light dark:chart-axis-label-dark",
+          className: "chart-axis-label-terminal",
           style: {
             textAnchor: "middle",
-            fontSize: "12px",
+            fontSize: "11px",
             fontWeight: 600
           }
         }
@@ -68442,12 +68443,12 @@ function ChartCanvas({
           var _a3;
           if (active && payload && payload.length) {
             const point2 = (_a3 = payload[0]) == null ? void 0 : _a3.payload;
-            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium mb-2", children: format(new Date((point2 == null ? void 0 : point2.date) || Date.now()), "PPP") }),
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-md border border-terminal bg-terminal-card p-3 shadow-xl", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-terminal text-xs text-terminal-muted mb-2", children: format(new Date((point2 == null ? void 0 : point2.date) || Date.now()), "PPP") }),
               visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "p",
                 {
-                  className: "text-sm font-bold mb-1 last:mb-0",
+                  className: "font-terminal text-xs font-bold mb-1 last:mb-0",
                   style: { color: line.color },
                   children: [
                     line.name,
@@ -68463,7 +68464,14 @@ function ChartCanvas({
         }
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Legend, { wrapperStyle: { paddingTop: "20px" }, iconType: "line" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Legend,
+      {
+        wrapperStyle: { paddingTop: "8px" },
+        iconType: "line",
+        formatter: (value) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs", children: value })
+      }
+    ),
     visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsx(
       Line,
       {
@@ -68474,7 +68482,7 @@ function ChartCanvas({
         strokeWidth: line.strokeWidth,
         dot: false,
         connectNulls: true,
-        activeDot: { r: 6, strokeWidth: 2 }
+        activeDot: { r: 4, strokeWidth: 1 }
       },
       line.key
     ))
@@ -72711,51 +72719,51 @@ function AssetList({
   }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     TableHead,
     {
-      className: `cursor-pointer select-none border-r border-border/50 last:border-r-0 text-center ${className}`,
+      className: `cursor-pointer select-none border-r border-terminal last:border-r-0 text-center text-terminal-muted ${className}`,
       onClick: () => handleSort(field),
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-center gap-1", children: [
         children,
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           ArrowUpDown,
           {
-            className: `h-3 w-3 ${sortField === field ? "opacity-100" : "opacity-50"}`
+            className: `h-3 w-3 ${sortField === field ? "opacity-100 text-terminal-green" : "opacity-50"}`
           }
         )
       ] })
     }
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4 md:grid-cols-2 lg:grid-cols-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-sm font-medium", children: t2.totalValue }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-2xl font-bold", children: formatCurrency(totalValue) }) })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-2 lg:grid-cols-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xs font-medium text-terminal-muted", children: t2.totalValue }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-xl font-bold text-terminal", children: formatCurrency(totalValue) }) })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-sm font-medium", children: t2.totalProfitLoss }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xs font-medium text-terminal-muted", children: t2.totalProfitLoss }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           "div",
           {
-            className: `text-2xl font-bold ${totalProfitLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+            className: `font-terminal text-xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`,
             children: formatCurrency(totalProfitLoss)
           }
         ) })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-sm font-medium", children: t2.unrealizedProfitLoss }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xs font-medium text-terminal-muted", children: t2.unrealizedProfitLoss }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           "div",
           {
-            className: `text-2xl font-bold ${unrealizedProfitLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+            className: `font-terminal text-xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`,
             children: formatCurrency(unrealizedProfitLoss)
           }
         ) })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-sm font-medium", children: t2.totalPurchaseValue }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-2xl font-bold", children: formatCurrency(totalPurchaseValue) }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xs font-medium text-terminal-muted", children: t2.totalPurchaseValue }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-3 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-xl font-bold text-terminal", children: formatCurrency(totalPurchaseValue) }) })
       ] })
     ] }),
-    updatedPortfolio && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-6 lg:grid-cols-2", children: [
+    updatedPortfolio && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 lg:grid-cols-2", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         PortfolioChart,
         {
@@ -72772,9 +72780,9 @@ function AssetList({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: t2.assets }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-terminal bg-terminal-card p-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base font-bold text-terminal", children: t2.assets }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs(
             Button$1,
@@ -72782,40 +72790,56 @@ function AssetList({
               variant: "outline",
               size: "sm",
               onClick: () => setHistoryModalOpen(true),
+              className: "font-terminal",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(History, { className: "mr-2 h-4 w-4" }),
                 t2.transactionHistory
               ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Button$1, { size: "sm", onClick: () => handleBuyClick(), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "mr-2 h-4 w-4" }),
-            t2.addTransaction
-          ] })
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button$1,
+            {
+              size: "sm",
+              onClick: () => handleBuyClick(),
+              className: "font-terminal",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "mr-2 h-4 w-4" }),
+                t2.addTransaction
+              ]
+            }
+          )
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-terminal-muted" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Input,
             {
               placeholder: t2.searchAssets,
               value: searchTerm,
               onChange: (e3) => setSearchTerm(e3.target.value),
-              className: "pl-9"
+              className: "border-terminal bg-terminal font-terminal text-terminal placeholder:text-terminal-muted pl-9"
             }
           )
         ] }) }),
         filteredAndSortedAssets.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "py-16 text-center", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: t2.noAssets }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: t2.addFirst }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Button$1, { className: "mt-4", onClick: () => handleBuyClick(), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "mr-2 h-4 w-4" }),
-            t2.addTransaction
-          ] })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-terminal-muted font-terminal text-sm", children: t2.noAssets }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-terminal text-xs text-terminal-muted", children: t2.addFirst }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button$1,
+            {
+              className: "mt-4 font-terminal",
+              onClick: () => handleBuyClick(),
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "mr-2 h-4 w-4" }),
+                t2.addTransaction
+              ]
+            }
+          )
         ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "border-b-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "border-b border-terminal hover:bg-transparent", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "name", children: t2.name }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "symbol", children: t2.symbol }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "price", children: t2.price }),
@@ -72826,7 +72850,7 @@ function AssetList({
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "profitLossDollar", children: t2.profitLossDollar }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "profitLossPercent", children: t2.profitLossPercent }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "realizedProfitLossPercent", children: t2.realizedProfitLossPercent }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-center border-r-0", children: t2.actions })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-center border-r-0 text-terminal-muted", children: t2.actions })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: filteredAndSortedAssets.map((asset) => {
             if (!asset) return null;
@@ -72840,46 +72864,53 @@ function AssetList({
             return /* @__PURE__ */ jsxRuntimeExports.jsxs(
               TableRow,
               {
-                className: "cursor-pointer hover:bg-muted/50",
+                className: "cursor-pointer border-b border-terminal/50 hover:bg-terminal-green/5",
                 onClick: () => handleAssetClick(asset),
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-medium border-r border-border/50 text-center", children: asset.name }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "border-r border-border/50 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "outline", children: asset.symbol }) }) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-mono border-r border-border/50", children: formatCurrency(asset.currentPrice || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-mono border-r border-border/50", children: formatCurrency(asset.averagePurchasePrice || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-mono border-r border-border/50", children: formatNumber(asset.amount || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-mono font-semibold border-r border-border/50", children: formatCurrency(
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-medium border-r border-terminal/50 text-center text-terminal py-1.5 px-2", children: asset.name }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "border-r border-terminal/50 text-center py-1.5 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Badge,
+                    {
+                      variant: "outline",
+                      className: "border-terminal text-terminal-muted font-terminal",
+                      children: asset.symbol
+                    }
+                  ) }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2", children: formatCurrency(asset.currentPrice || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2", children: formatCurrency(asset.averagePurchasePrice || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2", children: formatNumber(asset.amount || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal font-semibold border-r border-terminal/50 text-terminal py-1.5 px-2", children: formatCurrency(
                     (asset.amount || 0) * (asset.currentPrice || 0)
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-mono border-r border-border/50", children: formatCurrency(asset.purchaseValue || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-border/50", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal/50 text-terminal py-1.5 px-2", children: formatCurrency(asset.purchaseValue || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal/50 py-1.5 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                     "div",
                     {
-                      className: `flex items-center justify-center gap-1 font-semibold font-mono ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+                      className: `flex items-center justify-center gap-1 font-semibold font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`,
                       children: [
                         isPositive ? /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingUp, { className: "h-3 w-3" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingDown, { className: "h-3 w-3" }),
                         formatCurrency(Math.abs(profitLoss))
                       ]
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-border/50", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal/50 py-1.5 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "div",
                     {
-                      className: `font-medium font-mono ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+                      className: `font-medium font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`,
                       children: formatPercent(profitLossPercentage)
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-border/50", children: hasSellHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal/50 py-1.5 px-2", children: hasSellHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "div",
                     {
-                      className: `font-medium font-mono ${isRealizedPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+                      className: `font-medium font-terminal ${isRealizedPositive ? "text-terminal-green" : "text-terminal-red"}`,
                       children: formatPercent(realizedPercentage)
                     }
-                  ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-mono text-muted-foreground", children: "—" }) }),
+                  ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-terminal-muted", children: "—" }) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(
                     TableCell,
                     {
-                      className: "text-center",
+                      className: "text-center py-1.5 px-2",
                       onClick: (e3) => e3.stopPropagation(),
                       children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-center gap-1", children: [
                         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -72887,7 +72918,7 @@ function AssetList({
                           {
                             variant: "ghost",
                             size: "icon",
-                            className: "h-8 w-8",
+                            className: "h-8 w-8 hover:bg-terminal-green/10",
                             onClick: () => handleBuyClick(asset),
                             title: t2.buy,
                             children: /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -72905,7 +72936,7 @@ function AssetList({
                           {
                             variant: "ghost",
                             size: "icon",
-                            className: "h-8 w-8",
+                            className: "h-8 w-8 hover:bg-terminal-red/10",
                             onClick: () => handleSellClick(asset),
                             title: t2.sell,
                             children: /* @__PURE__ */ jsxRuntimeExports.jsx(

@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Terminal mono font (JetBrains Mono) for numeric/ticker text */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/JetBrainsMono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
+    /* Trading-terminal token layer (dashboard-scoped, does NOT override global theme) */
+    --font-mono-terminal: "JetBrains Mono", "IBM Plex Mono", ui-monospace,
+      SFMono-Regular, Menlo, monospace;
+    --terminal-bg: #0a0a0f;
+    --terminal-card: #0d0f12;
+    --terminal-border: #1a1d24;
+    --terminal-green: #00ff88;
+    --terminal-red: #ff3b30;
+    --terminal-grid: rgba(0, 255, 136, 0.08);
+    --terminal-axis: rgba(0, 255, 136, 0.45);
+    --terminal-axis-label: rgba(0, 255, 136, 0.75);
+    --terminal-text: rgba(255, 255, 255, 0.92);
+    --terminal-text-muted: rgba(255, 255, 255, 0.55);
+    --terminal-card-pad: 0.875rem;
+    --terminal-row-height: 2.25rem;
     --radius: 0.625rem;
     --background: 0.98 0 0;
     --foreground: 0.145 0 0;
@@ -98,6 +122,12 @@
   stroke-width: 1.5;
 }
 
+/* Chart grid styling for terminal mode - low-contrast green tint, thin lines */
+.chart-grid-terminal {
+  stroke: var(--terminal-grid);
+  stroke-width: 1;
+}
+
 /* Chart axis styling for light mode */
 .chart-axis-light {
   stroke: rgba(0, 0, 0, 0.7);
@@ -108,6 +138,12 @@
   stroke: rgba(255, 255, 255, 0.95);
 }
 
+/* Chart axis styling for terminal mode - subtle green axis */
+.chart-axis-terminal {
+  stroke: var(--terminal-axis);
+  stroke-width: 1;
+}
+
 /* Chart axis label styling for light mode */
 .chart-axis-label-light {
   fill: rgba(0, 0, 0, 0.8);
@@ -116,6 +152,14 @@
 /* Chart axis label styling for dark mode - maximum contrast and brightness */
 .chart-axis-label-dark {
   fill: rgba(255, 255, 255, 1);
+}
+
+/* Chart axis label styling for terminal mode - mono green labels */
+.chart-axis-label-terminal {
+  fill: var(--terminal-axis-label);
+  font-family: var(--font-mono-terminal);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* Recharts text elements in light mode */
@@ -168,6 +212,45 @@
 
 /* Smooth transitions for all interactive elements */
 @layer utilities {
+  /* Terminal typography utility for numeric/ticker/axis text */
+  .font-terminal {
+    font-family: var(--font-mono-terminal);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 1;
+    letter-spacing: -0.01em;
+  }
+
+  /* Terminal surface utilities (dashboard-scoped, do not override global theme) */
+  .bg-terminal {
+    background-color: var(--terminal-bg);
+  }
+  .bg-terminal-card {
+    background-color: var(--terminal-card);
+  }
+  .border-terminal {
+    border-color: var(--terminal-border);
+  }
+  .text-terminal-green {
+    color: var(--terminal-green);
+  }
+  .text-terminal-red {
+    color: var(--terminal-red);
+  }
+  .text-terminal {
+    color: var(--terminal-text);
+  }
+  .text-terminal-muted {
+    color: var(--terminal-text-muted);
+  }
+
+  /* Terminal card padding/row density tokens */
+  .p-terminal-card {
+    padding: var(--terminal-card-pad);
+  }
+  .h-terminal-row {
+    height: var(--terminal-row-height);
+  }
+
   .modal-overlay {
     @apply fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300;
   }

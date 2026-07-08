@@ -500,6 +500,21 @@ video {
   display: none;
 }
   :root {
+    /* Trading-terminal token layer (dashboard-scoped, does NOT override global theme) */
+    --font-mono-terminal: "JetBrains Mono", "IBM Plex Mono", ui-monospace,
+      SFMono-Regular, Menlo, monospace;
+    --terminal-bg: #0a0a0f;
+    --terminal-card: #0d0f12;
+    --terminal-border: #1a1d24;
+    --terminal-green: #00ff88;
+    --terminal-red: #ff3b30;
+    --terminal-grid: rgba(0, 255, 136, 0.08);
+    --terminal-axis: rgba(0, 255, 136, 0.45);
+    --terminal-axis-label: rgba(0, 255, 136, 0.75);
+    --terminal-text: rgba(255, 255, 255, 0.92);
+    --terminal-text-muted: rgba(255, 255, 255, 0.55);
+    --terminal-card-pad: 0.875rem;
+    --terminal-row-height: 2.25rem;
     --radius: 0.625rem;
     --background: 0.98 0 0;
     --foreground: 0.145 0 0;
@@ -781,6 +796,9 @@ video {
 }
 .mb-2 {
   margin-bottom: 0.5rem;
+}
+.mb-3 {
+  margin-bottom: 0.75rem;
 }
 .mb-4 {
   margin-bottom: 1rem;
@@ -1392,11 +1410,6 @@ video {
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1rem * var(--tw-space-y-reverse));
 }
-.space-y-6 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
-}
 .self-start {
   align-self: flex-start;
 }
@@ -1491,9 +1504,6 @@ video {
 }
 .border-b {
   border-bottom-width: 1px;
-}
-.border-b-2 {
-  border-bottom-width: 2px;
 }
 .border-l {
   border-left-width: 1px;
@@ -1636,6 +1646,9 @@ video {
 .bg-sidebar-border {
   background-color: oklch(var(--sidebar-border));
 }
+.bg-terminal-card {
+  background-color: var(--terminal-card);
+}
 .bg-transparent {
   background-color: transparent;
 }
@@ -1695,9 +1708,6 @@ video {
 }
 .fill-current {
   fill: currentColor;
-}
-.fill-foreground {
-  fill: oklch(var(--foreground));
 }
 .fill-primary {
   fill: oklch(var(--primary) / 1);
@@ -1808,8 +1818,8 @@ video {
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
-.pb-2 {
-  padding-bottom: 0.5rem;
+.pb-1 {
+  padding-bottom: 0.25rem;
 }
 .pb-3 {
   padding-bottom: 0.75rem;
@@ -1847,6 +1857,9 @@ video {
 .pt-0 {
   padding-top: 0px;
 }
+.pt-1 {
+  padding-top: 0.25rem;
+}
 .pt-3 {
   padding-top: 0.75rem;
 }
@@ -1870,6 +1883,9 @@ video {
 }
 .font-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.font-terminal {
+  font-family: JetBrains Mono, IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .text-2xl {
   font-size: 1.5rem;
@@ -1998,6 +2014,15 @@ video {
 }
 .text-sidebar-foreground {
   color: oklch(var(--sidebar-foreground));
+}
+.text-terminal-green {
+  color: var(--terminal-green);
+}
+.text-terminal-muted {
+  color: var(--terminal-text-muted);
+}
+.text-terminal-red {
+  color: var(--terminal-red);
 }
 .text-white {
   --tw-text-opacity: 1;
@@ -2221,6 +2246,42 @@ video {
 .ease-linear {
   animation-timing-function: linear;
 }
+/* Terminal typography utility for numeric/ticker/axis text */
+.font-terminal {
+    font-family: var(--font-mono-terminal);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 1;
+    letter-spacing: -0.01em;
+  }
+/* Terminal surface utilities (dashboard-scoped, do not override global theme) */
+.bg-terminal {
+    background-color: var(--terminal-bg);
+  }
+.bg-terminal-card {
+    background-color: var(--terminal-card);
+  }
+.border-terminal {
+    border-color: var(--terminal-border);
+  }
+.text-terminal-green {
+    color: var(--terminal-green);
+  }
+.text-terminal-red {
+    color: var(--terminal-red);
+  }
+.text-terminal {
+    color: var(--terminal-text);
+  }
+.text-terminal-muted {
+    color: var(--terminal-text-muted);
+  }
+/* Terminal card padding/row density tokens */
+.p-terminal-card {
+    padding: var(--terminal-card-pad);
+  }
+.h-terminal-row {
+    height: var(--terminal-row-height);
+  }
 .modal-overlay {
   position: fixed;
   inset: 0px;
@@ -2467,6 +2528,15 @@ video {
   --cell-size: var(--spacing(8));
 }
 
+/* Terminal mono font (JetBrains Mono) for numeric/ticker text */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/JetBrainsMono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Chart grid styling for light mode */
 .chart-grid-light {
   stroke: rgba(0, 0, 0, 0.2);
@@ -2479,6 +2549,12 @@ video {
   stroke-width: 1.5;
 }
 
+/* Chart grid styling for terminal mode - low-contrast green tint, thin lines */
+.chart-grid-terminal {
+  stroke: var(--terminal-grid);
+  stroke-width: 1;
+}
+
 /* Chart axis styling for light mode */
 .chart-axis-light {
   stroke: rgba(0, 0, 0, 0.7);
@@ -2489,6 +2565,12 @@ video {
   stroke: rgba(255, 255, 255, 0.95);
 }
 
+/* Chart axis styling for terminal mode - subtle green axis */
+.chart-axis-terminal {
+  stroke: var(--terminal-axis);
+  stroke-width: 1;
+}
+
 /* Chart axis label styling for light mode */
 .chart-axis-label-light {
   fill: rgba(0, 0, 0, 0.8);
@@ -2497,6 +2579,14 @@ video {
 /* Chart axis label styling for dark mode - maximum contrast and brightness */
 .chart-axis-label-dark {
   fill: rgba(255, 255, 255, 1);
+}
+
+/* Chart axis label styling for terminal mode - mono green labels */
+.chart-axis-label-terminal {
+  fill: var(--terminal-axis-label);
+  font-family: var(--font-mono-terminal);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* Recharts text elements in light mode */
@@ -2633,6 +2723,12 @@ td {
   --tw-text-opacity: 1;
   color: oklch(var(--muted-foreground) / var(--tw-text-opacity, 1));
 }
+.placeholder\:text-terminal-muted::-moz-placeholder {
+    color: var(--terminal-text-muted);
+}
+.placeholder\:text-terminal-muted::placeholder {
+    color: var(--terminal-text-muted);
+}
 .after\:absolute::after {
   content: var(--tw-content);
   position: absolute;
@@ -2721,6 +2817,9 @@ td {
 }
 .hover\:bg-sidebar-accent:hover {
   background-color: oklch(var(--sidebar-accent));
+}
+.hover\:bg-transparent:hover {
+  background-color: transparent;
 }
 .hover\:text-accent-foreground:hover {
   color: oklch(var(--accent-foreground));

@@ -42,8 +42,10 @@ const translations = {
   },
 };
 
+// Terminal palette: first color shifted to neon green for consistency with PortfolioChart.
+// Color assignment order is unchanged — only hex values updated.
 const COLORS = [
-  "#10b981", // green
+  "#00ff88", // terminal green
   "#3b82f6", // blue
   "#f59e0b", // amber
   "#ef4444", // red
@@ -116,13 +118,19 @@ export default function AssetAllocationChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl">
-          <p className="text-sm font-bold mb-2">{data.name}</p>
-          <p className="text-sm mb-1">
-            {t.value}: {formatCurrency(data.value)}
+        <div className="rounded-md border border-terminal bg-terminal-card p-3 shadow-xl">
+          <p className="font-terminal text-xs font-bold text-terminal mb-2">
+            {data.name}
           </p>
-          <p className="text-sm">
-            {t.percentage}: {formatPercent(data.percentage)}
+          <p className="font-terminal text-xs text-terminal-muted mb-1">
+            {t.value}:{" "}
+            <span className="text-terminal">{formatCurrency(data.value)}</span>
+          </p>
+          <p className="font-terminal text-xs text-terminal-muted">
+            {t.percentage}:{" "}
+            <span className="text-terminal">
+              {formatPercent(data.percentage)}
+            </span>
           </p>
         </div>
       );
@@ -138,8 +146,9 @@ export default function AssetAllocationChart({
           y={0}
           dy={4}
           textAnchor="end"
-          fill="currentColor"
-          className="text-xs fill-foreground"
+          fill="rgba(0,255,136,0.75)"
+          className="font-terminal text-xs"
+          style={{ fontFamily: "var(--font-mono-terminal)" }}
         >
           {showPercentage ? `${payload.value}%` : formatCurrency(payload.value)}
         </text>
@@ -148,63 +157,74 @@ export default function AssetAllocationChart({
   };
 
   return (
-    <Card className="border-2">
-      <CardHeader>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-bold">
-              {t.assetAllocation}
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant={showPercentage ? "outline" : "default"}
-                size="sm"
-                onClick={() => setShowPercentage(false)}
-              >
-                {t.showDollar}
-              </Button>
-              <Button
-                variant={showPercentage ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowPercentage(true)}
-              >
-                {t.showPercentage}
-              </Button>
-            </div>
+    <Card className="border border-terminal bg-terminal-card p-3">
+      <CardHeader className="gap-2 p-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-bold text-terminal">
+            {t.assetAllocation}
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant={showPercentage ? "outline" : "default"}
+              size="sm"
+              onClick={() => setShowPercentage(false)}
+              className="font-terminal"
+            >
+              {t.showDollar}
+            </Button>
+            <Button
+              variant={showPercentage ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowPercentage(true)}
+              className="font-terminal"
+            >
+              {t.showPercentage}
+            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         {!hasData ? (
-          <div className="h-[400px] flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">{t.noAssets}</p>
-            <p className="mt-2 text-sm text-muted-foreground">{t.addAssets}</p>
+          <div className="h-[400px] flex flex-col items-center justify-center text-center bg-terminal">
+            <p className="text-terminal-muted font-terminal text-sm">
+              {t.noAssets}
+            </p>
+            <p className="mt-2 font-terminal text-xs text-terminal-muted">
+              {t.addAssets}
+            </p>
           </div>
         ) : (
-          <div className="h-[500px] w-full">
+          <div className="h-[500px] w-full bg-terminal">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
               >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <CartesianGrid stroke="rgba(0,255,136,0.08)" strokeWidth={1} />
                 <XAxis
                   dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={80}
                   interval={0}
-                  tick={{ fill: "currentColor", fontSize: 12 }}
-                  className="fill-foreground"
+                  stroke="rgba(0,255,136,0.45)"
+                  tick={{
+                    fill: "rgba(0,255,136,0.75)",
+                    fontSize: 11,
+                    fontFamily: "var(--font-mono-terminal)",
+                  }}
                 />
                 <YAxis
                   tick={<CustomYAxisTick />}
                   width={showPercentage ? 60 : 100}
+                  stroke="rgba(0,255,136,0.45)"
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
-                  wrapperStyle={{ paddingTop: "20px" }}
-                  formatter={() => (showPercentage ? t.percentage : t.value)}
+                  wrapperStyle={{ paddingTop: "8px" }}
+                  formatter={(value) => (
+                    <span className="font-terminal text-xs">{value}</span>
+                  )}
                 />
                 <Bar
                   dataKey="displayValue"
