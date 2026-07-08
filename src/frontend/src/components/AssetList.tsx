@@ -53,7 +53,8 @@ const translations = {
     value: "Wartość $",
     purchaseValue: "Wartość zakupu $",
     profitLossDollar: "Zysk/Strata ($)",
-    profitLossPercent: "Zysk/Strata (%)",
+    profitLossPercent: "Niezrealizowany %",
+    realizedProfitLossPercent: "Zrealizowany %",
     actions: "Akcje",
     buy: "Kup",
     sell: "Sprzedaj",
@@ -77,7 +78,8 @@ const translations = {
     value: "Value $",
     purchaseValue: "Purchase value $",
     profitLossDollar: "Profit/Loss ($)",
-    profitLossPercent: "Profit/Loss (%)",
+    profitLossPercent: "Unrealized %",
+    realizedProfitLossPercent: "Realized %",
     actions: "Actions",
     buy: "Buy",
     sell: "Sell",
@@ -95,7 +97,8 @@ type SortField =
   | "value"
   | "purchaseValue"
   | "profitLossDollar"
-  | "profitLossPercent";
+  | "profitLossPercent"
+  | "realizedProfitLossPercent";
 type SortDirection = "asc" | "desc";
 
 export default function AssetList({
@@ -249,6 +252,11 @@ export default function AssetList({
         case "profitLossPercent":
           comparison =
             calculateProfitLossPercentage(a) - calculateProfitLossPercentage(b);
+          break;
+        case "realizedProfitLossPercent":
+          comparison =
+            (a.realizedProfitLossPercentage || 0) -
+            (b.realizedProfitLossPercentage || 0);
           break;
       }
       return sortDirection === "asc" ? comparison : -comparison;
@@ -484,6 +492,9 @@ export default function AssetList({
                     <SortableHeader field="profitLossPercent">
                       {t.profitLossPercent}
                     </SortableHeader>
+                    <SortableHeader field="realizedProfitLossPercent">
+                      {t.realizedProfitLossPercent}
+                    </SortableHeader>
                     <TableHead className="text-center border-r-0">
                       {t.actions}
                     </TableHead>
@@ -497,6 +508,11 @@ export default function AssetList({
                     const profitLossPercentage =
                       calculateProfitLossPercentage(asset);
                     const isPositive = profitLoss >= 0;
+                    const totalSoldCost = asset.totalSoldCost || 0;
+                    const hasSellHistory = totalSoldCost > 0;
+                    const realizedPercentage =
+                      asset.realizedProfitLossPercentage || 0;
+                    const isRealizedPositive = realizedPercentage >= 0;
 
                     return (
                       <TableRow
@@ -547,6 +563,19 @@ export default function AssetList({
                           >
                             {formatPercent(profitLossPercentage)}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center border-r border-border/50">
+                          {hasSellHistory ? (
+                            <div
+                              className={`font-medium font-mono ${isRealizedPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                            >
+                              {formatPercent(realizedPercentage)}
+                            </div>
+                          ) : (
+                            <div className="font-mono text-muted-foreground">
+                              —
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell
                           className="text-center"

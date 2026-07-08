@@ -67869,6 +67869,8 @@ function subDays(date2, amount) {
 const translations$a = {
   pl: {
     portfolioValue: "Wartość portfela w czasie",
+    portfolioValueOverTime: "Wartość portfela w czasie",
+    profitLossOverTime: "Zysk/strata w czasie",
     value: "Wartość",
     date: "Data",
     noData: "Brak danych do wyświetlenia wykresu",
@@ -67890,6 +67892,8 @@ const translations$a = {
   },
   en: {
     portfolioValue: "Portfolio value over time",
+    portfolioValueOverTime: "Portfolio value over time",
+    profitLossOverTime: "Profit/loss over time",
     value: "Value",
     date: "Date",
     noData: "No data to display chart",
@@ -67909,6 +67913,12 @@ const translations$a = {
     rangeMax: "Max",
     selectDate: "Select date"
   }
+};
+const LINE_COLORS = {
+  totalValue: "#10b981",
+  totalProfitLoss: "oklch(0.646 0.222 145)",
+  unrealizedProfitLoss: "oklch(0.6 0.118 220)",
+  totalPurchaseValue: "oklch(0.65 0.24 300)"
 };
 function PortfolioChart({
   portfolio,
@@ -68094,82 +68104,31 @@ function PortfolioChart({
     }).format(value)}`;
   };
   const hasData = filteredChartData.length > 0;
-  const allValues = filteredChartData.flatMap(
-    (d2) => [
-      showTotalValue ? d2.totalValue || 0 : null,
-      showTotalProfitLoss ? d2.totalProfitLoss || 0 : null,
-      showUnrealizedProfitLoss ? d2.unrealizedProfitLoss || 0 : null,
-      showTotalPurchaseValue ? d2.totalPurchaseValue || 0 : null
-    ].filter((v2) => v2 !== null)
-  );
-  const maxValue = hasData && allValues.length > 0 ? Math.max(...allValues) : 100;
-  const minValue = hasData && allValues.length > 0 ? Math.min(...allValues) : 0;
-  const yAxisMin = minValue === 0 && maxValue === 0 ? 0 : minValue < 0 ? minValue * 1.1 : minValue * 0.95;
-  const yAxisMax = minValue === 0 && maxValue === 0 ? 100 : maxValue * 1.05;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
+  const rangeButtons = [
+    { key: "7d", label: t2.range7d },
+    { key: "30d", label: t2.range30d },
+    { key: "90d", label: t2.range90d },
+    { key: "ytd", label: t2.rangeYtd },
+    { key: "max", label: t2.rangeMax }
+  ];
+  const handleRangeChange = (range3) => {
+    setDateRange(range3);
+    setSelectedDate(void 0);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "border-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: t2.portfolioValue }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        rangeButtons.map((btn) => /* @__PURE__ */ jsxRuntimeExports.jsx(
           Button$1,
           {
-            variant: dateRange === "7d" ? "default" : "outline",
+            variant: dateRange === btn.key ? "default" : "outline",
             size: "sm",
-            onClick: () => {
-              setDateRange("7d");
-              setSelectedDate(void 0);
-            },
-            children: t2.range7d
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: dateRange === "30d" ? "default" : "outline",
-            size: "sm",
-            onClick: () => {
-              setDateRange("30d");
-              setSelectedDate(void 0);
-            },
-            children: t2.range30d
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: dateRange === "90d" ? "default" : "outline",
-            size: "sm",
-            onClick: () => {
-              setDateRange("90d");
-              setSelectedDate(void 0);
-            },
-            children: t2.range90d
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: dateRange === "ytd" ? "default" : "outline",
-            size: "sm",
-            onClick: () => {
-              setDateRange("ytd");
-              setSelectedDate(void 0);
-            },
-            children: t2.rangeYtd
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button$1,
-          {
-            variant: dateRange === "max" ? "default" : "outline",
-            size: "sm",
-            onClick: () => {
-              setDateRange("max");
-              setSelectedDate(void 0);
-            },
-            children: t2.rangeMax
-          }
-        ),
+            onClick: () => handleRangeChange(btn.key),
+            children: btn.label
+          },
+          btn.key
+        )),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Popover, { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Button$1, { variant: "outline", size: "sm", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(Calendar$1, { className: "mr-2 h-4 w-4" }),
@@ -68188,347 +68147,359 @@ function PortfolioChart({
             }
           ) })
         ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Checkbox,
-            {
-              id: "show-total-value",
-              checked: showTotalValue,
-              onCheckedChange: (checked) => setShowTotalValue(checked === true)
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Label,
-            {
-              htmlFor: "show-total-value",
-              className: "text-sm font-bold leading-none cursor-pointer",
-              style: { color: "#10b981" },
-              children: t2.showTotalValue
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Checkbox,
-            {
-              id: "show-total-pl",
-              checked: showTotalProfitLoss,
-              onCheckedChange: (checked) => setShowTotalProfitLoss(checked === true)
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Label,
-            {
-              htmlFor: "show-total-pl",
-              className: "text-sm font-medium leading-none cursor-pointer",
-              style: { color: "oklch(0.646 0.222 145)" },
-              children: t2.showTotalProfitLoss
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Checkbox,
-            {
-              id: "show-unrealized-pl",
-              checked: showUnrealizedProfitLoss,
-              onCheckedChange: (checked) => setShowUnrealizedProfitLoss(checked === true)
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Label,
-            {
-              htmlFor: "show-unrealized-pl",
-              className: "text-sm font-medium leading-none cursor-pointer",
-              style: { color: "oklch(0.6 0.118 220)" },
-              children: t2.showUnrealizedProfitLoss
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Checkbox,
-            {
-              id: "show-purchase-value",
-              checked: showTotalPurchaseValue,
-              onCheckedChange: (checked) => setShowTotalPurchaseValue(checked === true)
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Label,
-            {
-              htmlFor: "show-purchase-value",
-              className: "text-sm font-medium leading-none cursor-pointer",
-              style: { color: "oklch(0.65 0.24 300)" },
-              children: t2.showTotalPurchaseValue
-            }
-          )
-        ] })
       ] })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[400px] w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LineChart, { data: filteredChartData, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("defs", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "linearGradient",
+    ] }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ValueChart,
+      {
+        title: t2.portfolioValueOverTime,
+        data: filteredChartData,
+        hasData,
+        showTotalValue,
+        showTotalPurchaseValue,
+        onToggleTotalValue: (v2) => setShowTotalValue(v2),
+        onToggleTotalPurchaseValue: (v2) => setShowTotalPurchaseValue(v2),
+        showTotalValueLabel: t2.showTotalValue,
+        showTotalPurchaseValueLabel: t2.showTotalPurchaseValue,
+        totalValueName: t2.totalValue,
+        totalPurchaseValueName: t2.totalPurchaseValue,
+        formatCurrency,
+        noDataLabel: t2.noData
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ProfitLossChart,
+      {
+        title: t2.profitLossOverTime,
+        data: filteredChartData,
+        hasData,
+        showTotalProfitLoss,
+        showUnrealizedProfitLoss,
+        onToggleTotalProfitLoss: (v2) => setShowTotalProfitLoss(v2),
+        onToggleUnrealizedProfitLoss: (v2) => setShowUnrealizedProfitLoss(v2),
+        showTotalProfitLossLabel: t2.showTotalProfitLoss,
+        showUnrealizedProfitLossLabel: t2.showUnrealizedProfitLoss,
+        totalProfitLossName: t2.totalProfitLoss,
+        unrealizedProfitLossName: t2.unrealizedProfitLoss,
+        formatCurrency,
+        noDataLabel: t2.noData
+      }
+    )
+  ] });
+}
+function ValueChart({
+  title,
+  data,
+  hasData,
+  showTotalValue,
+  showTotalPurchaseValue,
+  onToggleTotalValue,
+  onToggleTotalPurchaseValue,
+  showTotalValueLabel,
+  showTotalPurchaseValueLabel,
+  totalValueName,
+  totalPurchaseValueName,
+  formatCurrency,
+  noDataLabel
+}) {
+  const lines = [
+    {
+      key: "totalValue",
+      name: totalValueName,
+      color: LINE_COLORS.totalValue,
+      gradientId: "colorTotalValue",
+      strokeWidth: 4
+    },
+    {
+      key: "totalPurchaseValue",
+      name: totalPurchaseValueName,
+      color: LINE_COLORS.totalPurchaseValue,
+      gradientId: "colorPurchaseValue",
+      strokeWidth: 3
+    }
+  ];
+  const visibleLines = lines.filter((line) => {
+    if (line.key === "totalValue") return showTotalValue;
+    return showTotalPurchaseValue;
+  });
+  const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          CheckboxLine,
           {
-            id: "colorTotalValue",
-            x1: "0",
-            y1: "0",
-            x2: "0",
-            y2: "1",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "5%", stopColor: "#10b981", stopOpacity: 0.1 }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "95%", stopColor: "#10b981", stopOpacity: 0 })
-            ]
+            id: "show-total-value",
+            checked: showTotalValue,
+            onCheckedChange: onToggleTotalValue,
+            label: showTotalValueLabel,
+            color: LINE_COLORS.totalValue,
+            bold: true
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("linearGradient", { id: "colorTotalPL", x1: "0", y1: "0", x2: "0", y2: "1", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "stop",
-            {
-              offset: "5%",
-              stopColor: "oklch(0.646 0.222 145)",
-              stopOpacity: 0.1
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "stop",
-            {
-              offset: "95%",
-              stopColor: "oklch(0.646 0.222 145)",
-              stopOpacity: 0
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "linearGradient",
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          CheckboxLine,
           {
-            id: "colorUnrealizedPL",
-            x1: "0",
-            y1: "0",
-            x2: "0",
-            y2: "1",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "stop",
-                {
-                  offset: "5%",
-                  stopColor: "oklch(0.6 0.118 220)",
-                  stopOpacity: 0.1
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "stop",
-                {
-                  offset: "95%",
-                  stopColor: "oklch(0.6 0.118 220)",
-                  stopOpacity: 0
-                }
-              )
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "linearGradient",
-          {
-            id: "colorPurchaseValue",
-            x1: "0",
-            y1: "0",
-            x2: "0",
-            y2: "1",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "stop",
-                {
-                  offset: "5%",
-                  stopColor: "oklch(0.65 0.24 300)",
-                  stopOpacity: 0.1
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "stop",
-                {
-                  offset: "95%",
-                  stopColor: "oklch(0.65 0.24 300)",
-                  stopOpacity: 0
-                }
-              )
-            ]
+            id: "show-purchase-value",
+            checked: showTotalPurchaseValue,
+            onCheckedChange: onToggleTotalPurchaseValue,
+            label: showTotalPurchaseValueLabel,
+            color: LINE_COLORS.totalPurchaseValue
           }
         )
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        CartesianGrid,
-        {
-          strokeDasharray: "3 3",
-          className: "chart-grid-light dark:chart-grid-dark",
-          vertical: true,
-          horizontal: true
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        XAxis,
-        {
-          dataKey: "date",
-          tickFormatter: (timestamp) => format(new Date(timestamp), "MMM d"),
-          className: "chart-axis-light dark:chart-axis-dark",
-          tick: { fontSize: 12 }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        YAxis,
-        {
-          tickFormatter: (value) => formatCurrency(value),
-          className: "chart-axis-light dark:chart-axis-dark",
-          domain: [yAxisMin, yAxisMax],
-          tick: { fontSize: 12 },
-          label: {
-            value: "USD ($)",
-            angle: -90,
-            position: "insideLeft",
-            className: "chart-axis-label-light dark:chart-axis-label-dark",
-            style: {
-              textAnchor: "middle",
-              fontSize: "12px",
-              fontWeight: 600
-            }
-          }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Tooltip,
-        {
-          content: ({ active, payload }) => {
-            var _a3, _b3, _c2, _d2, _e3, _f2, _g2, _h2, _i2, _j2;
-            if (active && payload && payload.length) {
-              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium mb-2", children: format(
-                  new Date(((_b3 = (_a3 = payload[0]) == null ? void 0 : _a3.payload) == null ? void 0 : _b3.date) || Date.now()),
-                  "PPP"
-                ) }),
-                showTotalValue && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "p",
-                  {
-                    className: "text-sm font-bold mb-1",
-                    style: { color: "#10b981" },
-                    children: [
-                      t2.totalValue,
-                      ":",
-                      " ",
-                      formatCurrency(
-                        ((_d2 = (_c2 = payload[0]) == null ? void 0 : _c2.payload) == null ? void 0 : _d2.totalValue) || 0
-                      )
-                    ]
-                  }
-                ),
-                showTotalProfitLoss && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "p",
-                  {
-                    className: "text-sm font-bold mb-1",
-                    style: { color: "oklch(0.646 0.222 145)" },
-                    children: [
-                      t2.totalProfitLoss,
-                      ":",
-                      " ",
-                      formatCurrency(
-                        ((_f2 = (_e3 = payload[0]) == null ? void 0 : _e3.payload) == null ? void 0 : _f2.totalProfitLoss) || 0
-                      )
-                    ]
-                  }
-                ),
-                showUnrealizedProfitLoss && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "p",
-                  {
-                    className: "text-sm font-bold mb-1",
-                    style: { color: "oklch(0.6 0.118 220)" },
-                    children: [
-                      t2.unrealizedProfitLoss,
-                      ":",
-                      " ",
-                      formatCurrency(
-                        ((_h2 = (_g2 = payload[0]) == null ? void 0 : _g2.payload) == null ? void 0 : _h2.unrealizedProfitLoss) || 0
-                      )
-                    ]
-                  }
-                ),
-                showTotalPurchaseValue && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "p",
-                  {
-                    className: "text-sm font-bold",
-                    style: { color: "oklch(0.65 0.24 300)" },
-                    children: [
-                      t2.totalPurchaseValue,
-                      ":",
-                      " ",
-                      formatCurrency(
-                        ((_j2 = (_i2 = payload[0]) == null ? void 0 : _i2.payload) == null ? void 0 : _j2.totalPurchaseValue) || 0
-                      )
-                    ]
-                  }
-                )
-              ] });
-            }
-            return null;
-          }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Legend, { wrapperStyle: { paddingTop: "20px" }, iconType: "line" }),
-      showTotalValue && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Line,
-        {
-          type: "monotone",
-          dataKey: "totalValue",
-          name: t2.totalValue,
-          stroke: "#10b981",
-          strokeWidth: 4,
-          dot: false,
-          connectNulls: true,
-          activeDot: { r: 6, strokeWidth: 2 }
-        }
-      ),
-      showTotalProfitLoss && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Line,
-        {
-          type: "monotone",
-          dataKey: "totalProfitLoss",
-          name: t2.totalProfitLoss,
-          stroke: "oklch(0.646 0.222 145)",
-          strokeWidth: 3,
-          dot: false,
-          connectNulls: true,
-          activeDot: { r: 6, strokeWidth: 2 }
-        }
-      ),
-      showUnrealizedProfitLoss && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Line,
-        {
-          type: "monotone",
-          dataKey: "unrealizedProfitLoss",
-          name: t2.unrealizedProfitLoss,
-          stroke: "oklch(0.6 0.118 220)",
-          strokeWidth: 3,
-          dot: false,
-          connectNulls: true,
-          activeDot: { r: 6, strokeWidth: 2 }
-        }
-      ),
-      showTotalPurchaseValue && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Line,
-        {
-          type: "monotone",
-          dataKey: "totalPurchaseValue",
-          name: t2.totalPurchaseValue,
-          stroke: "oklch(0.65 0.24 300)",
-          strokeWidth: 3,
-          dot: false,
-          connectNulls: true,
-          activeDot: { r: 6, strokeWidth: 2 }
-        }
-      )
-    ] }) }) }) })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ChartCanvas,
+      {
+        data,
+        hasData,
+        visibleLines,
+        yAxisMin,
+        yAxisMax,
+        formatCurrency,
+        noDataLabel
+      }
+    ) })
   ] });
+}
+function ProfitLossChart({
+  title,
+  data,
+  hasData,
+  showTotalProfitLoss,
+  showUnrealizedProfitLoss,
+  onToggleTotalProfitLoss,
+  onToggleUnrealizedProfitLoss,
+  showTotalProfitLossLabel,
+  showUnrealizedProfitLossLabel,
+  totalProfitLossName,
+  unrealizedProfitLossName,
+  formatCurrency,
+  noDataLabel
+}) {
+  const lines = [
+    {
+      key: "totalProfitLoss",
+      name: totalProfitLossName,
+      color: LINE_COLORS.totalProfitLoss,
+      gradientId: "colorTotalPL",
+      strokeWidth: 3
+    },
+    {
+      key: "unrealizedProfitLoss",
+      name: unrealizedProfitLossName,
+      color: LINE_COLORS.unrealizedProfitLoss,
+      gradientId: "colorUnrealizedPL",
+      strokeWidth: 3
+    }
+  ];
+  const visibleLines = lines.filter((line) => {
+    if (line.key === "totalProfitLoss") return showTotalProfitLoss;
+    return showUnrealizedProfitLoss;
+  });
+  const { yAxisMin, yAxisMax } = useYAxisDomain(data, visibleLines);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-xl font-bold", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          CheckboxLine,
+          {
+            id: "show-total-pl",
+            checked: showTotalProfitLoss,
+            onCheckedChange: onToggleTotalProfitLoss,
+            label: showTotalProfitLossLabel,
+            color: LINE_COLORS.totalProfitLoss,
+            bold: true
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          CheckboxLine,
+          {
+            id: "show-unrealized-pl",
+            checked: showUnrealizedProfitLoss,
+            onCheckedChange: onToggleUnrealizedProfitLoss,
+            label: showUnrealizedProfitLossLabel,
+            color: LINE_COLORS.unrealizedProfitLoss
+          }
+        )
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ChartCanvas,
+      {
+        data,
+        hasData,
+        visibleLines,
+        yAxisMin,
+        yAxisMax,
+        formatCurrency,
+        noDataLabel
+      }
+    ) })
+  ] });
+}
+function CheckboxLine({
+  id,
+  checked,
+  onCheckedChange,
+  label,
+  color: color2,
+  bold = false
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Checkbox,
+      {
+        id,
+        checked,
+        onCheckedChange: (c2) => onCheckedChange(c2 === true)
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Label,
+      {
+        htmlFor: id,
+        className: `text-sm ${bold ? "font-bold" : "font-medium"} leading-none cursor-pointer`,
+        style: { color: color2 },
+        children: label
+      }
+    )
+  ] });
+}
+function ChartCanvas({
+  data,
+  hasData,
+  visibleLines,
+  yAxisMin,
+  yAxisMax,
+  formatCurrency,
+  noDataLabel
+}) {
+  if (!hasData) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[400px] w-full items-center justify-center text-muted-foreground", children: noDataLabel });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[400px] w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LineChart, { data, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("defs", { children: visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "linearGradient",
+      {
+        id: line.gradientId,
+        x1: "0",
+        y1: "0",
+        x2: "0",
+        y2: "1",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "5%", stopColor: line.color, stopOpacity: 0.1 }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("stop", { offset: "95%", stopColor: line.color, stopOpacity: 0 })
+        ]
+      },
+      line.gradientId
+    )) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CartesianGrid,
+      {
+        strokeDasharray: "3 3",
+        className: "chart-grid-light dark:chart-grid-dark",
+        vertical: true,
+        horizontal: true
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      XAxis,
+      {
+        dataKey: "date",
+        tickFormatter: (timestamp) => format(new Date(timestamp), "MMM d"),
+        className: "chart-axis-light dark:chart-axis-dark",
+        tick: { fontSize: 12 }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      YAxis,
+      {
+        tickFormatter: (value) => formatCurrency(value),
+        className: "chart-axis-light dark:chart-axis-dark",
+        domain: [yAxisMin, yAxisMax],
+        tick: { fontSize: 12 },
+        label: {
+          value: "USD ($)",
+          angle: -90,
+          position: "insideLeft",
+          className: "chart-axis-label-light dark:chart-axis-label-dark",
+          style: {
+            textAnchor: "middle",
+            fontSize: "12px",
+            fontWeight: 600
+          }
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Tooltip,
+      {
+        content: ({ active, payload }) => {
+          var _a3;
+          if (active && payload && payload.length) {
+            const point2 = (_a3 = payload[0]) == null ? void 0 : _a3.payload;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-xl", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium mb-2", children: format(new Date((point2 == null ? void 0 : point2.date) || Date.now()), "PPP") }),
+              visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "p",
+                {
+                  className: "text-sm font-bold mb-1 last:mb-0",
+                  style: { color: line.color },
+                  children: [
+                    line.name,
+                    ": ",
+                    formatCurrency((point2 == null ? void 0 : point2[line.key]) || 0)
+                  ]
+                },
+                line.key
+              ))
+            ] });
+          }
+          return null;
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Legend, { wrapperStyle: { paddingTop: "20px" }, iconType: "line" }),
+    visibleLines.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Line,
+      {
+        type: "monotone",
+        dataKey: line.key,
+        name: line.name,
+        stroke: line.color,
+        strokeWidth: line.strokeWidth,
+        dot: false,
+        connectNulls: true,
+        activeDot: { r: 6, strokeWidth: 2 }
+      },
+      line.key
+    ))
+  ] }) }) });
+}
+function useYAxisDomain(data, visibleLines) {
+  return reactExports.useMemo(() => {
+    if (data.length === 0 || visibleLines.length === 0) {
+      return { yAxisMin: 0, yAxisMax: 100 };
+    }
+    const allValues = data.flatMap(
+      (d2) => visibleLines.map((line) => d2[line.key] || 0)
+    );
+    if (allValues.length === 0) {
+      return { yAxisMin: 0, yAxisMax: 100 };
+    }
+    const maxValue = Math.max(...allValues);
+    const minValue = Math.min(...allValues);
+    if (minValue === 0 && maxValue === 0) {
+      return { yAxisMin: 0, yAxisMax: 100 };
+    }
+    const yAxisMin = minValue < 0 ? minValue * 1.1 : minValue * 0.95;
+    const yAxisMax = maxValue * 1.05;
+    return { yAxisMin, yAxisMax };
+  }, [data, visibleLines]);
 }
 var U = 1, Y$1 = 0.9, H = 0.8, J = 0.17, p = 0.1, u = 0.999, $ = 0.9999;
 var k$1 = 0.99, m = /[\\\/_+.#"@\[\(\{&]/, B$1 = /[\\\/_+.#"@\[\(\{&]/g, K$1 = /[\s-]/, X = /[\s-]/g;
@@ -72537,7 +72508,8 @@ const translations$6 = {
     value: "Wartość $",
     purchaseValue: "Wartość zakupu $",
     profitLossDollar: "Zysk/Strata ($)",
-    profitLossPercent: "Zysk/Strata (%)",
+    profitLossPercent: "Niezrealizowany %",
+    realizedProfitLossPercent: "Zrealizowany %",
     actions: "Akcje",
     buy: "Kup",
     sell: "Sprzedaj",
@@ -72561,7 +72533,8 @@ const translations$6 = {
     value: "Value $",
     purchaseValue: "Purchase value $",
     profitLossDollar: "Profit/Loss ($)",
-    profitLossPercent: "Profit/Loss (%)",
+    profitLossPercent: "Unrealized %",
+    realizedProfitLossPercent: "Realized %",
     actions: "Actions",
     buy: "Buy",
     sell: "Sell",
@@ -72690,6 +72663,9 @@ function AssetList({
           break;
         case "profitLossPercent":
           comparison = calculateProfitLossPercentage(a2) - calculateProfitLossPercentage(b2);
+          break;
+        case "realizedProfitLossPercent":
+          comparison = (a2.realizedProfitLossPercentage || 0) - (b2.realizedProfitLossPercentage || 0);
           break;
       }
       return sortDirection === "asc" ? comparison : -comparison;
@@ -72871,6 +72847,7 @@ function AssetList({
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "purchaseValue", children: t2.purchaseValue }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "profitLossDollar", children: t2.profitLossDollar }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "profitLossPercent", children: t2.profitLossPercent }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(SortableHeader, { field: "realizedProfitLossPercent", children: t2.realizedProfitLossPercent }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-center border-r-0", children: t2.actions })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: filteredAndSortedAssets.map((asset) => {
@@ -72878,6 +72855,10 @@ function AssetList({
             const profitLoss = asset.profitLoss || 0;
             const profitLossPercentage = calculateProfitLossPercentage(asset);
             const isPositive = profitLoss >= 0;
+            const totalSoldCost = asset.totalSoldCost || 0;
+            const hasSellHistory = totalSoldCost > 0;
+            const realizedPercentage = asset.realizedProfitLossPercentage || 0;
+            const isRealizedPositive = realizedPercentage >= 0;
             return /* @__PURE__ */ jsxRuntimeExports.jsxs(
               TableRow,
               {
@@ -72910,6 +72891,13 @@ function AssetList({
                       children: formatPercent(profitLossPercentage)
                     }
                   ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-border/50", children: hasSellHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "div",
+                    {
+                      className: `font-medium font-mono ${isRealizedPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`,
+                      children: formatPercent(realizedPercentage)
+                    }
+                  ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-mono text-muted-foreground", children: "—" }) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(
                     TableCell,
                     {

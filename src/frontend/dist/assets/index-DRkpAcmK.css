@@ -2670,6 +2670,9 @@ td {
 .first\:border-l:first-child {
   border-left-width: 1px;
 }
+.last\:mb-0:last-child {
+  margin-bottom: 0px;
+}
 .last\:rounded-r-md:last-child {
   border-top-right-radius: calc(var(--radius) - 2px);
   border-bottom-right-radius: calc(var(--radius) - 2px);
