@@ -269,6 +269,7 @@ import Error "mo:core/Error";
 
   transient let natMap = OrderedMap.Make<Nat>(Int.compare);
   var portfolios = principalMap.empty<[Portfolio]>();
+  var migrationVersion : Nat = 0;
   var marketData = natMap.empty<MarketData>();
   var priorityAssets = natMap.empty<PriorityAsset>();
   var technicalData = natMap.empty<TechnicalData>();
@@ -1950,5 +1951,28 @@ import Error "mo:core/Error";
     #nanoseconds(5_000_000_000),
     _scheduledRefresh,
   );
+
+  // One-time data migration: recompute totalPurchaseValue for every existing
+  // portfolio using the already-correct calculateTotalPurchaseValue(assets)
+  // function. Brings stored values in sync with the fixed calculation logic
+  // without requiring any user transaction to trigger. Idempotent via the
+  // migrationVersion guard — runs only on the first upgrade that sees
+  // migrationVersion < 1.
+  system func preupgrade() {
+    if (migrationVersion < 1) {
+      portfolios := principalMap.map(
+        portfolios,
+        func(_principal, userPortfolios) {
+          Array.map(
+            userPortfolios,
+            func(p) {
+              { p with totalPurchaseValue = calculateTotalPurchaseValue(p.assets) }
+            },
+          )
+        },
+      );
+      migrationVersion := 1;
+    };
+  };
 };
 

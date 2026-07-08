@@ -135,6 +135,7 @@ actor {
     {root : Tree__4145630<Nat, MarketData__386355075>; size : Nat};
   stable var marketDataStatus :
     {root : Tree__4145630<Nat, MarketDataStatus__1069269376>; size : Nat};
+  stable var migrationVersion : Nat;
   stable var portfolios :
     {
       root : Tree__4145630<Principal__565152929, [Portfolio__529122221]>;
