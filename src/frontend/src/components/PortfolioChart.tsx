@@ -233,8 +233,9 @@ export default function PortfolioChart({
           totalCost: newTotalCost,
         });
       } else if (tx.type === "sell") {
-        const sellValue = txAmount * txPrice;
-        const costBasis = txAmount * holding.avgPrice;
+        const effectiveAmount = Math.min(txAmount, holding.amount);
+        const sellValue = effectiveAmount * txPrice;
+        const costBasis = effectiveAmount * holding.avgPrice;
         const realizedPL = sellValue - costBasis;
         cumulativeRealizedPL += realizedPL;
 

@@ -714,11 +714,25 @@ import Error "mo:core/Error";
           assets,
           func(a) {
             if (a.symbol == transaction.assetSymbol) {
+              // Reject oversells at the source: a sell larger than current
+              // holdings would otherwise inflate realized P&L and totalSoldCost
+              // (the old code clamped newAmount to 0.0 but still used the full
+              // transaction.amount in the P&L math). Mirror the frontend
+              // TransactionDialog insufficient-balance check on the backend so
+              // every submission path is guarded.
+              if (transaction.type_ == "sell" and transaction.amount > a.amount) {
+                Debug.trap(
+                  "Insufficient holdings: cannot sell " #
+                  Float.toText(transaction.amount) # " " #
+                  transaction.assetSymbol #
+                  " when only " # Float.toText(a.amount) # " are held"
+                );
+              };
+
               let newAmount = if (transaction.type_ == "buy") {
                 a.amount + transaction.amount;
               } else {
-                let remaining = a.amount - transaction.amount;
-                if (remaining < 0.0) { 0.0 } else { remaining };
+                a.amount - transaction.amount;
               };
 
               let newAveragePrice = if (transaction.type_ == "buy") {
@@ -1474,10 +1488,11 @@ import Error "mo:core/Error";
               let totalProfitLoss = asset.realizedProfitLoss + unrealizedPL;
 
               // profitLossPercentage is unrealized-only: unrealizedPL / current purchaseValue * 100.
+              // No 100% fallback for free tokens (purchaseValue == 0): a percentage
+              // against a $0 cost basis is undefined, so return 0.0 here and let the
+              // frontend render "—". Matches updateAssets() exactly.
               let profitLossPercentage = if (asset.purchaseValue > 0.0) {
                 (unrealizedPL / asset.purchaseValue) * 100.0;
-              } else if (asset.purchaseValue == 0.0 and asset.currentValue > 0.0) {
-                100.0;
               } else {
                 0.0;
               };
