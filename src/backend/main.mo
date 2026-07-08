@@ -1531,9 +1531,17 @@ import Error "mo:core/Error";
         // asset was written with key 0).
         priorityAssets := natMap.empty<PriorityAsset>();
         var index : Nat = 0;
+        // Per-id diagnostics: collect ids whose ".usd" path was not found in
+        // the response (price == 0.0). We do NOT trap or skip storing — every
+        // id is stored as before; this list is purely informational so the
+        // debug panel can show which CoinGecko id had no price.
+        var missingIds : [Text] = [];
         for (id in allAssetIds.vals()) {
           // Path "id.usd" resolves to the USD price for this priority id.
           let price = _getFloat(json, id # ".usd");
+          if (price == 0.0) {
+            missingIds := Array.append(missingIds, [id]);
+          };
           priorityAssets := natMap.put(
             priorityAssets,
             index,
@@ -1548,9 +1556,35 @@ import Error "mo:core/Error";
           );
           index := index + 1;
         };
-        // Successful refresh — clear any prior fetch error.
-        lastPriorityAssetsError := null;
-        lastPriorityAssetsErrorTimestamp := null;
+        if (missingIds.size() > 0) {
+          // Build a comma-separated list of the ids that had no price. Inline
+          // foldLeft join (no external join helper) inserts ", " between ids.
+          let missingList = Array.foldLeft(
+            missingIds,
+            "",
+            func(acc, id) {
+              if (Text.size(acc) == 0) { id } else { acc # ", " # id };
+            },
+          );
+          // Capture the first 300 chars of the raw response safely, clamping
+          // to the actual response length so short responses do not trap.
+          // Text has no direct slice/index, so materialize the chars once and
+          // build the snippet from the first snippetLen of them.
+          let responseChars = Text.toArray(response);
+          let snippetLen = if (responseChars.size() < 300) { responseChars.size() } else { 300 };
+          let snippet = Text.fromArray(Array.tabulate(snippetLen, func(i) { responseChars[i] }));
+          lastPriorityAssetsError := ?(
+            "Priority assets refreshed, but no price found for: " #
+            missingList #
+            ". Raw response snippet: " #
+            snippet
+          );
+          lastPriorityAssetsErrorTimestamp := ?currentTime;
+        } else {
+          // All ids succeeded — clear any prior fetch error (existing behavior).
+          lastPriorityAssetsError := null;
+          lastPriorityAssetsErrorTimestamp := null;
+        };
         lastHealthCheck := currentTime;
       };
     };
