@@ -300,13 +300,13 @@ export default function AssetAllocationChart({
                       }}
                       aria-hidden="true"
                     />
-                    <span className="font-terminal text-sm font-bold text-terminal w-16 shrink-0 truncate">
+                    <span className="font-terminal text-lg font-bold text-terminal w-20 shrink-0 truncate">
                       {entry.name}
                     </span>
-                    <span className="font-terminal text-sm text-terminal flex-1 text-right tabular-nums truncate">
+                    <span className="font-terminal text-lg text-terminal flex-1 text-right tabular-nums truncate">
                       {formatCurrency(entry.value)}
                     </span>
-                    <span className="font-terminal text-sm text-terminal-muted w-16 shrink-0 text-right tabular-nums">
+                    <span className="font-terminal text-lg text-terminal-muted w-20 shrink-0 text-right tabular-nums">
                       {formatPercent(entry.percentage)}
                     </span>
                   </div>

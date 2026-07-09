@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -80,12 +81,18 @@ const translations = {
     adding: "Dodawanie...",
     success: "Transakcja dodana pomyślnie",
     successWithUsdc: "Transakcja dodana pomyślnie. USDC dodany do portfela.",
+    successPayWithUsdc: "Transakcja dodana pomyślnie. USDC odjęty z portfela.",
+    partialBuySuccessUsdcFail:
+      "Zakaz aktywa zakończony pomyślnie, ale nie udało się odjąć USDC z portfela z powodu niewystarczającego salda USDC.",
+    payWithUsdc: "Zapłać z USDC",
     error: "Błąd dodawania transakcji",
     fillAll: "Wypełnij wszystkie pola",
     loadingMarketData: "Ładowanie danych rynkowych...",
     insufficientBalance: "Niewystarczająca ilość do sprzedaży",
     insufficientHoldings:
       "Nie posiadasz wystarczającej ilości {symbol} do sprzedaży (masz {held}, próbujesz sprzedać {sell})",
+    insufficientUsdc:
+      "Niewystarczająca ilość USDC do odjęcia (posiadasz {held}, próbujesz odjąć {sell})",
     available: "Dostępne",
     freeTokenNoteMarket: "Cena $0 - użyto aktualnej ceny rynkowej",
     freeTokenNoteHistorical: "Cena $0 - użyto ceny historycznej",
@@ -119,12 +126,19 @@ const translations = {
     adding: "Adding...",
     success: "Transaction added successfully",
     successWithUsdc: "Transaction added successfully. USDC added to portfolio.",
+    successPayWithUsdc:
+      "Transaction added successfully. USDC deducted from portfolio.",
+    partialBuySuccessUsdcFail:
+      "Token purchase succeeded, but the USDC deduction from your portfolio failed due to insufficient USDC balance.",
+    payWithUsdc: "Pay with USDC",
     error: "Error adding transaction",
     fillAll: "Fill all fields",
     loadingMarketData: "Loading market data...",
     insufficientBalance: "Insufficient amount to sell",
     insufficientHoldings:
       "Insufficient {symbol} to sell (you have {held}, attempting to sell {sell})",
+    insufficientUsdc:
+      "Insufficient USDC to deduct (you have {held}, attempting to deduct {sell})",
     available: "Available",
     freeTokenNoteMarket: "Price $0 - current market price used",
     freeTokenNoteHistorical: "Price $0 - historical price used",
@@ -164,6 +178,10 @@ export default function TransactionDialog({
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  // Buy-side option: deduct the purchase cost from the portfolio's USDC
+  // balance by submitting a matching USDC sell after the buy succeeds.
+  // Reset to false whenever the dialog's type or selected asset changes.
+  const [payWithUsdc, setPayWithUsdc] = useState(false);
   // Tracks which price source was used for the most recent free-token buy so
   // the freeTokenNote can reflect it accurately. null when not a free token.
   const [freeTokenPriceSource, setFreeTokenPriceSource] = useState<
@@ -188,6 +206,7 @@ export default function TransactionDialog({
         price: preselectedAsset.currentPrice,
       });
       setPrice(preselectedAsset.currentPrice.toString());
+      setPayWithUsdc(false);
     }
   }, [preselectedAsset]);
 
@@ -232,6 +251,7 @@ export default function TransactionDialog({
   }) => {
     setSelectedAsset(asset);
     setPrice(asset.price.toString());
+    setPayWithUsdc(false);
     setOpen(false);
   };
 
@@ -355,6 +375,52 @@ export default function TransactionDialog({
         });
 
         toast.success(t.successWithUsdc);
+      } else if (payWithUsdc) {
+        // Buy-side "Pay with USDC": the buy already succeeded above. Now
+        // deduct the cost from the portfolio by selling USDC at $1.00.
+        // If this fails (e.g. insufficient USDC balance), the buy is NOT
+        // rolled back — we surface a partial-state message instead.
+        const usdcAmount = (amountNum * priceNum) / 1.0;
+        const usdcPrice = 1.0;
+
+        try {
+          await addTransaction.mutateAsync({
+            portfolioId,
+            transaction: {
+              id: BigInt(Date.now() + 1),
+              assetSymbol: "USDC",
+              assetName: "USD Coin",
+              amount: usdcAmount,
+              price: usdcPrice,
+              type: "sell",
+              date: transactionDate,
+              comment: `Auto-added: payment for ${selectedAsset.symbol} purchase`,
+            },
+          });
+
+          toast.success(t.successPayWithUsdc);
+        } catch (usdcError) {
+          console.error("USDC deduction error:", usdcError);
+          const usdcMessage =
+            typeof usdcError === "object" &&
+            usdcError !== null &&
+            "message" in usdcError
+              ? String((usdcError as { message?: unknown }).message)
+              : String(usdcError);
+          const usdcMatch = usdcMessage.match(
+            /Insufficient holdings: cannot sell (\S+) (\S+) when only (\S+) are held/,
+          );
+          if (usdcMatch) {
+            const [, sell, symbol, held] = usdcMatch;
+            toast.error(
+              t.insufficientUsdc
+                .replace("{symbol}", symbol)
+                .replace("{held}", held)
+                .replace("{sell}", sell),
+            );
+          }
+          toast.error(t.partialBuySuccessUsdcFail);
+        }
       } else {
         toast.success(t.success);
       }
@@ -417,7 +483,10 @@ export default function TransactionDialog({
                 type="button"
                 variant={type === "buy" ? "default" : "outline"}
                 className="flex-1"
-                onClick={() => setType("buy")}
+                onClick={() => {
+                  setType("buy");
+                  setPayWithUsdc(false);
+                }}
               >
                 {t.buy}
               </Button>
@@ -425,7 +494,10 @@ export default function TransactionDialog({
                 type="button"
                 variant={type === "sell" ? "default" : "outline"}
                 className="flex-1"
-                onClick={() => setType("sell")}
+                onClick={() => {
+                  setType("sell");
+                  setPayWithUsdc(false);
+                }}
               >
                 {t.sell}
               </Button>
@@ -605,6 +677,26 @@ export default function TransactionDialog({
               rows={3}
             />
           </div>
+
+          {type === "buy" &&
+            selectedAsset &&
+            selectedAsset.symbol.toUpperCase() !== "USDC" && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="pay-with-usdc"
+                  checked={payWithUsdc}
+                  onCheckedChange={(checked) =>
+                    setPayWithUsdc(checked === true)
+                  }
+                />
+                <Label
+                  htmlFor="pay-with-usdc"
+                  className="cursor-pointer text-sm font-medium leading-none"
+                >
+                  {t.payWithUsdc}
+                </Label>
+              </div>
+            )}
 
           {isFreeToken && freeTokenPriceSource && (
             <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">

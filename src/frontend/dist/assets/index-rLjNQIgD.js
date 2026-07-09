@@ -62620,9 +62620,9 @@ function AssetAllocationChart({
                     "aria-hidden": "true"
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm font-bold text-terminal w-16 shrink-0 truncate", children: entry.name }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm text-terminal flex-1 text-right tabular-nums truncate", children: formatCurrency(entry.value) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm text-terminal-muted w-16 shrink-0 text-right tabular-nums", children: formatPercent(entry.percentage) })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg font-bold text-terminal w-20 shrink-0 truncate", children: entry.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg text-terminal flex-1 text-right tabular-nums truncate", children: formatCurrency(entry.value) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg text-terminal-muted w-20 shrink-0 text-right tabular-nums", children: formatPercent(entry.percentage) })
               ]
             },
             entry.name
@@ -70739,11 +70739,15 @@ const translations$a = {
     adding: "Dodawanie...",
     success: "Transakcja dodana pomyślnie",
     successWithUsdc: "Transakcja dodana pomyślnie. USDC dodany do portfela.",
+    successPayWithUsdc: "Transakcja dodana pomyślnie. USDC odjęty z portfela.",
+    partialBuySuccessUsdcFail: "Zakaz aktywa zakończony pomyślnie, ale nie udało się odjąć USDC z portfela z powodu niewystarczającego salda USDC.",
+    payWithUsdc: "Zapłać z USDC",
     error: "Błąd dodawania transakcji",
     fillAll: "Wypełnij wszystkie pola",
     loadingMarketData: "Ładowanie danych rynkowych...",
     insufficientBalance: "Niewystarczająca ilość do sprzedaży",
     insufficientHoldings: "Nie posiadasz wystarczającej ilości {symbol} do sprzedaży (masz {held}, próbujesz sprzedać {sell})",
+    insufficientUsdc: "Niewystarczająca ilość USDC do odjęcia (posiadasz {held}, próbujesz odjąć {sell})",
     available: "Dostępne",
     freeTokenNoteMarket: "Cena $0 - użyto aktualnej ceny rynkowej",
     freeTokenNoteHistorical: "Cena $0 - użyto ceny historycznej",
@@ -70777,11 +70781,15 @@ const translations$a = {
     adding: "Adding...",
     success: "Transaction added successfully",
     successWithUsdc: "Transaction added successfully. USDC added to portfolio.",
+    successPayWithUsdc: "Transaction added successfully. USDC deducted from portfolio.",
+    partialBuySuccessUsdcFail: "Token purchase succeeded, but the USDC deduction from your portfolio failed due to insufficient USDC balance.",
+    payWithUsdc: "Pay with USDC",
     error: "Error adding transaction",
     fillAll: "Fill all fields",
     loadingMarketData: "Loading market data...",
     insufficientBalance: "Insufficient amount to sell",
     insufficientHoldings: "Insufficient {symbol} to sell (you have {held}, attempting to sell {sell})",
+    insufficientUsdc: "Insufficient USDC to deduct (you have {held}, attempting to deduct {sell})",
     available: "Available",
     freeTokenNoteMarket: "Price $0 - current market price used",
     freeTokenNoteHistorical: "Price $0 - historical price used",
@@ -70807,6 +70815,7 @@ function TransactionDialog({
   const [comment, setComment] = reactExports.useState("");
   const [open, setOpen] = reactExports.useState(false);
   const [calendarOpen, setCalendarOpen] = reactExports.useState(false);
+  const [payWithUsdc, setPayWithUsdc] = reactExports.useState(false);
   const [freeTokenPriceSource, setFreeTokenPriceSource] = reactExports.useState(null);
   const addTransaction = useAddTransaction();
   const {
@@ -70826,6 +70835,7 @@ function TransactionDialog({
         price: preselectedAsset.currentPrice
       });
       setPrice(preselectedAsset.currentPrice.toString());
+      setPayWithUsdc(false);
     }
   }, [preselectedAsset]);
   const sortedMarketData = reactExports.useMemo(() => {
@@ -70857,6 +70867,7 @@ function TransactionDialog({
   const handleAssetSelect = (asset) => {
     setSelectedAsset(asset);
     setPrice(asset.price.toString());
+    setPayWithUsdc(false);
     setOpen(false);
   };
   const totalValue = reactExports.useMemo(() => {
@@ -70955,6 +70966,38 @@ function TransactionDialog({
           }
         });
         ue$1.success(t2.successWithUsdc);
+      } else if (payWithUsdc) {
+        const usdcAmount = amountNum * priceNum / 1;
+        const usdcPrice = 1;
+        try {
+          await addTransaction.mutateAsync({
+            portfolioId,
+            transaction: {
+              id: BigInt(Date.now() + 1),
+              assetSymbol: "USDC",
+              assetName: "USD Coin",
+              amount: usdcAmount,
+              price: usdcPrice,
+              type: "sell",
+              date: transactionDate,
+              comment: `Auto-added: payment for ${selectedAsset.symbol} purchase`
+            }
+          });
+          ue$1.success(t2.successPayWithUsdc);
+        } catch (usdcError) {
+          console.error("USDC deduction error:", usdcError);
+          const usdcMessage = typeof usdcError === "object" && usdcError !== null && "message" in usdcError ? String(usdcError.message) : String(usdcError);
+          const usdcMatch = usdcMessage.match(
+            /Insufficient holdings: cannot sell (\S+) (\S+) when only (\S+) are held/
+          );
+          if (usdcMatch) {
+            const [, sell, symbol, held] = usdcMatch;
+            ue$1.error(
+              t2.insufficientUsdc.replace("{symbol}", symbol).replace("{held}", held).replace("{sell}", sell)
+            );
+          }
+          ue$1.error(t2.partialBuySuccessUsdcFail);
+        }
       } else {
         ue$1.success(t2.success);
       }
@@ -71006,7 +71049,10 @@ function TransactionDialog({
               type: "button",
               variant: type === "buy" ? "default" : "outline",
               className: "flex-1",
-              onClick: () => setType("buy"),
+              onClick: () => {
+                setType("buy");
+                setPayWithUsdc(false);
+              },
               children: t2.buy
             }
           ),
@@ -71016,7 +71062,10 @@ function TransactionDialog({
               type: "button",
               variant: type === "sell" ? "default" : "outline",
               className: "flex-1",
-              onClick: () => setType("sell"),
+              onClick: () => {
+                setType("sell");
+                setPayWithUsdc(false);
+              },
               children: t2.sell
             }
           )
@@ -71195,6 +71244,24 @@ function TransactionDialog({
             onChange: (e3) => setComment(e3.target.value),
             placeholder: t2.commentPlaceholder,
             rows: 3
+          }
+        )
+      ] }),
+      type === "buy" && selectedAsset && selectedAsset.symbol.toUpperCase() !== "USDC" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Checkbox,
+          {
+            id: "pay-with-usdc",
+            checked: payWithUsdc,
+            onCheckedChange: (checked) => setPayWithUsdc(checked === true)
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Label,
+          {
+            htmlFor: "pay-with-usdc",
+            className: "cursor-pointer text-sm font-medium leading-none",
+            children: t2.payWithUsdc
           }
         )
       ] }),
