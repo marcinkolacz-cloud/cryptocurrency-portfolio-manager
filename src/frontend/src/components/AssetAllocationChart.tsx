@@ -178,15 +178,22 @@ export default function AssetAllocationChart({
 
   // Inline label rendered next to each slice. Only shown for slices large
   // enough to read (>= INLINE_LABEL_MIN_PERCENT). Honors the $/% toggle.
+  // Explicit fontSize bumps the label above recharts' ~11px default for
+  // better readability alongside the larger list rows and legend.
   const renderInlineLabel = (entry: {
     name: string;
     value: number;
     percentage: number;
   }) => {
     if (entry.percentage < INLINE_LABEL_MIN_PERCENT) return "";
-    return showPercentage
+    const text = showPercentage
       ? formatPercent(entry.percentage)
       : formatCurrency(entry.value);
+    return (
+      <tspan fontSize={13} fill={palette.labelFill} style={{ font: "inherit" }}>
+        {text}
+      </tspan>
+    );
   };
 
   return (
@@ -236,9 +243,9 @@ export default function AssetAllocationChart({
                 <PieChart>
                   <Tooltip content={<CustomTooltip />} />
                   <Legend
-                    wrapperStyle={{ paddingTop: "4px", fontSize: "11px" }}
+                    wrapperStyle={{ paddingTop: "4px", fontSize: "13px" }}
                     formatter={(value) => (
-                      <span className="font-terminal text-xs text-terminal">
+                      <span className="font-terminal text-sm text-terminal">
                         {value}
                       </span>
                     )}
@@ -283,7 +290,7 @@ export default function AssetAllocationChart({
                   <div
                     key={entry.name}
                     data-ocid={`allocation.list.item.${index + 1}`}
-                    className="flex items-center gap-2 border-b border-terminal px-2 py-1 last:border-b-0 hover:bg-terminal-hover"
+                    className="flex items-center gap-2 border-b border-terminal px-2 py-1.5 last:border-b-0 hover:bg-terminal-hover"
                   >
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-terminal"
@@ -293,13 +300,13 @@ export default function AssetAllocationChart({
                       }}
                       aria-hidden="true"
                     />
-                    <span className="font-terminal text-xs font-bold text-terminal w-16 shrink-0 truncate">
+                    <span className="font-terminal text-sm font-bold text-terminal w-16 shrink-0 truncate">
                       {entry.name}
                     </span>
-                    <span className="font-terminal text-xs text-terminal flex-1 text-right tabular-nums truncate">
+                    <span className="font-terminal text-sm text-terminal flex-1 text-right tabular-nums truncate">
                       {formatCurrency(entry.value)}
                     </span>
-                    <span className="font-terminal text-xs text-terminal-muted w-16 shrink-0 text-right tabular-nums">
+                    <span className="font-terminal text-sm text-terminal-muted w-16 shrink-0 text-right tabular-nums">
                       {formatPercent(entry.percentage)}
                     </span>
                   </div>

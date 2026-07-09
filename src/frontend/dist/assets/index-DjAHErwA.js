@@ -62526,7 +62526,8 @@ function AssetAllocationChart({
   };
   const renderInlineLabel = (entry) => {
     if (entry.percentage < INLINE_LABEL_MIN_PERCENT) return "";
-    return showPercentage ? formatPercent(entry.percentage) : formatCurrency(entry.value);
+    const text = showPercentage ? formatPercent(entry.percentage) : formatCurrency(entry.value);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("tspan", { fontSize: 13, fill: palette.labelFill, style: { font: "inherit" }, children: text });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "flex h-full flex-col rounded-terminal border border-terminal bg-terminal-card p-3", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "gap-2 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
@@ -62565,8 +62566,8 @@ function AssetAllocationChart({
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Legend,
           {
-            wrapperStyle: { paddingTop: "4px", fontSize: "11px" },
-            formatter: (value) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs text-terminal", children: value })
+            wrapperStyle: { paddingTop: "4px", fontSize: "13px" },
+            formatter: (value) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm text-terminal", children: value })
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -62607,7 +62608,7 @@ function AssetAllocationChart({
             "div",
             {
               "data-ocid": `allocation.list.item.${index2 + 1}`,
-              className: "flex items-center gap-2 border-b border-terminal px-2 py-1 last:border-b-0 hover:bg-terminal-hover",
+              className: "flex items-center gap-2 border-b border-terminal px-2 py-1.5 last:border-b-0 hover:bg-terminal-hover",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                   "span",
@@ -62619,9 +62620,9 @@ function AssetAllocationChart({
                     "aria-hidden": "true"
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs font-bold text-terminal w-16 shrink-0 truncate", children: entry.name }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs text-terminal flex-1 text-right tabular-nums truncate", children: formatCurrency(entry.value) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-xs text-terminal-muted w-16 shrink-0 text-right tabular-nums", children: formatPercent(entry.percentage) })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm font-bold text-terminal w-16 shrink-0 truncate", children: entry.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm text-terminal flex-1 text-right tabular-nums truncate", children: formatCurrency(entry.value) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-sm text-terminal-muted w-16 shrink-0 text-right tabular-nums", children: formatPercent(entry.percentage) })
               ]
             },
             entry.name
