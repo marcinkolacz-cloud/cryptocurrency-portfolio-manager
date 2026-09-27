@@ -36869,6 +36869,12 @@ const AuthResult_1 = Variant({
   "notFound": Text$1,
   "unauthorized": Text$1
 });
+const ExchangeRate = Record({
+  "rate": Float64,
+  "lastUpdated": Int,
+  "sourceTimestamp": Int,
+  "lastError": Opt(Text$1)
+});
 const MarketData = Record({
   "id": Nat,
   "marketCap": Float64,
@@ -36903,6 +36909,7 @@ const Asset = Record({
 const Portfolio = Record({
   "id": Nat,
   "totalProfitLoss": Float64,
+  "totalValue": Float64,
   "name": Text$1,
   "createdAt": Int,
   "assets": Vec(Asset),
@@ -36932,6 +36939,12 @@ const TechnicalData = Record({
   "lastUpdated": Int,
   "volume24h": Float64,
   "symbol": Text$1
+});
+const RefreshResult = Record({
+  "marketDataError": Opt(Text$1),
+  "priorityAssetsOk": Bool,
+  "marketDataOk": Bool,
+  "priorityAssetsError": Opt(Text$1)
 });
 const HttpHeader = Record({ "value": Text$1, "name": Text$1 });
 const HttpRequestResult = Record({
@@ -36966,6 +36979,7 @@ Service({
   "fetchMarketData": Func([], [], []),
   "fetchPriorityAssetPrices": Func([], [], []),
   "fetchTechnicalData": Func([Text$1], [], []),
+  "getApiDoc": Func([], [Text$1], ["query"]),
   "getAvailableAssets": Func([], [Vec(Text$1)], ["query"]),
   "getCallerUserProfile": Func([], [Opt(UserProfile)], ["query"]),
   "getCallerUserProfileWithStatus": Func([], [AuthResult_1], ["query"]),
@@ -36975,6 +36989,7 @@ Service({
     [Vec(Tuple(Text$1, Text$1))],
     ["query"]
   ),
+  "getExchangeRate": Func([], [Opt(ExchangeRate)], ["query"]),
   "getHistoricalPrice": Func([Text$1, Int], [Float64], []),
   "getLastFetchError": Func(
     [],
@@ -37047,6 +37062,8 @@ Service({
   "initializeAccessControl": Func([], [], []),
   "isAuthenticated": Func([], [Bool], ["query"]),
   "isCallerAdmin": Func([], [Bool], ["query"]),
+  "refreshAllPrices": Func([], [RefreshResult], []),
+  "refreshExchangeRate": Func([], [ExchangeRate], []),
   "removeCustomPriorityAsset": Func(
     [Text$1],
     [Record({ "error": Opt(Text$1), "success": Bool })],
@@ -37118,6 +37135,12 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "notFound": IDL2.Text,
     "unauthorized": IDL2.Text
   });
+  const ExchangeRate2 = IDL2.Record({
+    "rate": IDL2.Float64,
+    "lastUpdated": IDL2.Int,
+    "sourceTimestamp": IDL2.Int,
+    "lastError": IDL2.Opt(IDL2.Text)
+  });
   const MarketData2 = IDL2.Record({
     "id": IDL2.Nat,
     "marketCap": IDL2.Float64,
@@ -37152,6 +37175,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
   const Portfolio2 = IDL2.Record({
     "id": IDL2.Nat,
     "totalProfitLoss": IDL2.Float64,
+    "totalValue": IDL2.Float64,
     "name": IDL2.Text,
     "createdAt": IDL2.Int,
     "assets": IDL2.Vec(Asset2),
@@ -37181,6 +37205,12 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "lastUpdated": IDL2.Int,
     "volume24h": IDL2.Float64,
     "symbol": IDL2.Text
+  });
+  const RefreshResult2 = IDL2.Record({
+    "marketDataError": IDL2.Opt(IDL2.Text),
+    "priorityAssetsOk": IDL2.Bool,
+    "marketDataOk": IDL2.Bool,
+    "priorityAssetsError": IDL2.Opt(IDL2.Text)
   });
   const HttpHeader2 = IDL2.Record({ "value": IDL2.Text, "name": IDL2.Text });
   const HttpRequestResult2 = IDL2.Record({
@@ -37215,6 +37245,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "fetchMarketData": IDL2.Func([], [], []),
     "fetchPriorityAssetPrices": IDL2.Func([], [], []),
     "fetchTechnicalData": IDL2.Func([IDL2.Text], [], []),
+    "getApiDoc": IDL2.Func([], [IDL2.Text], ["query"]),
     "getAvailableAssets": IDL2.Func([], [IDL2.Vec(IDL2.Text)], ["query"]),
     "getCallerUserProfile": IDL2.Func([], [IDL2.Opt(UserProfile2)], ["query"]),
     "getCallerUserProfileWithStatus": IDL2.Func([], [AuthResult_12], ["query"]),
@@ -37224,6 +37255,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Vec(IDL2.Tuple(IDL2.Text, IDL2.Text))],
       ["query"]
     ),
+    "getExchangeRate": IDL2.Func([], [IDL2.Opt(ExchangeRate2)], ["query"]),
     "getHistoricalPrice": IDL2.Func([IDL2.Text, IDL2.Int], [IDL2.Float64], []),
     "getLastFetchError": IDL2.Func(
       [],
@@ -37300,6 +37332,8 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "initializeAccessControl": IDL2.Func([], [], []),
     "isAuthenticated": IDL2.Func([], [IDL2.Bool], ["query"]),
     "isCallerAdmin": IDL2.Func([], [IDL2.Bool], ["query"]),
+    "refreshAllPrices": IDL2.Func([], [RefreshResult2], []),
+    "refreshExchangeRate": IDL2.Func([], [ExchangeRate2], []),
     "removeCustomPriorityAsset": IDL2.Func(
       [IDL2.Text],
       [IDL2.Record({ "error": IDL2.Opt(IDL2.Text), "success": IDL2.Bool })],
@@ -37458,14 +37492,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.execute(arg0);
-        return from_candid_Result_n5(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_n4(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.execute(arg0);
-      return from_candid_Result_n5(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_n4(this._uploadFile, this._downloadFile, result);
     }
   }
   async fetchHistoricalPriceData(arg0) {
@@ -37524,6 +37558,20 @@ class Backend {
       return result;
     }
   }
+  async getApiDoc() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getApiDoc();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getApiDoc();
+      return result;
+    }
+  }
   async getAvailableAssets() {
     if (this.processError) {
       try {
@@ -37542,42 +37590,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfile();
-        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfile();
-      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserProfileWithStatus() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfileWithStatus();
-        return from_candid_AuthResult_1_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_1_n13(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfileWithStatus();
-      return from_candid_AuthResult_1_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_1_n13(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCustomPriorityAssets() {
@@ -37592,6 +37640,20 @@ class Backend {
     } else {
       const result = await this.actor.getCustomPriorityAssets();
       return result;
+    }
+  }
+  async getExchangeRate() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getExchangeRate();
+        return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getExchangeRate();
+      return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async getHistoricalPrice(arg0, arg1) {
@@ -37612,14 +37674,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getLastFetchError();
-        return from_candid_record_n18(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n19(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getLastFetchError();
-      return from_candid_record_n18(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n19(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMarketData() {
@@ -37640,14 +37702,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMarketDataStatus();
-        return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMarketDataStatus();
-      return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioAssets(arg0) {
@@ -37668,14 +37730,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfolioSummary(arg0);
-        return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfolioSummary(arg0);
-      return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPortfolioTrackedAssets(arg0) {
@@ -37724,14 +37786,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPortfoliosWithStatus();
-        return from_candid_AuthResult_n22(this._uploadFile, this._downloadFile, result);
+        return from_candid_AuthResult_n23(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPortfoliosWithStatus();
-      return from_candid_AuthResult_n22(this._uploadFile, this._downloadFile, result);
+      return from_candid_AuthResult_n23(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPriorityAssets() {
@@ -37766,28 +37828,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getTechnicalData(arg0);
-        return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getTechnicalData(arg0);
-      return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserProfile(arg0);
-        return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserProfile(arg0);
-      return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
     }
   }
   async initializeAccessControl() {
@@ -37830,6 +37892,34 @@ class Backend {
     } else {
       const result = await this.actor.isCallerAdmin();
       return result;
+    }
+  }
+  async refreshAllPrices() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.refreshAllPrices();
+        return from_candid_RefreshResult_n26(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.refreshAllPrices();
+      return from_candid_RefreshResult_n26(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async refreshExchangeRate() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.refreshExchangeRate();
+        return from_candid_ExchangeRate_n17(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.refreshExchangeRate();
+      return from_candid_ExchangeRate_n17(this._uploadFile, this._downloadFile, result);
     }
   }
   async removeCustomPriorityAsset(arg0) {
@@ -37878,14 +37968,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.searchCoinGeckoTokens(arg0);
-        return from_candid_record_n25(this._uploadFile, this._downloadFile, result);
+        return from_candid_record_n28(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchCoinGeckoTokens(arg0);
-      return from_candid_record_n25(this._uploadFile, this._downloadFile, result);
+      return from_candid_record_n28(this._uploadFile, this._downloadFile, result);
     }
   }
   async transform(arg0) {
@@ -37931,29 +38021,35 @@ class Backend {
     }
   }
 }
-function from_candid_AuthResult_1_n14(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n15(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_1_n13(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuthResult_n22(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n23(_uploadFile, _downloadFile, value);
+function from_candid_AuthResult_n23(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n24(_uploadFile, _downloadFile, value);
 }
-function from_candid_Cell_n9(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n10(_uploadFile, _downloadFile, value);
+function from_candid_Cell_n8(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n9(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n5(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n6(_uploadFile, _downloadFile, value);
+function from_candid_ExchangeRate_n17(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n16(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n17(_uploadFile, _downloadFile, value);
+function from_candid_RefreshResult_n26(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n27(_uploadFile, _downloadFile, value);
 }
-function from_candid_Value_n11(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n12(_uploadFile, _downloadFile, value);
+function from_candid_Result_n4(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n13(_uploadFile, _downloadFile, value) {
+function from_candid_UserRole_n15(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+}
+function from_candid_Value_n10(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n11(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n12(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n19(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
+function from_candid_opt_n16(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_ExchangeRate_n17(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n2(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
@@ -37964,7 +38060,10 @@ function from_candid_opt_n20(_uploadFile, _downloadFile, value) {
 function from_candid_opt_n21(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n24(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n22(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n25(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n1(_uploadFile, _downloadFile, value) {
@@ -37973,32 +38072,48 @@ function from_candid_record_n1(_uploadFile, _downloadFile, value) {
     success: value.success
   };
 }
-function from_candid_record_n10(_uploadFile, _downloadFile, value) {
-  return {
-    value: from_candid_Value_n11(_uploadFile, _downloadFile, value.value),
-    name: value.name
-  };
-}
 function from_candid_record_n18(_uploadFile, _downloadFile, value) {
   return {
-    marketData: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.marketData)),
-    priorityAssets: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.priorityAssets)),
-    technicalData: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.technicalData))
+    rate: value.rate,
+    lastUpdated: value.lastUpdated,
+    sourceTimestamp: value.sourceTimestamp,
+    lastError: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.lastError))
   };
 }
-function from_candid_record_n25(_uploadFile, _downloadFile, value) {
+function from_candid_record_n19(_uploadFile, _downloadFile, value) {
+  return {
+    marketData: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.marketData)),
+    priorityAssets: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.priorityAssets)),
+    technicalData: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.technicalData))
+  };
+}
+function from_candid_record_n27(_uploadFile, _downloadFile, value) {
+  return {
+    marketDataError: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.marketDataError)),
+    priorityAssetsOk: value.priorityAssetsOk,
+    marketDataOk: value.marketDataOk,
+    priorityAssetsError: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.priorityAssetsError))
+  };
+}
+function from_candid_record_n28(_uploadFile, _downloadFile, value) {
   return {
     results: value.results,
     error: record_opt_to_undefined(from_candid_opt_n2(_uploadFile, _downloadFile, value.error))
   };
 }
-function from_candid_record_n6(_uploadFile, _downloadFile, value) {
+function from_candid_record_n5(_uploadFile, _downloadFile, value) {
   return {
     hasMore: value.hasMore,
-    rows: from_candid_vec_n7(_uploadFile, _downloadFile, value.rows)
+    rows: from_candid_vec_n6(_uploadFile, _downloadFile, value.rows)
   };
 }
-function from_candid_variant_n12(_uploadFile, _downloadFile, value) {
+function from_candid_record_n9(_uploadFile, _downloadFile, value) {
+  return {
+    value: from_candid_Value_n10(_uploadFile, _downloadFile, value.value),
+    name: value.name
+  };
+}
+function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
   return "int" in value ? {
     __kind__: "int",
     int: value.int
@@ -38019,7 +38134,7 @@ function from_candid_variant_n12(_uploadFile, _downloadFile, value) {
     text: value.text
   } : value;
 }
-function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -38031,10 +38146,7 @@ function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
     unauthorized: value.unauthorized
   } : value;
 }
-function from_candid_variant_n17(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
-}
-function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -38045,17 +38157,14 @@ function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
     __kind__: "unauthorized",
     unauthorized: value.unauthorized
   } : value;
+}
+function from_candid_vec_n6(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_vec_n7(_uploadFile, _downloadFile, x3));
 }
 function from_candid_vec_n7(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_vec_n8(_uploadFile, _downloadFile, x3));
-}
-function from_candid_vec_n8(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_Cell_n9(_uploadFile, _downloadFile, x3));
+  return value.map((x3) => from_candid_Cell_n8(_uploadFile, _downloadFile, x3));
 }
 function to_candid_UserRole_n3(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n4(_uploadFile, _downloadFile, value);
-}
-function to_candid_variant_n4(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -38083,6 +38192,15 @@ function useActor() {
 }
 const MAX_QUERY_RETRIES = 3;
 const RETRY_DELAY_BASE = 1500;
+function useCallerPrincipalKey() {
+  const { identity: identity3 } = useInternetIdentity();
+  if (!identity3) return null;
+  try {
+    return identity3.getPrincipal().toText();
+  } catch {
+    return null;
+  }
+}
 function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
   const query = useQuery({
@@ -38316,36 +38434,41 @@ function useGetMarketData() {
     staleTime: 6e4
   });
 }
-function useFetchMarketData() {
+function useRefreshAllPrices() {
   const { actor } = useActor();
   const queryClient2 = useQueryClient();
   return useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error("Backend connection not available");
-      return actor.fetchMarketData();
+      return actor.refreshAllPrices();
     },
     onSuccess: () => {
-      queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      void queryClient2.invalidateQueries({ queryKey: ["marketData"] });
+      void queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
+      void queryClient2.invalidateQueries({ queryKey: ["lastFetchError"] });
+      void queryClient2.invalidateQueries({ queryKey: ["exchangeRate"] });
     },
     onError: (error) => {
-      console.error("Error fetching market data:", error);
+      console.error("Error refreshing all prices:", error);
     }
   });
 }
-function useFetchPriorityAssetPrices() {
-  const { actor } = useActor();
-  const queryClient2 = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error("Backend connection not available");
-      return actor.fetchPriorityAssetPrices();
+function useGetExchangeRate() {
+  const { actor, isFetching: actorFetching } = useActor();
+  return useQuery({
+    queryKey: ["exchangeRate"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        const result = await actor.getExchangeRate();
+        return result ?? null;
+      } catch (error) {
+        console.error("Error fetching exchange rate:", error);
+        return null;
+      }
     },
-    onSuccess: () => {
-      queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
-    },
-    onError: (error) => {
-      console.error("Error fetching priority asset prices:", error);
-    }
+    enabled: !!actor && !actorFetching,
+    staleTime: 6e4
   });
 }
 function useGetPriorityAssets() {
@@ -38395,20 +38518,26 @@ function useGetLastFetchError() {
 }
 function useGetIsAdmin() {
   const { actor, isFetching: actorFetching } = useActor();
+  const principalKey = useCallerPrincipalKey();
   return useQuery({
-    queryKey: ["isAdmin"],
+    queryKey: ["isAdmin", principalKey],
     queryFn: async () => {
-      if (!actor) return false;
-      try {
-        const isAdmin = await actor.isCallerAdmin();
-        return isAdmin === true;
-      } catch (error) {
-        console.error("Error checking admin status:", error);
+      if (!actor) {
+        throw new Error("Backend connection not available");
+      }
+      const isAdmin = await actor.isCallerAdmin();
+      return isAdmin === true;
+    },
+    enabled: !!actor && !actorFetching && !!principalKey,
+    staleTime: 3e4,
+    retry: (failureCount, error) => {
+      const message2 = error instanceof Error ? error.message : String(error);
+      if (message2.includes("Unauthorized") || message2.includes("permission")) {
         return false;
       }
+      return failureCount < MAX_QUERY_RETRIES;
     },
-    enabled: !!actor && !actorFetching,
-    staleTime: 6e4
+    retryDelay: (attemptIndex) => Math.min(RETRY_DELAY_BASE * 2 ** attemptIndex, 8e3)
   });
 }
 function useGetPortfolioTrackedAssets(portfolioId) {
@@ -38611,68 +38740,21 @@ function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) 
     }
     const amount = asset.amount || 0;
     const averagePrice = asset.averagePrice || 0;
-    const currentValue = amount * currentPrice;
-    const investedValue = amount * averagePrice;
-    const profitLoss = currentValue - investedValue;
+    const basis = averagePrice * amount;
+    const unrealizedPL = amount > 0 ? (currentPrice - averagePrice) * amount : 0;
+    const profitLossPercentage = basis > 0 ? unrealizedPL / basis * 100 : 0;
     return {
       ...asset,
       currentPrice,
-      profitLoss
+      profitLossPercentage
     };
   }).filter(
-    (asset) => asset !== null && (asset.amount || 0) > 1e-8
+    (asset) => asset !== null && (asset.amount || 0) > 0
   );
-  const unrealizedProfitLoss = updatedAssets.reduce(
-    (sum, asset) => sum + (asset.profitLoss || 0),
-    0
-  );
-  const realizedProfitLoss = calculateRealizedProfitLoss(
-    portfolio.transactions || [],
-    portfolio.assets || []
-  );
-  const totalProfitLoss = unrealizedProfitLoss + realizedProfitLoss;
   return {
     ...portfolio,
-    assets: updatedAssets,
-    totalProfitLoss,
-    unrealizedProfitLoss
+    assets: updatedAssets
   };
-}
-function calculateRealizedProfitLoss(transactions, _assets) {
-  if (!Array.isArray(transactions)) return 0;
-  let realizedPL = 0;
-  const transactionsByAsset = /* @__PURE__ */ new Map();
-  for (const tx of transactions) {
-    if (!tx || !tx.assetSymbol) continue;
-    if (!transactionsByAsset.has(tx.assetSymbol)) {
-      transactionsByAsset.set(tx.assetSymbol, []);
-    }
-    transactionsByAsset.get(tx.assetSymbol).push(tx);
-  }
-  for (const txs of transactionsByAsset.values()) {
-    const sortedTxs = [...txs].sort(
-      (a2, b2) => Number((a2.date || 0n) - (b2.date || 0n))
-    );
-    let totalBought = 0;
-    let totalCost = 0;
-    for (const tx of sortedTxs) {
-      if (!tx) continue;
-      const amount = tx.amount || 0;
-      const price = tx.price || 0;
-      if (tx.type === "buy") {
-        totalBought += amount;
-        totalCost += amount * price;
-      } else if (tx.type === "sell") {
-        const avgPrice = totalBought > 0 ? totalCost / totalBought : 0;
-        const sellValue = amount * price;
-        const costBasis = amount * avgPrice;
-        realizedPL += sellValue - costBasis;
-        totalBought -= amount;
-        totalCost -= costBasis;
-      }
-    }
-  }
-  return realizedPL;
 }
 const ThemeContext = reactExports.createContext(void 0);
 function ThemeProvider({ children }) {
@@ -62380,6 +62462,109 @@ var PieChart = generateCategoricalChart({
     outerRadius: "80%"
   }
 });
+const USD_CURRENCY = "USD";
+const PLN_CURRENCY = "PLN";
+const usdFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: USD_CURRENCY,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const usdCompactFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: USD_CURRENCY,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+const plnFormatter = new Intl.NumberFormat("pl-PL", {
+  style: "currency",
+  currency: PLN_CURRENCY,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const plnCompactFormatter = new Intl.NumberFormat("pl-PL", {
+  style: "currency",
+  currency: PLN_CURRENCY,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+function isUsableRate(rate) {
+  return typeof rate === "number" && Number.isFinite(rate) && rate > 0;
+}
+function formatUsd(amount, options = {}) {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const formatter = options.compact ? usdCompactFormatter : usdFormatter;
+  const formatted = formatter.format(Math.abs(safe));
+  if (options.showSign && safe > 0) return `+${formatted}`;
+  if (safe < 0) return `-${formatted}`;
+  return formatted;
+}
+function formatPln(amount, rate, options = {}) {
+  if (!isUsableRate(rate)) return null;
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const converted = safe * rate;
+  const formatter = options.compact ? plnCompactFormatter : plnFormatter;
+  const formatted = formatter.format(Math.abs(converted));
+  if (options.showSign && converted > 0) return `+${formatted}`;
+  if (converted < 0) return `-${formatted}`;
+  return formatted;
+}
+function formatMoney(amount, rate, options = {}) {
+  return {
+    usd: formatUsd(amount, options),
+    pln: formatPln(amount, rate, options)
+  };
+}
+const CurrencyContext = reactExports.createContext(
+  void 0
+);
+function CurrencyProvider({
+  children,
+  usdToPlnRate = null
+}) {
+  const value = reactExports.useMemo(() => {
+    const rate = typeof usdToPlnRate === "number" && Number.isFinite(usdToPlnRate) && usdToPlnRate > 0 ? usdToPlnRate : null;
+    return {
+      usdToPlnRate: rate,
+      hasRate: rate !== null,
+      formatUsd: (amount, options) => formatUsd(amount, options),
+      formatPln: (amount, options) => formatPln(amount, rate, options),
+      formatMoney: (amount, options) => formatMoney(amount, rate, options)
+    };
+  }, [usdToPlnRate]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CurrencyContext.Provider, { value, children });
+}
+function useCurrency() {
+  const context = reactExports.useContext(CurrencyContext);
+  if (context === void 0) {
+    throw new Error("useCurrency must be used within a CurrencyProvider");
+  }
+  return context;
+}
+function Money({
+  usd,
+  compact = false,
+  showSign = false,
+  className,
+  secondaryClassName
+}) {
+  const { formatMoney: formatMoney2 } = useCurrency();
+  const options = { compact, showSign };
+  const { usd: usdText, pln: plnText } = formatMoney2(usd, options);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "inline-flex flex-col items-end leading-tight", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: cn("font-terminal tabular-nums", className), children: usdText }),
+    plnText ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "span",
+      {
+        className: cn(
+          "font-terminal text-[0.7em] tabular-nums text-terminal-muted",
+          secondaryClassName
+        ),
+        children: plnText
+      }
+    ) : null
+  ] });
+}
 const translations$d = {
   pl: {
     assetAllocation: "Alokacja aktywów",
@@ -62460,6 +62645,7 @@ function AssetAllocationChart({
 }) {
   const t2 = translations$d[language];
   const palette = useAllocationPalette();
+  const { formatMoney: formatMoney2 } = useCurrency();
   const [showPercentage, setShowPercentage] = reactExports.useState(false);
   const chartData = reactExports.useMemo(() => {
     if (!(portfolio == null ? void 0 : portfolio.assets)) return [];
@@ -62485,14 +62671,6 @@ function AssetAllocationChart({
       };
     }).sort((a2, b2) => b2.value - a2.value);
   }, [portfolio, showPercentage]);
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
   const formatPercent = (value) => {
     return `${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 1,
@@ -62510,9 +62688,8 @@ function AssetAllocationChart({
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-terminal text-xs font-bold text-terminal mb-2", children: data.name }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-terminal text-xs text-terminal-muted mb-1", children: [
           t2.value,
-          ":",
-          " ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-terminal", children: formatCurrency(data.value) })
+          ": ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Money, { usd: data.value, className: "text-terminal" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-terminal text-xs text-terminal-muted", children: [
           t2.percentage,
@@ -62526,8 +62703,43 @@ function AssetAllocationChart({
   };
   const renderInlineLabel = (entry) => {
     if (entry.percentage < INLINE_LABEL_MIN_PERCENT) return "";
-    const text = showPercentage ? formatPercent(entry.percentage) : formatCurrency(entry.value);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("tspan", { fontSize: 13, fill: palette.labelFill, style: { font: "inherit" }, children: text });
+    if (showPercentage) {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "tspan",
+        {
+          fontSize: 13,
+          fill: palette.labelFill,
+          style: { font: "inherit" },
+          children: formatPercent(entry.percentage)
+        }
+      );
+    }
+    const { usd, pln } = formatMoney2(entry.value);
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "tspan",
+        {
+          x: 0,
+          dy: 0,
+          fontSize: 13,
+          fill: palette.labelFill,
+          style: { font: "inherit" },
+          children: usd
+        }
+      ),
+      pln ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "tspan",
+        {
+          x: 0,
+          dy: 12,
+          fontSize: 10,
+          fill: palette.labelFill,
+          opacity: 0.7,
+          style: { font: "inherit" },
+          children: pln
+        }
+      ) : null
+    ] });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "flex h-full flex-col rounded-terminal border border-terminal bg-terminal-card p-3", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "gap-2 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
@@ -62621,7 +62833,13 @@ function AssetAllocationChart({
                   }
                 ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg font-bold text-terminal w-20 shrink-0 truncate", children: entry.name }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg text-terminal flex-1 text-right tabular-nums truncate", children: formatCurrency(entry.value) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Money,
+                  {
+                    usd: entry.value,
+                    className: "text-lg text-terminal"
+                  }
+                ) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-terminal text-lg text-terminal-muted w-20 shrink-0 text-right tabular-nums", children: formatPercent(entry.percentage) })
               ]
             },
@@ -69764,6 +69982,10 @@ function PortfolioChart({
         const costBasis = effectiveAmount * holding.avgPrice;
         const realizedPL = sellValue - costBasis;
         cumulativeRealizedPL += realizedPL;
+        cumulativePurchaseValue = Math.max(
+          0,
+          cumulativePurchaseValue - costBasis
+        );
         const newAmount = Math.max(0, holding.amount - txAmount);
         const newTotalCost = Math.max(0, holding.totalCost - costBasis);
         holdings.set(symbol, {
@@ -74473,12 +74695,6 @@ function AssetList({
       priorityAssets
     );
   }, [portfolio, marketData, priorityAssets]);
-  const formatCurrency = (value) => {
-    return `$${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value)}`;
-  };
   const formatNumber = (value) => {
     return new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 2,
@@ -74496,24 +74712,25 @@ function AssetList({
     ).format(Math.abs(value));
     return `${sign2}${formatted}%`;
   };
-  const totalValue = reactExports.useMemo(() => {
-    if (!(updatedPortfolio == null ? void 0 : updatedPortfolio.assets)) return 0;
-    return updatedPortfolio.assets.reduce((sum, asset) => {
-      if (!asset) return sum;
-      const amount = asset.amount || 0;
-      const currentPrice = asset.currentPrice || 0;
-      return sum + amount * currentPrice;
-    }, 0);
-  }, [updatedPortfolio]);
-  const totalProfitLoss = (updatedPortfolio == null ? void 0 : updatedPortfolio.totalProfitLoss) || 0;
-  const unrealizedProfitLoss = (updatedPortfolio == null ? void 0 : updatedPortfolio.unrealizedProfitLoss) || 0;
-  const totalPurchaseValue = (updatedPortfolio == null ? void 0 : updatedPortfolio.totalPurchaseValue) || 0;
+  const summary = reactExports.useMemo(() => {
+    const totalPurchaseValue = portfolio.totalPurchaseValue || 0;
+    const unrealizedProfitLoss = portfolio.unrealizedProfitLoss || 0;
+    const totalProfitLoss = portfolio.totalProfitLoss || 0;
+    const canonicalTotalValue = portfolio.totalValue;
+    const totalValue = typeof canonicalTotalValue === "number" ? canonicalTotalValue : totalPurchaseValue + unrealizedProfitLoss;
+    return {
+      totalValue,
+      totalPurchaseValue,
+      unrealizedProfitLoss,
+      totalProfitLoss
+    };
+  }, [portfolio]);
   const filteredAndSortedAssets = reactExports.useMemo(() => {
     if (!(updatedPortfolio == null ? void 0 : updatedPortfolio.assets)) return [];
     let filtered = [...updatedPortfolio.assets].filter((asset) => {
       if (!asset) return false;
       const amount = asset.amount || 0;
-      return amount > 1e-8;
+      return amount > 0;
     });
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -74635,31 +74852,45 @@ function AssetList({
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-2 lg:grid-cols-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "rounded-terminal border border-terminal bg-terminal-card p-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-[11px] font-medium uppercase tracking-wider text-terminal-muted", children: t2.totalValue }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-2xl font-bold text-terminal", children: formatCurrency(totalValue) }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Money,
+          {
+            usd: summary.totalValue,
+            className: "text-2xl font-bold text-terminal"
+          }
+        ) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "rounded-terminal border border-terminal bg-terminal-card p-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-[11px] font-medium uppercase tracking-wider text-terminal-muted", children: t2.totalProfitLoss }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "div",
+          Money,
           {
-            className: `font-terminal text-2xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`,
-            children: formatCurrency(totalProfitLoss)
+            usd: summary.totalProfitLoss,
+            showSign: true,
+            className: `text-2xl font-bold ${summary.totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`
           }
         ) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "rounded-terminal border border-terminal bg-terminal-card p-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-[11px] font-medium uppercase tracking-wider text-terminal-muted", children: t2.unrealizedProfitLoss }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "div",
+          Money,
           {
-            className: `font-terminal text-2xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`,
-            children: formatCurrency(unrealizedProfitLoss)
+            usd: summary.unrealizedProfitLoss,
+            showSign: true,
+            className: `text-2xl font-bold ${summary.unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`
           }
         ) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "rounded-terminal border border-terminal bg-terminal-card p-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "flex flex-row items-center justify-between space-y-0 pb-1 p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-[11px] font-medium uppercase tracking-wider text-terminal-muted", children: t2.totalPurchaseValue }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-terminal text-2xl font-bold text-terminal", children: formatCurrency(totalPurchaseValue) }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Money,
+          {
+            usd: summary.totalPurchaseValue,
+            className: "text-2xl font-bold text-terminal"
+          }
+        ) })
       ] })
     ] }),
     updatedPortfolio && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 lg:grid-cols-2", children: [
@@ -74777,20 +75008,23 @@ function AssetList({
                       children: asset.symbol
                     }
                   ) }) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: formatCurrency(asset.currentPrice || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: formatCurrency(asset.averagePurchasePrice || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Money, { usd: asset.currentPrice || 0 }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Money, { usd: asset.averagePurchasePrice || 0 }) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: formatNumber(asset.amount || 0) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal font-semibold border-r border-terminal text-terminal py-1 px-2", children: formatCurrency(
-                    (asset.amount || 0) * (asset.currentPrice || 0)
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal font-semibold border-r border-terminal text-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Money,
+                    {
+                      usd: (asset.amount || 0) * (asset.currentPrice || 0)
+                    }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: formatCurrency(asset.purchaseValue || 0) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center font-terminal border-r border-terminal text-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Money, { usd: asset.purchaseValue || 0 }) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-center border-r border-terminal py-1 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                     "div",
                     {
                       className: `flex items-center justify-center gap-1 font-semibold font-terminal ${isPositive ? "text-terminal-green" : "text-terminal-red"}`,
                       children: [
                         isPositive ? /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingUp, { className: "h-3 w-3" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingDown, { className: "h-3 w-3" }),
-                        formatCurrency(Math.abs(profitLoss))
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Money, { usd: Math.abs(profitLoss) })
                       ]
                     }
                   ) }),
@@ -76132,6 +76366,7 @@ const translations$3 = {
     loading: "Ładowanie",
     connected: "Połączono",
     lastUpdated: "Ostatnia aktualizacja",
+    lastUpdatedUnknown: "Nieznana",
     calculationQuality: "Jakość obliczeń",
     trackedAssets: "Śledzone aktywa",
     debugTitle: "Debug: ostatni błąd pobierania",
@@ -76146,13 +76381,23 @@ const translations$3 = {
     refreshPrices: "Odśwież ceny",
     refreshPricesLoading: "Odświeżanie...",
     refreshPricesError: "Błąd odświeżania cen",
-    addTokenButton: "Dodaj token"
+    refreshPricesErrorMarketData: "Nie udało się odświeżyć danych rynkowych",
+    refreshPricesErrorPriorityAssets: "Nie udało się odświeżyć cen aktywów priorytetowych",
+    refreshPricesErrorBoth: "Nie udało się odświeżyć danych rynkowych ani cen aktywów priorytetowych",
+    refreshPricesErrorDetail: "Szczegóły błędu",
+    refreshPricesSuccess: "Ceny zaktualizowane",
+    addTokenButton: "Dodaj token",
+    adminCheckError: "Nie udało się sprawdzić uprawnień administratora.",
+    adminCheckRetry: "Spróbuj ponownie",
+    exchangeRateError: "Błąd kursu USD/PLN",
+    exchangeRateErrorDetail: "Szczegóły błędu"
   },
   en: {
     marketDataStatus: "Market Data Status",
     loading: "Loading",
     connected: "Connected",
     lastUpdated: "Last updated",
+    lastUpdatedUnknown: "Unknown",
     calculationQuality: "Calculation Quality",
     trackedAssets: "Tracked Assets",
     debugTitle: "Debug: last fetch error",
@@ -76167,7 +76412,16 @@ const translations$3 = {
     refreshPrices: "Refresh prices",
     refreshPricesLoading: "Refreshing...",
     refreshPricesError: "Error refreshing prices",
-    addTokenButton: "Add token"
+    refreshPricesErrorMarketData: "Failed to refresh market data",
+    refreshPricesErrorPriorityAssets: "Failed to refresh priority asset prices",
+    refreshPricesErrorBoth: "Failed to refresh both market data and priority asset prices",
+    refreshPricesErrorDetail: "Error details",
+    refreshPricesSuccess: "Prices updated",
+    addTokenButton: "Add token",
+    adminCheckError: "Could not verify administrator permissions.",
+    adminCheckRetry: "Try again",
+    exchangeRateError: "USD/PLN rate error",
+    exchangeRateErrorDetail: "Error details"
   }
 };
 function MarketDataStatusPanel({
@@ -76177,34 +76431,51 @@ function MarketDataStatusPanel({
   lastUpdated,
   calculationQuality
 }) {
+  var _a3;
   const t2 = translations$3[language];
-  const [currentTime, setCurrentTime] = reactExports.useState(/* @__PURE__ */ new Date());
   const [debugOpen, setDebugOpen] = reactExports.useState(false);
-  const [refreshError, setRefreshError] = reactExports.useState(false);
+  const [refreshError, setRefreshError] = reactExports.useState(null);
+  const [refreshSuccess, setRefreshSuccess] = reactExports.useState(false);
   const [addTokenOpen, setAddTokenOpen] = reactExports.useState(false);
   const lastFetchErrorQuery = useGetLastFetchError();
-  const showDebug = useGetIsAdmin();
-  const fetchMarketDataMutation = useFetchMarketData();
-  const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
-  const isRefreshing = fetchMarketDataMutation.isPending || fetchPriorityAssetPricesMutation.isPending;
+  const isAdminQuery = useGetIsAdmin();
+  const exchangeRateQuery = useGetExchangeRate();
+  const showDebug = isAdminQuery.isSuccess && isAdminQuery.data === true;
+  const adminCheckFailed = isAdminQuery.isError;
+  const refreshAllPricesMutation = useRefreshAllPrices();
+  const isRefreshing = refreshAllPricesMutation.isPending;
+  const handleAdminCheckRetry = () => {
+    setRefreshError(null);
+    setRefreshSuccess(false);
+    void isAdminQuery.refetch();
+  };
   const handleRefreshPrices = async () => {
-    setRefreshError(false);
+    setRefreshError(null);
+    setRefreshSuccess(false);
     try {
-      await Promise.all([
-        fetchMarketDataMutation.mutateAsync(),
-        fetchPriorityAssetPricesMutation.mutateAsync()
-      ]);
+      const result = await refreshAllPricesMutation.mutateAsync();
+      if (result.marketDataOk && result.priorityAssetsOk) {
+        setRefreshSuccess(true);
+        return;
+      }
+      const failedParts = [];
+      if (!result.marketDataOk) {
+        failedParts.push(
+          `${t2.refreshPricesErrorMarketData}${result.marketDataError ? `: ${result.marketDataError}` : ""}`
+        );
+      }
+      if (!result.priorityAssetsOk) {
+        failedParts.push(
+          `${t2.refreshPricesErrorPriorityAssets}${result.priorityAssetsError ? `: ${result.priorityAssetsError}` : ""}`
+        );
+      }
+      setRefreshError(failedParts.join(" · "));
     } catch (error) {
       console.error("Error refreshing prices:", error);
-      setRefreshError(true);
+      const message2 = error instanceof Error ? error.message : String(error);
+      setRefreshError(`${t2.refreshPricesError}: ${message2}`);
     }
   };
-  reactExports.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(/* @__PURE__ */ new Date());
-    }, 1e3);
-    return () => clearInterval(timer);
-  }, []);
   const formatTime = (date2) => {
     return date2.toLocaleTimeString(language === "pl" ? "pl-PL" : "en-US", {
       hour: "2-digit",
@@ -76280,7 +76551,7 @@ function MarketDataStatusPanel({
               t2.lastUpdated,
               ":"
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-terminal font-semibold text-terminal", children: lastUpdated ? formatTime(lastUpdated) : formatTime(currentTime) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-terminal font-semibold text-terminal", children: lastUpdated ? formatTime(lastUpdated) : t2.lastUpdatedUnknown })
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6", children: [
@@ -76318,7 +76589,7 @@ function MarketDataStatusPanel({
               }
             )
           ] }),
-          showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 Button$1,
@@ -76338,7 +76609,7 @@ function MarketDataStatusPanel({
                   ] })
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 Button$1,
                 {
                   variant: "outline",
@@ -76359,10 +76630,64 @@ function MarketDataStatusPanel({
               {
                 className: "text-xs text-terminal-red",
                 "data-ocid": "market_data_status.refresh_prices_error",
-                children: t2.refreshPricesError
+                children: refreshError
+              }
+            ),
+            refreshSuccess && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "text-xs text-terminal-green",
+                "data-ocid": "market_data_status.refresh_prices_success",
+                children: t2.refreshPricesSuccess
+              }
+            ),
+            ((_a3 = exchangeRateQuery.data) == null ? void 0 : _a3.lastError) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "span",
+              {
+                className: "flex items-start gap-1.5 text-xs text-terminal-red",
+                "data-ocid": "market_data_status.exchange_rate_error",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "mt-0.5 h-3.5 w-3.5 shrink-0" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold", children: [
+                      t2.exchangeRateError,
+                      ":"
+                    ] }),
+                    " ",
+                    exchangeRateQuery.data.lastError
+                  ] })
+                ]
               }
             )
-          ] })
+          ] }),
+          adminCheckFailed && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: "flex flex-col gap-1",
+              "data-ocid": "market_data_status.admin_check_error",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1.5 text-xs text-terminal-red", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "h-3.5 w-3.5" }),
+                  t2.adminCheckError
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Button$1,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: handleAdminCheckRetry,
+                    disabled: isAdminQuery.isFetching,
+                    className: "w-fit rounded-terminal font-terminal",
+                    "data-ocid": "market_data_status.admin_check_retry_button",
+                    children: [
+                      isAdminQuery.isFetching ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5" }),
+                      t2.adminCheckRetry
+                    ]
+                  }
+                )
+              ]
+            }
+          )
         ] })
       ] }),
       showDebug && /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -76713,7 +77038,6 @@ function PortfolioManager({ language }) {
   const [isRefreshing, setIsRefreshing] = reactExports.useState(false);
   const [showExportModal, setShowExportModal] = reactExports.useState(false);
   const [showImportModal, setShowImportModal] = reactExports.useState(false);
-  const [lastUpdated, setLastUpdated] = reactExports.useState(null);
   const { clear } = useInternetIdentity();
   const queryClient2 = useQueryClient();
   const t2 = translations$1[language];
@@ -76748,11 +77072,18 @@ function PortfolioManager({ language }) {
       console.error("[PortfolioManager] Market data error:", marketDataError);
     }
   }, [portfoliosError, marketDataError]);
-  reactExports.useEffect(() => {
-    if (!marketDataLoading && !isRefreshing && marketData) {
-      setLastUpdated(/* @__PURE__ */ new Date());
+  const lastUpdated = reactExports.useMemo(() => {
+    if (!marketData || marketData.length === 0) return null;
+    let newest = 0n;
+    for (const entry of marketData) {
+      if ((entry == null ? void 0 : entry.lastUpdated) && entry.lastUpdated > newest) {
+        newest = entry.lastUpdated;
+      }
     }
-  }, [marketDataLoading, isRefreshing, marketData]);
+    if (newest <= 0n) return null;
+    const date2 = new Date(Number(newest / 1000000n));
+    return Number.isNaN(date2.getTime()) ? null : date2;
+  }, [marketData]);
   reactExports.useEffect(() => {
     setMounted(true);
   }, []);
@@ -76781,7 +77112,6 @@ function PortfolioManager({ language }) {
       await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
       await refetch();
       await refetchPortfolios();
-      setLastUpdated(/* @__PURE__ */ new Date());
       ue$1.success(t2.marketDataUpdated);
     } catch (error) {
       console.error("[PortfolioManager] Fetch market data error:", error);
@@ -76815,7 +77145,6 @@ function PortfolioManager({ language }) {
       });
       await queryClient2.invalidateQueries({ queryKey: ["marketData"] });
       await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
-      setLastUpdated(/* @__PURE__ */ new Date());
     } catch (error) {
       console.error("[PortfolioManager] Error refreshing after import:", error);
     }
@@ -76831,7 +77160,6 @@ function PortfolioManager({ language }) {
       });
       await queryClient2.invalidateQueries({ queryKey: ["marketData"] });
       await queryClient2.invalidateQueries({ queryKey: ["priorityAssets"] });
-      setLastUpdated(/* @__PURE__ */ new Date());
     } catch (error) {
       console.error(
         "[PortfolioManager] Error refreshing after dialog action:",
@@ -77237,10 +77565,14 @@ function AppContent() {
   ] });
 }
 function App() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient$1, children: /* @__PURE__ */ jsxRuntimeExports.jsx(J$1, { attribute: "class", defaultTheme: "dark", enableSystem: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ThemeProvider, { children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient$1, children: /* @__PURE__ */ jsxRuntimeExports.jsx(J$1, { attribute: "class", defaultTheme: "dark", enableSystem: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ThemeProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CurrencyRateProvider, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(AppContent, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, {})
-  ] }) }) }) });
+  ] }) }) }) }) });
+}
+function CurrencyRateProvider({ children }) {
+  const { data: exchangeRate } = useGetExchangeRate();
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CurrencyProvider, { usdToPlnRate: (exchangeRate == null ? void 0 : exchangeRate.rate) ?? null, children });
 }
 BigInt.prototype.toJSON = function() {
   return this.toString();

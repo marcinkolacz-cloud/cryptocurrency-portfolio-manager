@@ -842,6 +842,9 @@ video {
 .mr-2 {
   margin-right: 0.5rem;
 }
+.mt-0\.5 {
+  margin-top: 0.125rem;
+}
 .mt-1 {
   margin-top: 0.25rem;
 }
@@ -1928,6 +1931,9 @@ video {
   font-size: 1.875rem;
   line-height: 2.25rem;
 }
+.text-\[0\.7em\] {
+  font-size: 0.7em;
+}
 .text-\[0\.8rem\] {
   font-size: 0.8rem;
 }
@@ -1978,6 +1984,9 @@ video {
 }
 .leading-none {
   line-height: 1;
+}
+.leading-tight {
+  line-height: 1.25;
 }
 .tracking-tight {
   letter-spacing: -0.025em;

@@ -1,16 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Asset,
+  ExchangeRate,
   MarketData,
   Portfolio,
   PriorityAsset,
+  RefreshResult,
   Transaction,
   UserProfile,
 } from "../backend";
 import { useActor } from "./useActor";
+import { useInternetIdentity } from "./useInternetIdentity";
 
 const MAX_QUERY_RETRIES = 3;
 const RETRY_DELAY_BASE = 1500;
+
+/**
+ * Stable identity key for the signed-in principal. Used to scope
+ * identity-dependent queries so a value cached for a previous session can
+ * never leak into the next one. Returns null while no identity is available.
+ */
+function useCallerPrincipalKey(): string | null {
+  const { identity } = useInternetIdentity();
+  if (!identity) return null;
+  try {
+    return identity.getPrincipal().toText();
+  } catch {
+    return null;
+  }
+}
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -330,6 +348,86 @@ export function useFetchPriorityAssetPrices() {
   });
 }
 
+/**
+ * Single admin-gated refresh that updates both market data and priority
+ * asset prices. The backend never traps: it returns a RefreshResult that
+ * reports which part succeeded and carries the recorded error text for any
+ * part that failed. On success we invalidate every affected query, including
+ * ['lastFetchError'] so the debug panel reflects the new state immediately.
+ */
+export function useRefreshAllPrices() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation<RefreshResult, Error, void>({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend connection not available");
+      return actor.refreshAllPrices();
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["marketData"] });
+      void queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
+      void queryClient.invalidateQueries({ queryKey: ["lastFetchError"] });
+      // The refresh action also refreshes the USD->PLN rate on the backend, so
+      // refetch it here to keep the displayed PLN equivalents in sync.
+      void queryClient.invalidateQueries({ queryKey: ["exchangeRate"] });
+    },
+    onError: (error) => {
+      console.error("Error refreshing all prices:", error);
+    },
+  });
+}
+
+/**
+ * Live USD -> PLN exchange rate from the backend.
+ *
+ * Returns the full ExchangeRate record (rate, lastUpdated, sourceTimestamp,
+ * lastError) or null when the backend has no rate yet. A missing rate is a
+ * normal state, not an error: the CurrencyProvider then renders USD only.
+ * `lastError` is surfaced separately by the status panel.
+ */
+export function useGetExchangeRate() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<ExchangeRate | null>({
+    queryKey: ["exchangeRate"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        const result = await actor.getExchangeRate();
+        return result ?? null;
+      } catch (error) {
+        console.error("Error fetching exchange rate:", error);
+        return null;
+      }
+    },
+    enabled: !!actor && !actorFetching,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Admin-gated on-demand refresh of the USD -> PLN rate. Invalidates the
+ * exchange-rate query so the displayed PLN values update immediately.
+ */
+export function useRefreshExchangeRate() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation<ExchangeRate, Error, void>({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend connection not available");
+      return actor.refreshExchangeRate();
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["exchangeRate"] });
+    },
+    onError: (error) => {
+      console.error("Error refreshing exchange rate:", error);
+    },
+  });
+}
+
 export function useGetPriorityAssets() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -391,23 +489,40 @@ export function useGetLastFetchError() {
   });
 }
 
+/**
+ * Admin status for the signed-in caller.
+ *
+ * The query key is scoped to the caller principal so a value cached for a
+ * previous session can never hide the admin controls after a login/logout
+ * switch. A failed check is surfaced as an error (never cached as `false`)
+ * and retried, so a transient failure cannot permanently hide the controls.
+ * The backend returns a plain boolean and does not trap for unregistered
+ * callers, so a resolved `false` is a real answer.
+ */
 export function useGetIsAdmin() {
   const { actor, isFetching: actorFetching } = useActor();
+  const principalKey = useCallerPrincipalKey();
 
   return useQuery<boolean>({
-    queryKey: ["isAdmin"],
+    queryKey: ["isAdmin", principalKey],
     queryFn: async () => {
-      if (!actor) return false;
-      try {
-        const isAdmin = await actor.isCallerAdmin();
-        return isAdmin === true;
-      } catch (error) {
-        console.error("Error checking admin status:", error);
+      if (!actor) {
+        throw new Error("Backend connection not available");
+      }
+      const isAdmin = await actor.isCallerAdmin();
+      return isAdmin === true;
+    },
+    enabled: !!actor && !actorFetching && !!principalKey,
+    staleTime: 30000,
+    retry: (failureCount, error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("Unauthorized") || message.includes("permission")) {
         return false;
       }
+      return failureCount < MAX_QUERY_RETRIES;
     },
-    enabled: !!actor && !actorFetching,
-    staleTime: 60000,
+    retryDelay: (attemptIndex) =>
+      Math.min(RETRY_DELAY_BASE * 2 ** attemptIndex, 8000),
   });
 }
 
@@ -712,85 +827,34 @@ export function updatePortfolioWithMarketPrices(
         );
       }
 
+      // Refresh the live market price and recompute the unrealized-only
+      // profitLossPercentage from that same displayed currentPrice, using the
+      // exact backend canonical formula so the row's price and percentage can
+      // never disagree. The remaining P&L / cost-basis fields (profitLoss,
+      // realizedProfitLossPercentage, purchaseValue, currentValue,
+      // totalSoldCost) stay exactly as the backend computed them, so the
+      // summary cards and chart keep reading one canonical source.
       const amount = asset.amount || 0;
       const averagePrice = asset.averagePrice || 0;
-      const currentValue = amount * currentPrice;
-      const investedValue = amount * averagePrice;
-      const profitLoss = currentValue - investedValue;
+      const basis = averagePrice * amount;
+      const unrealizedPL =
+        amount > 0 ? (currentPrice - averagePrice) * amount : 0;
+      const profitLossPercentage = basis > 0 ? (unrealizedPL / basis) * 100 : 0;
 
       return {
         ...asset,
         currentPrice,
-        profitLoss,
+        profitLossPercentage,
       };
     })
     .filter(
-      (asset): asset is Asset =>
-        asset !== null && (asset.amount || 0) > 0.00000001,
+      (asset): asset is Asset => asset !== null && (asset.amount || 0) > 0,
     );
 
-  const unrealizedProfitLoss = updatedAssets.reduce(
-    (sum, asset) => sum + (asset.profitLoss || 0),
-    0,
-  );
-  const realizedProfitLoss = calculateRealizedProfitLoss(
-    portfolio.transactions || [],
-    portfolio.assets || [],
-  );
-  const totalProfitLoss = unrealizedProfitLoss + realizedProfitLoss;
-
+  // Portfolio-level P&L totals are backend-canonical too. Do not recompute
+  // them here; only the per-asset live price is refreshed above.
   return {
     ...portfolio,
     assets: updatedAssets,
-    totalProfitLoss,
-    unrealizedProfitLoss,
   };
-}
-
-function calculateRealizedProfitLoss(
-  transactions: Transaction[],
-  _assets: Asset[],
-): number {
-  if (!Array.isArray(transactions)) return 0;
-
-  let realizedPL = 0;
-  const transactionsByAsset = new Map<string, Transaction[]>();
-
-  for (const tx of transactions) {
-    if (!tx || !tx.assetSymbol) continue;
-    if (!transactionsByAsset.has(tx.assetSymbol)) {
-      transactionsByAsset.set(tx.assetSymbol, []);
-    }
-    transactionsByAsset.get(tx.assetSymbol)!.push(tx);
-  }
-
-  for (const txs of transactionsByAsset.values()) {
-    const sortedTxs = [...txs].sort((a, b) =>
-      Number((a.date || 0n) - (b.date || 0n)),
-    );
-    let totalBought = 0;
-    let totalCost = 0;
-
-    for (const tx of sortedTxs) {
-      if (!tx) continue;
-
-      const amount = tx.amount || 0;
-      const price = tx.price || 0;
-
-      if (tx.type === "buy") {
-        totalBought += amount;
-        totalCost += amount * price;
-      } else if (tx.type === "sell") {
-        const avgPrice = totalBought > 0 ? totalCost / totalBought : 0;
-        const sellValue = amount * price;
-        const costBasis = amount * avgPrice;
-        realizedPL += sellValue - costBasis;
-
-        totalBought -= amount;
-        totalCost -= costBasis;
-      }
-    }
-  }
-
-  return realizedPL;
 }

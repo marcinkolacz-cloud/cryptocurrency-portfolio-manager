@@ -43,6 +43,13 @@ module {
   // New Portfolio shape: the four historical* fields are dropped entirely
   // (no frontend component reads them — confirmed dead in the prior audit).
   // The migration (migration.mo) consumes the old shape and emits this one.
+  //
+  // The four totals are canonical sums of the per-asset fields over assets with
+  // amount > 0, so each card is literally the sum of its table column:
+  //   totalPurchaseValue  = sum(asset.purchaseValue)          where purchaseValue == averagePrice * amount
+  //   unrealizedProfitLoss = sum((currentPrice - averagePrice) * amount)
+  //   totalProfitLoss     = sum(asset.profitLoss)             where profitLoss == realizedProfitLoss + unrealized
+  //   totalValue          = sum(amount * currentPrice)
   public type Portfolio = {
     id : Nat;
     name : Text;
@@ -52,6 +59,7 @@ module {
     totalProfitLoss : Float;
     unrealizedProfitLoss : Float;
     totalPurchaseValue : Float;
+    totalValue : Float;
     trackedAssets : [Text];
   };
 
@@ -90,5 +98,15 @@ module {
     trackedAssetsCount : Nat;
     apiHealth : Text; // "healthy", "degraded", "unavailable"
     colorScheme : Text; // "default", "gray", "navy"
+  };
+
+  // Structured outcome of a combined price refresh (refreshAllPrices). Each
+  // half reports whether it succeeded and, when it did not, the recorded error
+  // text so the frontend can show an accurate message instead of a generic one.
+  public type RefreshResult = {
+    marketDataOk : Bool;
+    marketDataError : ?Text;
+    priorityAssetsOk : Bool;
+    priorityAssetsError : ?Text;
   };
 };

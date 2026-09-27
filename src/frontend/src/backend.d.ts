@@ -7,77 +7,6 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface TransformationOutput {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<HttpHeader>;
-}
-export interface HttpRequestResult {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<HttpHeader>;
-}
-export interface MarketDataStatus {
-    status: string;
-    calculationQuality: number;
-    apiHealth: string;
-    lastUpdated: bigint;
-    trackedAssetsCount: bigint;
-    colorScheme: string;
-}
-export type AuthResult_1 = {
-    __kind__: "ok";
-    ok: UserProfile;
-} | {
-    __kind__: "notFound";
-    notFound: string;
-} | {
-    __kind__: "unauthorized";
-    unauthorized: string;
-};
-export interface HttpHeader {
-    value: string;
-    name: string;
-}
-export interface MarketData {
-    id: bigint;
-    marketCap: number;
-    name: string;
-    lastUpdated: bigint;
-    price: number;
-    symbol: string;
-}
-export interface Transaction {
-    id: bigint;
-    date: bigint;
-    type: string;
-    comment: string;
-    assetSymbol: string;
-    assetName: string;
-    price: number;
-    amount: number;
-}
-export interface TechnicalData {
-    currentPrice: number;
-    change24h: number;
-    marketCap: number;
-    name: string;
-    lastUpdated: bigint;
-    volume24h: number;
-    symbol: string;
-}
-export interface Result {
-    hasMore: boolean;
-    rows: Array<Array<Cell>>;
-}
-export interface TransformationInput {
-    context: Uint8Array;
-    response: HttpRequestResult;
-}
-export interface Cell {
-    value: Value;
-    name: string;
-}
 export interface Asset {
     currentPrice: number;
     averagePrice: number;
@@ -93,9 +22,65 @@ export interface Asset {
     realizedProfitLoss: number;
     symbol: string;
 }
+export type AuthResult = {
+    __kind__: "ok";
+    ok: Array<Portfolio>;
+} | {
+    __kind__: "notFound";
+    notFound: string;
+} | {
+    __kind__: "unauthorized";
+    unauthorized: string;
+};
+export type AuthResult_1 = {
+    __kind__: "ok";
+    ok: UserProfile;
+} | {
+    __kind__: "notFound";
+    notFound: string;
+} | {
+    __kind__: "unauthorized";
+    unauthorized: string;
+};
+export interface Cell {
+    value: Value;
+    name: string;
+}
+export interface ExchangeRate {
+    rate: number;
+    lastUpdated: bigint;
+    sourceTimestamp: bigint;
+    lastError?: string;
+}
+export interface HttpHeader {
+    value: string;
+    name: string;
+}
+export interface HttpRequestResult {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
+export interface MarketData {
+    id: bigint;
+    marketCap: number;
+    name: string;
+    lastUpdated: bigint;
+    price: number;
+    symbol: string;
+}
+export interface MarketDataStatus {
+    status: string;
+    calculationQuality: number;
+    apiHealth: string;
+    lastUpdated: bigint;
+    trackedAssetsCount: bigint;
+    colorScheme: string;
+}
 export interface Portfolio {
     id: bigint;
     totalProfitLoss: number;
+    totalValue: number;
     name: string;
     createdAt: bigint;
     assets: Array<Asset>;
@@ -111,6 +96,50 @@ export interface PriorityAsset {
     lastUpdated: bigint;
     price: number;
     symbol: string;
+}
+export interface RefreshResult {
+    marketDataError?: string;
+    priorityAssetsOk: boolean;
+    marketDataOk: boolean;
+    priorityAssetsError?: string;
+}
+export interface Result {
+    hasMore: boolean;
+    rows: Array<Array<Cell>>;
+}
+export interface TechnicalData {
+    currentPrice: number;
+    change24h: number;
+    marketCap: number;
+    name: string;
+    lastUpdated: bigint;
+    volume24h: number;
+    symbol: string;
+}
+export interface Transaction {
+    id: bigint;
+    date: bigint;
+    type: string;
+    comment: string;
+    assetSymbol: string;
+    assetName: string;
+    price: number;
+    amount: number;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: HttpRequestResult;
+}
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
+export interface UserProfile {
+    theme: string;
+    name: string;
+    language: string;
+    colorScheme: string;
 }
 export type Value = {
     __kind__: "int";
@@ -131,22 +160,6 @@ export type Value = {
     __kind__: "text";
     text: string;
 };
-export type AuthResult = {
-    __kind__: "ok";
-    ok: Array<Portfolio>;
-} | {
-    __kind__: "notFound";
-    notFound: string;
-} | {
-    __kind__: "unauthorized";
-    unauthorized: string;
-};
-export interface UserProfile {
-    theme: string;
-    name: string;
-    language: string;
-    colorScheme: string;
-}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -168,11 +181,13 @@ export interface backendInterface {
     fetchMarketData(): Promise<void>;
     fetchPriorityAssetPrices(): Promise<void>;
     fetchTechnicalData(assetId: string): Promise<void>;
+    getApiDoc(): Promise<string>;
     getAvailableAssets(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserProfileWithStatus(): Promise<AuthResult_1>;
     getCallerUserRole(): Promise<UserRole>;
     getCustomPriorityAssets(): Promise<Array<[string, string]>>;
+    getExchangeRate(): Promise<ExchangeRate | null>;
     getHistoricalPrice(coinGeckoId: string, date: bigint): Promise<number>;
     getLastFetchError(): Promise<{
         marketData?: {
@@ -212,6 +227,8 @@ export interface backendInterface {
     initializeAccessControl(): Promise<void>;
     isAuthenticated(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    refreshAllPrices(): Promise<RefreshResult>;
+    refreshExchangeRate(): Promise<ExchangeRate>;
     removeCustomPriorityAsset(coinGeckoId: string): Promise<{
         error?: string;
         success: boolean;

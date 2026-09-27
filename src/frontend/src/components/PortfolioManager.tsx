@@ -19,7 +19,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
@@ -104,7 +104,6 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { clear } = useInternetIdentity();
   const queryClient = useQueryClient();
   const t = translations[language];
@@ -156,12 +155,21 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
     }
   }, [portfoliosError, marketDataError]);
 
-  // Update last updated timestamp when market data finishes loading
-  useEffect(() => {
-    if (!marketDataLoading && !isRefreshing && marketData) {
-      setLastUpdated(new Date());
+  // Derive the displayed "last updated" from the backend's actual data
+  // timestamp — the newest MarketData.lastUpdated across entries. Never use
+  // the local clock, so stale data stays visibly stale.
+  const lastUpdated = useMemo<Date | null>(() => {
+    if (!marketData || marketData.length === 0) return null;
+    let newest = 0n;
+    for (const entry of marketData) {
+      if (entry?.lastUpdated && entry.lastUpdated > newest) {
+        newest = entry.lastUpdated;
+      }
     }
-  }, [marketDataLoading, isRefreshing, marketData]);
+    if (newest <= 0n) return null;
+    const date = new Date(Number(newest / 1_000_000n));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }, [marketData]);
 
   // next-themes hydration guard — resolvedTheme is undefined before mount
   useEffect(() => {
@@ -199,7 +207,6 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       // Refetch market data via useGetMarketData's refetch
       await refetch();
       await refetchPortfolios();
-      setLastUpdated(new Date());
       toast.success(t.marketDataUpdated);
     } catch (error) {
       console.error("[PortfolioManager] Fetch market data error:", error);
@@ -237,7 +244,6 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       });
       await queryClient.invalidateQueries({ queryKey: ["marketData"] });
       await queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
-      setLastUpdated(new Date());
     } catch (error) {
       console.error("[PortfolioManager] Error refreshing after import:", error);
     }
@@ -254,7 +260,6 @@ export default function PortfolioManager({ language }: PortfolioManagerProps) {
       });
       await queryClient.invalidateQueries({ queryKey: ["marketData"] });
       await queryClient.invalidateQueries({ queryKey: ["priorityAssets"] });
-      setLastUpdated(new Date());
     } catch (error) {
       console.error(
         "[PortfolioManager] Error refreshing after dialog action:",

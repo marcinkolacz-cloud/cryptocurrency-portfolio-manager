@@ -23,6 +23,7 @@ import type { Asset, MarketData, Portfolio, PriorityAsset } from "../backend";
 import { updatePortfolioWithMarketPrices } from "../hooks/useQueries";
 import AssetAllocationChart from "./AssetAllocationChart";
 import AssetChartModal from "./AssetChartModal";
+import { Money } from "./Money";
 import PortfolioChart from "./PortfolioChart";
 import TransactionDialog from "./TransactionDialog";
 import TransactionHistoryModal from "./TransactionHistoryModal";
@@ -131,13 +132,6 @@ export default function AssetList({
     );
   }, [portfolio, marketData, priorityAssets]);
 
-  const formatCurrency = (value: number) => {
-    return `$${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)}`;
-  };
-
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 2,
@@ -157,27 +151,45 @@ export default function AssetList({
     return `${sign}${formatted}%`;
   };
 
-  const totalValue = useMemo(() => {
-    if (!updatedPortfolio?.assets) return 0;
-    return updatedPortfolio.assets.reduce((sum, asset) => {
-      if (!asset) return sum;
-      const amount = asset.amount || 0;
-      const currentPrice = asset.currentPrice || 0;
-      return sum + amount * currentPrice;
-    }, 0);
-  }, [updatedPortfolio]);
+  // The backend now stores a canonical Portfolio.totalValue and computes all
+  // four totals by summing the per-asset fields over assets with amount > 0.
+  // Read those canonical fields directly (AGENTS.md: the frontend must not
+  // recompute them). The derived totalPurchaseValue + unrealizedProfitLoss is
+  // kept only as a safety fallback for a portfolio payload that predates the
+  // totalValue field. The per-asset table renders the backend's own per-asset
+  // fields, so the column sums equal these cards.
+  const summary = useMemo(() => {
+    const totalPurchaseValue = portfolio.totalPurchaseValue || 0;
+    const unrealizedProfitLoss = portfolio.unrealizedProfitLoss || 0;
+    const totalProfitLoss = portfolio.totalProfitLoss || 0;
+    // totalValue is a canonical backend field; the generated bindings may lag
+    // the backend until the next bindgen, so read it through a narrow view and
+    // fall back to the derived value only when it is genuinely absent.
+    const canonicalTotalValue = (portfolio as { totalValue?: number })
+      .totalValue;
+    const totalValue =
+      typeof canonicalTotalValue === "number"
+        ? canonicalTotalValue
+        : totalPurchaseValue + unrealizedProfitLoss;
 
-  const totalProfitLoss = updatedPortfolio?.totalProfitLoss || 0;
-  const unrealizedProfitLoss = updatedPortfolio?.unrealizedProfitLoss || 0;
-  const totalPurchaseValue = updatedPortfolio?.totalPurchaseValue || 0;
+    return {
+      totalValue,
+      totalPurchaseValue,
+      unrealizedProfitLoss,
+      totalProfitLoss,
+    };
+  }, [portfolio]);
 
   const filteredAndSortedAssets = useMemo(() => {
     if (!updatedPortfolio?.assets) return [];
 
+    // Match the backend's asset set exactly: the backend sums its totals over
+    // assets with amount > 0, so the table must use the same predicate or the
+    // column sums would not equal the summary cards.
     let filtered = [...updatedPortfolio.assets].filter((asset) => {
       if (!asset) return false;
       const amount = asset.amount || 0;
-      return amount > 0.00000001;
+      return amount > 0;
     });
 
     if (searchTerm) {
@@ -328,9 +340,10 @@ export default function AssetList({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-2 pt-1">
-            <div className="font-terminal text-2xl font-bold text-terminal">
-              {formatCurrency(totalValue)}
-            </div>
+            <Money
+              usd={summary.totalValue}
+              className="text-2xl font-bold text-terminal"
+            />
           </CardContent>
         </Card>
 
@@ -341,11 +354,11 @@ export default function AssetList({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-2 pt-1">
-            <div
-              className={`font-terminal text-2xl font-bold ${totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
-            >
-              {formatCurrency(totalProfitLoss)}
-            </div>
+            <Money
+              usd={summary.totalProfitLoss}
+              showSign
+              className={`text-2xl font-bold ${summary.totalProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
+            />
           </CardContent>
         </Card>
 
@@ -356,11 +369,11 @@ export default function AssetList({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-2 pt-1">
-            <div
-              className={`font-terminal text-2xl font-bold ${unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
-            >
-              {formatCurrency(unrealizedProfitLoss)}
-            </div>
+            <Money
+              usd={summary.unrealizedProfitLoss}
+              showSign
+              className={`text-2xl font-bold ${summary.unrealizedProfitLoss >= 0 ? "text-terminal-green" : "text-terminal-red"}`}
+            />
           </CardContent>
         </Card>
 
@@ -371,9 +384,10 @@ export default function AssetList({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-2 pt-1">
-            <div className="font-terminal text-2xl font-bold text-terminal">
-              {formatCurrency(totalPurchaseValue)}
-            </div>
+            <Money
+              usd={summary.totalPurchaseValue}
+              className="text-2xl font-bold text-terminal"
+            />
           </CardContent>
         </Card>
       </div>
@@ -516,21 +530,23 @@ export default function AssetList({
                           </div>
                         </TableCell>
                         <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
-                          {formatCurrency(asset.currentPrice || 0)}
+                          <Money usd={asset.currentPrice || 0} />
                         </TableCell>
                         <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
-                          {formatCurrency(asset.averagePurchasePrice || 0)}
+                          <Money usd={asset.averagePurchasePrice || 0} />
                         </TableCell>
                         <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
                           {formatNumber(asset.amount || 0)}
                         </TableCell>
                         <TableCell className="text-center font-terminal font-semibold border-r border-terminal text-terminal py-1 px-2">
-                          {formatCurrency(
-                            (asset.amount || 0) * (asset.currentPrice || 0),
-                          )}
+                          <Money
+                            usd={
+                              (asset.amount || 0) * (asset.currentPrice || 0)
+                            }
+                          />
                         </TableCell>
                         <TableCell className="text-center font-terminal border-r border-terminal text-terminal py-1 px-2">
-                          {formatCurrency(asset.purchaseValue || 0)}
+                          <Money usd={asset.purchaseValue || 0} />
                         </TableCell>
                         <TableCell className="text-center border-r border-terminal py-1 px-2">
                           <div
@@ -541,7 +557,7 @@ export default function AssetList({
                             ) : (
                               <TrendingDown className="h-3 w-3" />
                             )}
-                            {formatCurrency(Math.abs(profitLoss))}
+                            <Money usd={Math.abs(profitLoss)} />
                           </div>
                         </TableCell>
                         <TableCell className="text-center border-r border-terminal py-1 px-2">

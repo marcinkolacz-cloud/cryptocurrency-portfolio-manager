@@ -1,18 +1,19 @@
 {
-  "overview": "A cryptocurrency portfolio manager that tracks holdings, transactions, and live prices with Polish-first i18n.",
+  "overview": "A cryptocurrency portfolio manager that tracks holdings, transactions, and live market prices with consistent profit/loss totals and automatic PLN conversion.",
   "features": [
-    "Track buy and sell transactions per portfolio",
-    "Live price fetching from CoinGecko",
-    "Admin-managed custom priority tokens",
-    "Realized and unrealized profit and loss tracking",
-    "Polish and English language support"
+    "Track crypto holdings and transactions",
+    "Live market prices and portfolio valuation",
+    "Consistent profit/loss summary cards",
+    "Automatic PLN value shown beneath every USD amount",
+    "Asset allocation and portfolio charts",
+    "Dark and light themes"
   ],
   "category": "finance",
   "tags": [
-    "cryptocurrency",
+    "crypto",
     "portfolio",
     "finance",
-    "polish"
+    "tracking"
   ],
-  "last_updated": "2026-07-08T17:28:59.940Z"
+  "last_updated": "2026-09-27T11:52:33.510Z"
 }

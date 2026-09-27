@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import type React from "react";
 import BackendUnavailableScreen from "./components/BackendUnavailableScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
@@ -10,10 +11,14 @@ import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import PortfolioManager from "./components/PortfolioManager";
 import ProfileSetupDialog from "./components/ProfileSetupDialog";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { ThemeProvider as ColorSchemeProvider } from "./contexts/ThemeContext";
 import { useActor } from "./hooks/useActor";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { useGetCallerUserProfile } from "./hooks/useQueries";
+import {
+  useGetCallerUserProfile,
+  useGetExchangeRate,
+} from "./hooks/useQueries";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -220,11 +225,28 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <NextThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ColorSchemeProvider>
-            <AppContent />
-            <Toaster />
+            <CurrencyRateProvider>
+              <AppContent />
+              <Toaster />
+            </CurrencyRateProvider>
           </ColorSchemeProvider>
         </NextThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
+  );
+}
+
+/**
+ * Bridges the backend USD -> PLN rate into the CurrencyProvider. The rate is
+ * fetched once here (inside the QueryClientProvider) and passed down as a
+ * prop; while it is loading or unavailable the provider receives null and
+ * every <Money> component renders USD only with no crash.
+ */
+function CurrencyRateProvider({ children }: { children: React.ReactNode }) {
+  const { data: exchangeRate } = useGetExchangeRate();
+  return (
+    <CurrencyProvider usdToPlnRate={exchangeRate?.rate ?? null}>
+      {children}
+    </CurrencyProvider>
   );
 }

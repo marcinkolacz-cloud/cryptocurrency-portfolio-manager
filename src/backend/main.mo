@@ -12,12 +12,17 @@ import Float "mo:base/Float";
 import Char "mo:base/Char";
 import Map "mo:core/Map";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import ApiDocMixin "mixins/api-doc";
+import ExchangeRateApiMixin "mixins/exchange-rate-api";
+import ExchangeRateLib "lib/exchange-rate";
+import ExchangeRateTypes "types/exchange-rate";
 import Json "mo:json";
 import Timer "mo:base/Timer";
 import Error "mo:core/Error";
 import Types "types";
 
 import OQL "mo:caffeineai-oql";
+import Entity "mo:caffeineai-oql/Entity";
 import Expose "mo:caffeineai-oql/Expose";
 
 // The actor must be the only non-imported top-level declaration (M0141), so
@@ -39,37 +44,56 @@ import Expose "mo:caffeineai-oql/Expose";
   public type PriorityAsset = Types.PriorityAsset;
   public type TechnicalData = Types.TechnicalData;
   public type MarketDataStatus = Types.MarketDataStatus;
+  public type RefreshResult = Types.RefreshResult;
 
   // Kept for upgrade compatibility - absorbs old stable accessControlState on upgrade
+  // Stable fields are declared type-only; their initial values come from the
+  // migration chain (migrations/20260918_000000.mo).
    var accessControlState : {
     var adminAssigned : Bool;
     var userRoles : OrderedMap.Map<Principal, AccessControl.UserRole>;
-  } = {
-    var adminAssigned = false;
-    var userRoles = OrderedMap.Make(Principal.compare).empty();
   };
 
   // Stable flat arrays - compatible with mo:base -> mo:core upgrade
-   var _acAdminAssigned : Bool = false;
-   var _acUserRoles : [(Principal, AccessControl.UserRole)] = [];
+   var _acAdminAssigned : Bool;
+   var _acUserRoles : [(Principal, AccessControl.UserRole)];
 
   // Working copy used by all AccessControl library calls
-  var _acState : AccessControl.AccessControlState = AccessControl.initState();
+  var _acState : AccessControl.AccessControlState;
 
 
 
   // System health tracking
-  private var lastHealthCheck : Int = Time.now();
-  private var isSystemHealthy : Bool = true;
+  private var lastHealthCheck : Int;
+  private var isSystemHealthy : Bool;
 
-  // Initialize auth (first caller becomes admin, others become users)
+  // Initialize auth (first caller becomes admin, others become users).
+  //
+  // Self-healing: if `_acState` is unpopulated (fresh deploy where the
+  // migration chain did not supply a value, or a state that was reset), rebuild
+  // it before registering the caller. Without this, `AccessControl.initialize`
+  // would write into an invalid state and every later role lookup would trap.
   public shared ({ caller }) func initializeAccessControl() : async () {
+    if (not _acState.adminAssigned and _acState.userRoles.isEmpty()) {
+      _acState := AccessControl.initState();
+    };
     AccessControl.initialize(_acState, caller);
     lastHealthCheck := Time.now();
     isSystemHealthy := true;
   };
 
   include MixinAuthorization(_acState);
+
+  // NOTE: `isCallerAdmin` is provided by MixinAuthorization above. The platform
+  // lint forbids redeclaring any of the mixin's endpoints, so the non-trapping
+  // behavior is achieved by keeping `_acState` valid instead of overriding the
+  // function: `initializeAccessControl()` above self-heals an unpopulated
+  // `_acState` before registering the caller, so `AccessControl.isAdmin` never
+  // sees an invalid state. Anonymous callers already return `#guest` from
+  // `getUserRole` (no trap), and a registered caller resolves to its real role.
+
+  // Static API documentation (getApiDoc). Reads no state.
+  include ApiDocMixin();
 
   // System health check endpoint - restricted to admin users only
   public query ({ caller }) func getSystemHealth() : async {
@@ -89,17 +113,18 @@ import Expose "mo:caffeineai-oql/Expose";
     };
   };
 
-  // Admin-only query to inspect per-function fetch errors from refresh/outcall.
-  // Mirrors the getSystemHealth admin-gating pattern. Returns a record with
-  // three optional fields (one per refresh function); each field is null when
-  // that function has no recorded error, or ?{ error; timestamp } when it does.
+  // Authenticated-user query to inspect per-function fetch errors from
+  // refresh/outcall. Readable by any signed-in caller so whoever triggered a
+  // refresh can see the real error text. Returns a record with three optional
+  // fields (one per refresh function); each field is null when that function
+  // has no recorded error, or ?{ error; timestamp } when it does.
   public query ({ caller }) func getLastFetchError() : async {
     marketData : ?{ error : Text; timestamp : Int };
     priorityAssets : ?{ error : Text; timestamp : Int };
     technicalData : ?{ error : Text; timestamp : Int };
   } {
-    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
-      Debug.trap("Unauthorized: Only administrators can check fetch errors");
+    if (not (AccessControl.hasPermission(_acState, caller, #user))) {
+      Debug.trap("Unauthorized: Only authenticated users can check fetch errors");
     };
 
     let marketData = switch (lastMarketDataError, lastMarketDataErrorTimestamp) {
@@ -136,7 +161,7 @@ import Expose "mo:caffeineai-oql/Expose";
   };
 
   transient let principalMap = OrderedMap.Make(Principal.compare);
-  var userProfiles = principalMap.empty<UserProfile>();
+  var userProfiles : OrderedMap.Map<Principal, UserProfile>;
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     // Only authenticated users (not guests) can view profiles
@@ -176,12 +201,12 @@ import Expose "mo:caffeineai-oql/Expose";
   };
 
   transient let natMap = OrderedMap.Make<Nat>(Int.compare);
-  var portfolios = principalMap.empty<[Portfolio]>();
-  var migrationVersion : Nat = 0;
-  var marketData = natMap.empty<MarketData>();
-  var priorityAssets = natMap.empty<PriorityAsset>();
-  var technicalData = natMap.empty<TechnicalData>();
-  var marketDataStatus = natMap.empty<MarketDataStatus>();
+  var portfolios : OrderedMap.Map<Principal, [Portfolio]>;
+  var migrationVersion : Nat;
+  var marketData : OrderedMap.Map<Nat, MarketData>;
+  var priorityAssets : OrderedMap.Map<Nat, PriorityAsset>;
+  var technicalData : OrderedMap.Map<Nat, TechnicalData>;
+  var marketDataStatus : OrderedMap.Map<Nat, MarketDataStatus>;
 
   // Per-function fetch error tracking — each refresh function owns its own
   // pair so a later function's success cannot erase an earlier function's
@@ -190,12 +215,12 @@ import Expose "mo:caffeineai-oql/Expose";
   // (fetchTechnicalData does not clear on success — see its comment).
   // Implicitly stable under --default-persistent-actors (matches the existing
   // state-var pattern above).
-  var lastMarketDataError : ?Text = null;
-  var lastMarketDataErrorTimestamp : ?Int = null;
-  var lastPriorityAssetsError : ?Text = null;
-  var lastPriorityAssetsErrorTimestamp : ?Int = null;
-  var lastTechnicalDataError : ?Text = null;
-  var lastTechnicalDataErrorTimestamp : ?Int = null;
+  var lastMarketDataError : ?Text;
+  var lastMarketDataErrorTimestamp : ?Int;
+  var lastPriorityAssetsError : ?Text;
+  var lastPriorityAssetsErrorTimestamp : ?Int;
+  var lastTechnicalDataError : ?Text;
+  var lastTechnicalDataErrorTimestamp : ?Int;
 
   // Admin-managed extension of the hardcoded base priority asset list. The base
   // 10 ids live inside _refreshPriorityAssetPrices; customPriorityAssetIds
@@ -203,8 +228,15 @@ import Expose "mo:caffeineai-oql/Expose";
   // stores (coinGeckoId, tickerSymbol) pairs for those custom ids so tickerFor
   // can resolve them. Both are implicitly stable under
   // --default-persistent-actors (same pattern as the state vars above).
-  var customPriorityAssetIds : [Text] = [];
-  var customTickerMap : [(Text, Text)] = [];
+  var customPriorityAssetIds : [Text];
+  var customTickerMap : [(Text, Text)];
+
+  // Cached USD -> PLN exchange rate for the display-layer PLN conversion.
+  // Declared type-only; its initial value comes from the migration chain
+  // (migrations/20260929_000000.mo). Passed by reference to
+  // ExchangeRateApiMixin so the mixin's reads and the refresh path's writes
+  // observe the same value.
+  var exchangeRate : { var value : ExchangeRateTypes.ExchangeRate };
 
   // OQL exposure — eight entities. User-scoped stores (userProfiles,
   // portfolios) declare an `owner` column and use #controllerOrScoped so a
@@ -215,186 +247,432 @@ import Expose "mo:caffeineai-oql/Expose";
   include Expose({
     entities = [
       // (Principal, UserProfile) — one row per user.
-      OQL.Entity.manual<(Principal, Types.UserProfile)>(
-        "userProfile",
-        func() = principalMap.entries(userProfiles),
-        "UserProfile",
-        "owner",
-      )
-        .sample((Principal.fromText("aaaaa-aa"), {
-          name = "";
-          theme = "";
-          language = "pl";
-          colorScheme = "";
-        }))
-        .payload("owner", func(kv) = kv.0, OQL.PrincipalValue._toRow)
-        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
-        .payload("theme", func(kv) = kv.1.theme, OQL.TextValue._toRow)
-        .payload("language", func(kv) = kv.1.language, OQL.TextValue._toRow)
-        .payload("colorScheme", func(kv) = kv.1.colorScheme, OQL.TextValue._toRow)
-        .ownedBy("owner")
-        .controllerOrScoped()
-        .build(),
-
-      // (Principal, Portfolio) — flattened from portfolios : Map<Principal, [Portfolio]>.
-      OQL.Entity.manual<(Principal, Types.Portfolio)>(
-        "portfolio",
-        func() = Iter.flatten(
-          principalMap.entries(portfolios).map(
-            func(kv : (Principal, [Types.Portfolio])) : Iter.Iter<(Principal, Types.Portfolio)> =
-              Array.map<Types.Portfolio, (Principal, Types.Portfolio)>(
-                kv.1,
-                func(p : Types.Portfolio) : (Principal, Types.Portfolio) = (kv.0, p),
-              ).vals(),
+      Entity.build(
+        Entity.controllerOrScoped(
+          Entity.ownedBy(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.sample(
+                        Entity.manual<(Principal, Types.UserProfile)>(
+                          "userProfile",
+                          func() = principalMap.entries(userProfiles),
+                          "UserProfile",
+                          "owner",
+                        ),
+                        (Principal.fromText("aaaaa-aa"), {
+                          name = "";
+                          theme = "";
+                          language = "pl";
+                          colorScheme = "";
+                        }),
+                      ),
+                      "owner",
+                      func(kv) = kv.0,
+                      OQL.PrincipalValue._toRow,
+                    ),
+                    "name",
+                    func(kv) = kv.1.name,
+                    OQL.TextValue._toRow,
+                  ),
+                  "theme",
+                  func(kv) = kv.1.theme,
+                  OQL.TextValue._toRow,
+                ),
+                "language",
+                func(kv) = kv.1.language,
+                OQL.TextValue._toRow,
+              ),
+              "colorScheme",
+              func(kv) = kv.1.colorScheme,
+              OQL.TextValue._toRow,
+            ),
+            "owner",
           ),
         ),
-        "Portfolio",
-        "id",
-      )
-        .sample((Principal.fromText("aaaaa-aa"), {
-          id = 0;
-          name = "";
-          createdAt = 0;
-          assets = [];
-          transactions = [];
-          totalProfitLoss = 0.0;
-          unrealizedProfitLoss = 0.0;
-          totalPurchaseValue = 0.0;
-          trackedAssets = [];
-        }))
-        .payload("owner", func(kv) = kv.0, OQL.PrincipalValue._toRow)
-        .payload("id", func(kv) = kv.1.id, OQL.NatValue._toRow)
-        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
-        .payload("createdAt", func(kv) = kv.1.createdAt, OQL.IntValue._toRow)
-        .payload("totalProfitLoss", func(kv) = kv.1.totalProfitLoss, OQL.FloatValue._toRow)
-        .payload("unrealizedProfitLoss", func(kv) = kv.1.unrealizedProfitLoss, OQL.FloatValue._toRow)
-        .payload("totalPurchaseValue", func(kv) = kv.1.totalPurchaseValue, OQL.FloatValue._toRow)
-        .ownedBy("owner")
-        .controllerOrScoped()
-        .build(),
+      ),
+
+      // (Principal, Portfolio) — flattened from portfolios : Map<Principal, [Portfolio]>.
+      Entity.build(
+        Entity.controllerOrScoped(
+          Entity.ownedBy(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.payload(
+                        Entity.payload(
+                          Entity.payload(
+                            Entity.sample(
+                              Entity.manual<(Principal, Types.Portfolio)>(
+                                "portfolio",
+                                func() = Iter.flatten(
+                                  principalMap.entries(portfolios).map(
+                                    func(kv : (Principal, [Types.Portfolio])) : Iter.Iter<(Principal, Types.Portfolio)> =
+                                      Array.map<Types.Portfolio, (Principal, Types.Portfolio)>(
+                                        kv.1,
+                                        func(p : Types.Portfolio) : (Principal, Types.Portfolio) = (kv.0, p),
+                                      ).vals(),
+                                  ),
+                                ),
+                                "Portfolio",
+                                "id",
+                              ),
+                              (Principal.fromText("aaaaa-aa"), {
+                                id = 0;
+                                name = "";
+                                createdAt = 0;
+                                assets = [];
+                                transactions = [];
+                                totalProfitLoss = 0.0;
+                                unrealizedProfitLoss = 0.0;
+                                totalPurchaseValue = 0.0;
+                                totalValue = 0.0;
+                                trackedAssets = [];
+                              }),
+                            ),
+                          "owner",
+                          func(kv) = kv.0,
+                          OQL.PrincipalValue._toRow,
+                        ),
+                        "id",
+                        func(kv) = kv.1.id,
+                        OQL.NatValue._toRow,
+                      ),
+                      "name",
+                      func(kv) = kv.1.name,
+                      OQL.TextValue._toRow,
+                    ),
+                    "createdAt",
+                    func(kv) = kv.1.createdAt,
+                    OQL.IntValue._toRow,
+                  ),
+                  "totalProfitLoss",
+                  func(kv) = kv.1.totalProfitLoss,
+                  OQL.FloatValue._toRow,
+                ),
+                "unrealizedProfitLoss",
+                func(kv) = kv.1.unrealizedProfitLoss,
+                OQL.FloatValue._toRow,
+              ),
+              "totalPurchaseValue",
+              func(kv) = kv.1.totalPurchaseValue,
+              OQL.FloatValue._toRow,
+            ),
+            "totalValue",
+            func(kv : (Principal, Types.Portfolio)) : Float = kv.1.totalValue,
+            OQL.FloatValue._toRow,
+          ),
+          "owner",
+        ),
+      ),
+    ),
 
       // MarketData — admin-only.
-      OQL.Entity.manual<(Nat, Types.MarketData)>(
-        "marketData",
-        func() = natMap.entries(marketData),
-        "MarketData",
-        "id",
-      )
-        .sample((0, {
-          id = 0;
-          symbol = "";
-          name = "";
-          price = 0.0;
-          marketCap = 0.0;
-          lastUpdated = 0;
-        }))
-        .payload("id", func(kv) = kv.1.id, OQL.NatValue._toRow)
-        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
-        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
-        .payload("price", func(kv) = kv.1.price, OQL.FloatValue._toRow)
-        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
-        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.sample(
+                        Entity.manual<(Nat, Types.MarketData)>(
+                          "marketData",
+                          func() = natMap.entries(marketData),
+                          "MarketData",
+                          "id",
+                        ),
+                        (0, {
+                          id = 0;
+                          symbol = "";
+                          name = "";
+                          price = 0.0;
+                          marketCap = 0.0;
+                          lastUpdated = 0;
+                        }),
+                      ),
+                      "id",
+                      func(kv) = kv.1.id,
+                      OQL.NatValue._toRow,
+                    ),
+                    "symbol",
+                    func(kv) = kv.1.symbol,
+                    OQL.TextValue._toRow,
+                  ),
+                  "name",
+                  func(kv) = kv.1.name,
+                  OQL.TextValue._toRow,
+                ),
+                "price",
+                func(kv) = kv.1.price,
+                OQL.FloatValue._toRow,
+              ),
+              "marketCap",
+              func(kv) = kv.1.marketCap,
+              OQL.FloatValue._toRow,
+            ),
+            "lastUpdated",
+            func(kv) = kv.1.lastUpdated,
+            OQL.IntValue._toRow,
+          ),
+        ),
+      ),
 
       // PriorityAsset — admin-only.
-      OQL.Entity.manual<(Nat, Types.PriorityAsset)>(
-        "priorityAsset",
-        func() = natMap.entries(priorityAssets),
-        "PriorityAsset",
-        "id",
-      )
-        .sample((0, {
-          id = "";
-          symbol = "";
-          name = "";
-          price = 0.0;
-          marketCap = 0.0;
-          lastUpdated = 0;
-        }))
-        .payload("id", func(kv) = kv.1.id, OQL.TextValue._toRow)
-        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
-        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
-        .payload("price", func(kv) = kv.1.price, OQL.FloatValue._toRow)
-        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
-        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.sample(
+                        Entity.manual<(Nat, Types.PriorityAsset)>(
+                          "priorityAsset",
+                          func() = natMap.entries(priorityAssets),
+                          "PriorityAsset",
+                          "id",
+                        ),
+                        (0, {
+                          id = "";
+                          symbol = "";
+                          name = "";
+                          price = 0.0;
+                          marketCap = 0.0;
+                          lastUpdated = 0;
+                        }),
+                      ),
+                      "id",
+                      func(kv) = kv.1.id,
+                      OQL.TextValue._toRow,
+                    ),
+                    "symbol",
+                    func(kv) = kv.1.symbol,
+                    OQL.TextValue._toRow,
+                  ),
+                  "name",
+                  func(kv) = kv.1.name,
+                  OQL.TextValue._toRow,
+                ),
+                "price",
+                func(kv) = kv.1.price,
+                OQL.FloatValue._toRow,
+              ),
+              "marketCap",
+              func(kv) = kv.1.marketCap,
+              OQL.FloatValue._toRow,
+            ),
+            "lastUpdated",
+            func(kv) = kv.1.lastUpdated,
+            OQL.IntValue._toRow,
+          ),
+        ),
+      ),
 
       // TechnicalData — admin-only.
-      OQL.Entity.manual<(Nat, Types.TechnicalData)>(
-        "technicalData",
-        func() = natMap.entries(technicalData),
-        "TechnicalData",
-        "symbol",
-      )
-        .sample((0, {
-          symbol = "";
-          name = "";
-          currentPrice = 0.0;
-          marketCap = 0.0;
-          change24h = 0.0;
-          volume24h = 0.0;
-          lastUpdated = 0;
-        }))
-        .payload("symbol", func(kv) = kv.1.symbol, OQL.TextValue._toRow)
-        .payload("name", func(kv) = kv.1.name, OQL.TextValue._toRow)
-        .payload("currentPrice", func(kv) = kv.1.currentPrice, OQL.FloatValue._toRow)
-        .payload("marketCap", func(kv) = kv.1.marketCap, OQL.FloatValue._toRow)
-        .payload("change24h", func(kv) = kv.1.change24h, OQL.FloatValue._toRow)
-        .payload("volume24h", func(kv) = kv.1.volume24h, OQL.FloatValue._toRow)
-        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.payload(
+                        Entity.sample(
+                          Entity.manual<(Nat, Types.TechnicalData)>(
+                            "technicalData",
+                            func() = natMap.entries(technicalData),
+                            "TechnicalData",
+                            "symbol",
+                          ),
+                          (0, {
+                            symbol = "";
+                            name = "";
+                            currentPrice = 0.0;
+                            marketCap = 0.0;
+                            change24h = 0.0;
+                            volume24h = 0.0;
+                            lastUpdated = 0;
+                          }),
+                        ),
+                        "symbol",
+                        func(kv) = kv.1.symbol,
+                        OQL.TextValue._toRow,
+                      ),
+                      "name",
+                      func(kv) = kv.1.name,
+                      OQL.TextValue._toRow,
+                    ),
+                    "currentPrice",
+                    func(kv) = kv.1.currentPrice,
+                    OQL.FloatValue._toRow,
+                  ),
+                  "marketCap",
+                  func(kv) = kv.1.marketCap,
+                  OQL.FloatValue._toRow,
+                ),
+                "change24h",
+                func(kv) = kv.1.change24h,
+                OQL.FloatValue._toRow,
+              ),
+              "volume24h",
+              func(kv) = kv.1.volume24h,
+              OQL.FloatValue._toRow,
+            ),
+            "lastUpdated",
+            func(kv) = kv.1.lastUpdated,
+            OQL.IntValue._toRow,
+          ),
+        ),
+      ),
 
       // MarketDataStatus — admin-only (single-row table keyed at 0).
-      OQL.Entity.manual<(Nat, Types.MarketDataStatus)>(
-        "marketDataStatus",
-        func() = natMap.entries(marketDataStatus),
-        "MarketDataStatus",
-        "status",
-      )
-        .sample((0, {
-          status = "";
-          lastUpdated = 0;
-          calculationQuality = 0.0;
-          trackedAssetsCount = 0;
-          apiHealth = "";
-          colorScheme = "";
-        }))
-        .payload("status", func(kv) = kv.1.status, OQL.TextValue._toRow)
-        .payload("lastUpdated", func(kv) = kv.1.lastUpdated, OQL.IntValue._toRow)
-        .payload("calculationQuality", func(kv) = kv.1.calculationQuality, OQL.FloatValue._toRow)
-        .payload("trackedAssetsCount", func(kv) = kv.1.trackedAssetsCount, OQL.NatValue._toRow)
-        .payload("apiHealth", func(kv) = kv.1.apiHealth, OQL.TextValue._toRow)
-        .payload("colorScheme", func(kv) = kv.1.colorScheme, OQL.TextValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.payload(
+                    Entity.payload(
+                      Entity.sample(
+                        Entity.manual<(Nat, Types.MarketDataStatus)>(
+                          "marketDataStatus",
+                          func() = natMap.entries(marketDataStatus),
+                          "MarketDataStatus",
+                          "status",
+                        ),
+                        (0, {
+                          status = "";
+                          lastUpdated = 0;
+                          calculationQuality = 0.0;
+                          trackedAssetsCount = 0;
+                          apiHealth = "";
+                          colorScheme = "";
+                        }),
+                      ),
+                      "status",
+                      func(kv) = kv.1.status,
+                      OQL.TextValue._toRow,
+                    ),
+                    "lastUpdated",
+                    func(kv) = kv.1.lastUpdated,
+                    OQL.IntValue._toRow,
+                  ),
+                  "calculationQuality",
+                  func(kv) = kv.1.calculationQuality,
+                  OQL.FloatValue._toRow,
+                ),
+                "trackedAssetsCount",
+                func(kv) = kv.1.trackedAssetsCount,
+                OQL.NatValue._toRow,
+              ),
+              "apiHealth",
+              func(kv) = kv.1.apiHealth,
+              OQL.TextValue._toRow,
+            ),
+            "colorScheme",
+            func(kv) = kv.1.colorScheme,
+            OQL.TextValue._toRow,
+          ),
+        ),
+      ),
 
       // customPriorityAssetIds : [Text] — admin-only, one row per id.
-      OQL.Entity.manual<Text>(
-        "customPriorityAssetId",
-        func() = customPriorityAssetIds.vals(),
-        "Text",
-        "id",
-      )
-        .sample("")
-        .payload("id", func(t) = t, OQL.TextValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.sample(
+              Entity.manual<Text>(
+                "customPriorityAssetId",
+                func() = customPriorityAssetIds.vals(),
+                "Text",
+                "id",
+              ),
+              "",
+            ),
+            "id",
+            func(t) = t,
+            OQL.TextValue._toRow,
+          ),
+        ),
+      ),
 
       // customTickerMap : [(Text, Text)] — admin-only, one row per (id, ticker).
-      OQL.Entity.manual<(Text, Text)>(
-        "customTicker",
-        func() = customTickerMap.vals(),
-        "CustomTicker",
-        "coinGeckoId",
-      )
-        .sample(("", ""))
-        .payload("coinGeckoId", func(kv) = kv.0, OQL.TextValue._toRow)
-        .payload("tickerSymbol", func(kv) = kv.1, OQL.TextValue._toRow)
-        .controllerOnly()
-        .build(),
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.sample(
+                Entity.manual<(Text, Text)>(
+                  "customTicker",
+                  func() = customTickerMap.vals(),
+                  "CustomTicker",
+                  "coinGeckoId",
+                ),
+                ("", ""),
+              ),
+              "coinGeckoId",
+              func(kv) = kv.0,
+              OQL.TextValue._toRow,
+            ),
+            "tickerSymbol",
+            func(kv) = kv.1,
+            OQL.TextValue._toRow,
+          ),
+        ),
+      ),
+
+      // exchangeRate : { var value : ExchangeRate } — admin-only, single row.
+      // The cached USD -> PLN display rate plus its provenance. `lastError` is
+      // an option, so it is flattened to Text with "" as the null sentinel
+      // (a `_toRow` that sometimes returns #null_ would make the reported
+      // schema type flip-flop by row order).
+      Entity.build(
+        Entity.controllerOnly(
+          Entity.payload(
+            Entity.payload(
+              Entity.payload(
+                Entity.payload(
+                  Entity.sample(
+                    Entity.manual<ExchangeRateTypes.ExchangeRate>(
+                      "exchangeRate",
+                      func() = [exchangeRate.value].vals(),
+                      "ExchangeRate",
+                      "rate",
+                    ),
+                    {
+                      rate = 0.0;
+                      lastUpdated = 0;
+                      sourceTimestamp = 0;
+                      lastError = null;
+                    },
+                  ),
+                  "rate",
+                  func(r) = r.rate,
+                  OQL.FloatValue._toRow,
+                ),
+                "lastUpdated",
+                func(r) = r.lastUpdated,
+                OQL.IntValue._toRow,
+              ),
+              "sourceTimestamp",
+              func(r) = r.sourceTimestamp,
+              OQL.IntValue._toRow,
+            ),
+            "lastError",
+            func(r) = r.lastError ?? "",
+            OQL.TextValue._toRow,
+          ),
+        ),
+      ),
     ];
   });
 
@@ -567,6 +845,7 @@ import Expose "mo:caffeineai-oql/Expose";
       totalProfitLoss = 0.0;
       unrealizedProfitLoss = 0.0;
       totalPurchaseValue = 0.0;
+      totalValue = 0.0;
       trackedAssets = [];
     };
 
@@ -630,6 +909,7 @@ import Expose "mo:caffeineai-oql/Expose";
           var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
           var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
+          var totalValue = calculateTotalValue(updatedAssets);
 
           // Update tracked assets
           var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -643,6 +923,7 @@ import Expose "mo:caffeineai-oql/Expose";
             totalProfitLoss;
             unrealizedProfitLoss;
             totalPurchaseValue;
+            totalValue;
             trackedAssets = updatedTrackedAssets;
           };
         } else {
@@ -691,6 +972,7 @@ import Expose "mo:caffeineai-oql/Expose";
               var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
               var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
+              var totalValue = calculateTotalValue(updatedAssets);
 
               // Update tracked assets
               var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -704,6 +986,7 @@ import Expose "mo:caffeineai-oql/Expose";
                 totalProfitLoss;
                 unrealizedProfitLoss;
                 totalPurchaseValue;
+                totalValue;
                 trackedAssets = updatedTrackedAssets;
               };
             };
@@ -743,6 +1026,7 @@ import Expose "mo:caffeineai-oql/Expose";
               var totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
               var unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
               var totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
+              var totalValue = calculateTotalValue(updatedAssets);
 
               // Update tracked assets
               var updatedTrackedAssets = updateTrackedAssets(p.trackedAssets, updatedAssets);
@@ -756,6 +1040,7 @@ import Expose "mo:caffeineai-oql/Expose";
                 totalProfitLoss;
                 unrealizedProfitLoss;
                 totalPurchaseValue;
+                totalValue;
                 trackedAssets = updatedTrackedAssets;
               };
             };
@@ -790,7 +1075,10 @@ import Expose "mo:caffeineai-oql/Expose";
     switch (existingAsset) {
       case null {
         if (transaction.type_ == "buy") {
-          // Calculate initial profit/loss (should be 0 for new asset)
+          // New asset: realized P/L is 0, so profitLoss is purely unrealized.
+          // purchaseValue is the canonical cost basis averagePrice * amount
+          // (== transaction.amount * transaction.price here), and
+          // averagePurchasePrice equals averagePrice.
           let initialProfitLoss = (effectiveCurrentPrice - transaction.price) * transaction.amount;
           let initialProfitLossPercentage = if (transaction.price > 0.0) {
             ((effectiveCurrentPrice - transaction.price) / transaction.price) * 100.0;
@@ -856,16 +1144,15 @@ import Expose "mo:caffeineai-oql/Expose";
                 a.averagePrice;
               };
 
-              let newPurchaseValue = if (transaction.type_ == "buy") {
-                a.purchaseValue + (transaction.amount * transaction.price);
-              } else {
-                if (a.amount > 0.0) {
-                  let remainingRatio = newAmount / a.amount;
-                  a.purchaseValue * remainingRatio;
-                } else {
-                  0.0;
-                };
-              };
+              // Canonical cost basis: purchaseValue is ALWAYS averagePrice * amount.
+              // It is NOT sell-scaled — the previous code multiplied it by
+              // newAmount/oldAmount on a sell, which put totalPurchaseValue on a
+              // different basis than unrealizedProfitLoss (which uses the
+              // unscaled averagePrice). Recomputing it from the post-trade
+              // averagePrice and amount keeps purchaseValue == averagePrice *
+              // amount an invariant at all times, so the purchase-value column
+              // and the unrealized P/L column share one basis.
+              let newPurchaseValue = newAveragePrice * newAmount;
 
               let transactionRealizedPL = if (transaction.type_ == "sell") {
                 (transaction.price - a.averagePrice) * transaction.amount;
@@ -900,14 +1187,17 @@ import Expose "mo:caffeineai-oql/Expose";
                 0.0;
               };
 
+              // profitLoss is the canonical realized + unrealized total, so the
+              // dollar column agrees with the sum of its two components.
               let totalProfitLoss = newRealizedProfitLoss + unrealizedPL;
 
-              // Unrealized-only: divide unrealized P/L by the cost basis of what
-              // is still held (newPurchaseValue). Realized gains now live in
-              // realizedProfitLossPercentage, so the old mixed formula and its
-              // fully-sold fallbacks are removed.
-              let profitLossPercentage = if (newPurchaseValue > 0.0) {
-                (unrealizedPL / newPurchaseValue) * 100.0;
+              // Unrealized-only: divide unrealized P/L by the SAME cost basis the
+              // dollar unrealized uses (newAveragePrice * newAmount), so numerator
+              // and denominator share one basis. Realized gains live in
+              // realizedProfitLossPercentage.
+              let unrealizedCostBasis = newAveragePrice * newAmount;
+              let profitLossPercentage = if (unrealizedCostBasis > 0.0) {
+                (unrealizedPL / unrealizedCostBasis) * 100.0;
               } else {
                 0.0;
               };
@@ -920,8 +1210,10 @@ import Expose "mo:caffeineai-oql/Expose";
                 0.0;
               };
 
+              // averagePurchasePrice is the same canonical basis as averagePrice
+              // (purchaseValue / amount == averagePrice by construction).
               let averagePurchasePrice = if (newAmount > 0.0) {
-                newPurchaseValue / newAmount;
+                newAveragePrice;
               } else {
                 0.0;
               };
@@ -951,18 +1243,26 @@ import Expose "mo:caffeineai-oql/Expose";
     };
   };
 
+  // The four portfolio totals are canonical sums of the per-asset fields over
+  // assets with amount > 0, so each summary card is literally the sum of its
+  // table column. All four share the same asset set (amount > 0) so the
+  // identities totalValue - totalPurchaseValue == unrealizedProfitLoss and
+  // totalProfitLoss == realized + unrealized hold exactly.
+
   func calculateTotalProfitLoss(assets : [Asset]) : Float {
-    Array.foldLeft(
-      assets,
-      0.0,
-      func(acc, asset) { acc + asset.profitLoss },
-    );
+    var total : Float = 0.0;
+    for (asset in assets.vals()) {
+      if (asset.amount > 0.0) {
+        total := total + asset.profitLoss;
+      };
+    };
+    total;
   };
 
   func calculateUnrealizedProfitLoss(assets : [Asset]) : Float {
     var total : Float = 0.0;
     for (asset in assets.vals()) {
-      if (asset.amount > 0.0 and asset.averagePrice >= 0.0 and asset.currentPrice >= 0.0) {
+      if (asset.amount > 0.0) {
         let unrealizedPL = (asset.currentPrice - asset.averagePrice) * asset.amount;
         total := total + unrealizedPL;
       };
@@ -971,11 +1271,23 @@ import Expose "mo:caffeineai-oql/Expose";
   };
 
   func calculateTotalPurchaseValue(assets : [Asset]) : Float {
-    Array.foldLeft(
-      assets,
-      0.0,
-      func(acc, asset) { acc + asset.purchaseValue },
-    );
+    var total : Float = 0.0;
+    for (asset in assets.vals()) {
+      if (asset.amount > 0.0) {
+        total := total + asset.purchaseValue;
+      };
+    };
+    total;
+  };
+
+  func calculateTotalValue(assets : [Asset]) : Float {
+    var total : Float = 0.0;
+    for (asset in assets.vals()) {
+      if (asset.amount > 0.0) {
+        total := total + (asset.amount * asset.currentPrice);
+      };
+    };
+    total;
   };
 
   func updateTrackedAssets(currentTrackedAssets : [Text], assets : [Asset]) : [Text] {
@@ -1089,6 +1401,14 @@ import Expose "mo:caffeineai-oql/Expose";
           // /api/v3/search response: { "coins": [ { "id", "symbol", "name", ... }, ... ], ... }
           // Canonicalize to keep only id/symbol/name per coin (strings only, no floats).
           _canonicalizeSearchResponse(json);
+        } else if (_hasKey(entries, "rates")) {
+          // open.er-api.com rates response: { "result", "time_last_update_unix",
+          // "rates": { "PLN": <rate>, ... }, ... }. Delegate to the
+          // exchange-rate module's canonicalizer, which keeps only result,
+          // error-type (when present), time_last_update_unix, and rates.PLN.
+          // `canonicalize` is synchronous because this transform callback is a
+          // plain query function and cannot await.
+          return ExchangeRateLib.canonicalize(input);
         } else {
           // /simple/price: object keyed by coin id, each value { "usd": <price> }
           _canonicalizeSimplePrice(entries);
@@ -1312,19 +1632,37 @@ import Expose "mo:caffeineai-oql/Expose";
     #object_([("coins", #array(canonicalCoins))]);
   };
 
-  // Admin-only function to fetch market data for all assets
-  // This is restricted to admins because it triggers expensive HTTP outcalls
+  // Any authenticated user may fetch market data for all assets. Anonymous
+  // callers are still rejected.
   public shared ({ caller }) func fetchMarketData() : async () {
-    // Only admins can fetch market data for all assets (expensive operation)
-    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
-      Debug.trap("Unauthorized: Only administrators can fetch market data for all assets. This is an expensive operation reserved for system maintenance.");
+    if (not (AccessControl.hasPermission(_acState, caller, #user))) {
+      Debug.trap("Unauthorized: Only authenticated users can fetch market data for all assets.");
     };
     await _refreshMarketData();
   };
 
   // Internal refresh for market data — no auth gate, called by the recurring
-  // timer and by the admin-only fetchMarketData public function.
+  // timer and by the authenticated fetchMarketData public function.
+  //
+  // Outer trap guard: the HTTP outcall library itself traps (Runtime.trap on an
+  // empty body) and the IC can surface transient/consensus traps that are not
+  // catchable by the inner `try await ... catch`. Any such trap escaping this
+  // function would reject the caller's promise and bypass the recorded error
+  // state, leaving lastMarketDataError empty while the frontend shows a generic
+  // failure. This wrapper catches everything, records it, and returns normally.
   private func _refreshMarketData() : async () {
+    try {
+      await _refreshMarketDataInner();
+    } catch (err) {
+      lastMarketDataError := ?("_refreshMarketData: " # err.message());
+      lastMarketDataErrorTimestamp := ?Time.now();
+    };
+  };
+
+  // Body of the market-data refresh. Records per-branch errors and clears them
+  // on the non-empty-array success path. Never called directly — always through
+  // the trap-guarded _refreshMarketData wrapper above.
+  private func _refreshMarketDataInner() : async () {
     let url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=40&page=1&sparkline=false";
     // Note: OutCall.httpGetRequest (caffeineai-http-outcalls 0.1.1) does not
     // expose a max_response_bytes option — it hardcodes null internally, so the
@@ -1475,21 +1813,67 @@ import Expose "mo:caffeineai-oql/Expose";
     };
   };
 
-  // Admin-only function to fetch priority asset prices
-  // This is restricted to admins because it triggers HTTP outcalls
+  // Any authenticated user may fetch priority asset prices. Anonymous callers
+  // are still rejected.
   public shared ({ caller }) func fetchPriorityAssetPrices() : async () {
-    // Only admins can fetch priority asset prices (expensive operation)
-    if (not (AccessControl.hasPermission(_acState, caller, #admin))) {
-      Debug.trap("Unauthorized: Only administrators can fetch priority asset prices. This is an expensive operation reserved for system maintenance.");
+    if (not (AccessControl.hasPermission(_acState, caller, #user))) {
+      Debug.trap("Unauthorized: Only authenticated users can fetch priority asset prices.");
     };
     await _refreshPriorityAssetPrices();
   };
 
+  // Any authenticated user may run BOTH refreshes and report each one's
+  // outcome. The two refresh helpers are trap-guarded, so this function never
+  // traps; it reads the recorded error state after each await to tell the
+  // frontend exactly which half failed and why. A null error with ok=true
+  // means that half succeeded and cleared its prior error.
+  public shared ({ caller }) func refreshAllPrices() : async RefreshResult {
+    if (not (AccessControl.hasPermission(_acState, caller, #user))) {
+      Debug.trap("Unauthorized: Only authenticated users can refresh prices.");
+    };
+
+    await _refreshMarketData();
+    let marketDataError = lastMarketDataError;
+    let marketDataOk = switch (marketDataError) { case null { true }; case (?_) { false } };
+
+    await _refreshPriorityAssetPrices();
+    let priorityAssetsError = lastPriorityAssetsError;
+    let priorityAssetsOk = switch (priorityAssetsError) { case null { true }; case (?_) { false } };
+
+    // Refresh the USD -> PLN display rate alongside the price refreshes. The
+    // refresh never traps; a failure is recorded in exchangeRate.value.lastError
+    // and the previously cached rate is preserved.
+    exchangeRate.value := await ExchangeRateLib.refresh(exchangeRate.value, transform);
+
+    {
+      marketDataOk;
+      marketDataError;
+      priorityAssetsOk;
+      priorityAssetsError;
+    };
+  };
+
   // Internal refresh for priority asset prices — no auth gate, called by the
-  // recurring timer and by the admin-only fetchPriorityAssetPrices public
+  // recurring timer and by the authenticated fetchPriorityAssetPrices public
   // function. Uses the free api.coingecko.com simple/price endpoint (the
   // pro-api.coingecko.com host requires paid auth we do not have).
+  //
+  // Outer trap guard: mirrors _refreshMarketData. The outcall library traps on
+  // an empty body and IC transient/consensus traps can escape the inner
+  // `try await ... catch`; catching them here keeps the recorded error state
+  // accurate and stops the caller's promise from rejecting.
   private func _refreshPriorityAssetPrices() : async () {
+    try {
+      await _refreshPriorityAssetPricesInner();
+    } catch (err) {
+      lastPriorityAssetsError := ?("_refreshPriorityAssetPrices: " # err.message());
+      lastPriorityAssetsErrorTimestamp := ?Time.now();
+    };
+  };
+
+  // Body of the priority-asset refresh. Never called directly — always through
+  // the trap-guarded _refreshPriorityAssetPrices wrapper above.
+  private func _refreshPriorityAssetPricesInner() : async () {
     let baseAssetIds : [Text] = [
       "waterneuron",
       "rujira",
@@ -1934,12 +2318,16 @@ import Expose "mo:caffeineai-oql/Expose";
 
               let totalProfitLoss = asset.realizedProfitLoss + unrealizedPL;
 
-              // profitLossPercentage is unrealized-only: unrealizedPL / current purchaseValue * 100.
-              // No 100% fallback for free tokens (purchaseValue == 0): a percentage
-              // against a $0 cost basis is undefined, so return 0.0 here and let the
-              // frontend render "—". Matches updateAssets() exactly.
-              let profitLossPercentage = if (asset.purchaseValue > 0.0) {
-                (unrealizedPL / asset.purchaseValue) * 100.0;
+              // profitLossPercentage is unrealized-only: unrealizedPL / (averagePrice * amount) * 100,
+              // the SAME cost basis the dollar unrealized uses. asset.purchaseValue
+              // is scaled on sells while averagePrice is not, so using it here made
+              // the percentage drift from the dollar figure. No 100% fallback for
+              // free tokens (cost basis == 0): a percentage against a $0 cost basis
+              // is undefined, so return 0.0 here and let the frontend render "—".
+              // Matches updateAssets() exactly.
+              let unrealizedCostBasis = asset.averagePrice * asset.amount;
+              let profitLossPercentage = if (unrealizedCostBasis > 0.0) {
+                (unrealizedPL / unrealizedCostBasis) * 100.0;
               } else {
                 0.0;
               };
@@ -1952,8 +2340,10 @@ import Expose "mo:caffeineai-oql/Expose";
                 0.0;
               };
 
+              // averagePurchasePrice is the same canonical basis as averagePrice
+              // (purchaseValue / amount == averagePrice by construction).
               let averagePurchasePrice = if (asset.amount > 0.0) {
-                asset.purchaseValue / asset.amount;
+                asset.averagePrice;
               } else {
                 0.0;
               };
@@ -1966,7 +2356,10 @@ import Expose "mo:caffeineai-oql/Expose";
                 currentPrice = newCurrentPrice;
                 profitLoss = totalProfitLoss;
                 profitLossPercentage;
-                purchaseValue = asset.purchaseValue;
+                // Canonical cost basis: purchaseValue is ALWAYS averagePrice *
+                // amount, never sell-scaled, so it stays on the same basis as
+                // unrealizedProfitLoss.
+                purchaseValue = asset.averagePrice * asset.amount;
                 currentValue = newCurrentValue;
                 realizedProfitLoss = asset.realizedProfitLoss;
                 averagePurchasePrice;
@@ -1978,6 +2371,8 @@ import Expose "mo:caffeineai-oql/Expose";
 
           let totalProfitLoss = calculateTotalProfitLoss(updatedAssets);
           let unrealizedProfitLoss = calculateUnrealizedProfitLoss(updatedAssets);
+          let totalPurchaseValue = calculateTotalPurchaseValue(updatedAssets);
+          let totalValue = calculateTotalValue(updatedAssets);
 
           {
             id = p.id;
@@ -1987,7 +2382,8 @@ import Expose "mo:caffeineai-oql/Expose";
             transactions = p.transactions;
             totalProfitLoss;
             unrealizedProfitLoss;
-            totalPurchaseValue = p.totalPurchaseValue;
+            totalPurchaseValue;
+            totalValue;
             trackedAssets = p.trackedAssets;
           };
         } else {
@@ -2056,20 +2452,10 @@ import Expose "mo:caffeineai-oql/Expose";
     switch (portfolio) {
       case null { null };
       case (?p) {
-        let totalValue = Array.foldLeft(
-          p.assets,
-          0.0,
-          func(acc, asset) {
-            if (asset.amount >= 0.0 and asset.currentPrice >= 0.0) {
-              acc + (asset.amount * asset.currentPrice);
-            } else {
-              acc;
-            };
-          },
-        );
-
+        // All four totals are read from the stored canonical portfolio fields,
+        // which are sums of the per-asset fields over assets with amount > 0.
         ?{
-          totalValue;
+          totalValue = p.totalValue;
           totalProfitLoss = p.totalProfitLoss;
           unrealizedProfitLoss = p.unrealizedProfitLoss;
           totalPurchaseValue = p.totalPurchaseValue;
@@ -2270,6 +2656,7 @@ import Expose "mo:caffeineai-oql/Expose";
   private func _scheduledRefresh() : async () {
     await _refreshMarketData();
     await _refreshPriorityAssetPrices();
+    exchangeRate.value := await ExchangeRateLib.refresh(exchangeRate.value, transform);
   };
 
   // One-time timer: fire _scheduledRefresh once ~5 seconds after actor start
@@ -2282,27 +2669,9 @@ import Expose "mo:caffeineai-oql/Expose";
     _scheduledRefresh,
   );
 
-  // One-time data migration: recompute totalPurchaseValue for every existing
-  // portfolio using the already-correct calculateTotalPurchaseValue(assets)
-  // function. Brings stored values in sync with the fixed calculation logic
-  // without requiring any user transaction to trigger. Idempotent via the
-  // migrationVersion guard — runs only on the first upgrade that sees
-  // migrationVersion < 1.
-  system func postupgrade() {
-    if (migrationVersion < 1) {
-      portfolios := principalMap.map(
-        portfolios,
-        func(_principal, userPortfolios) {
-          Array.map(
-            userPortfolios,
-            func(p) {
-              { p with totalPurchaseValue = calculateTotalPurchaseValue(p.assets) }
-            },
-          )
-        },
-      );
-      migrationVersion := 1;
-    };
-  };
+  // Public exchange-rate API (getExchangeRate / refreshExchangeRate). Included
+  // last so the mixin can receive the actor's `transform` callback, which is
+  // only defined once all of its canonicalizer helpers are in scope.
+  include ExchangeRateApiMixin(exchangeRate, _acState, transform);
 };
 

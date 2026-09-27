@@ -57,6 +57,13 @@ type Result =
    hasMore: bool;
    rows: vec vec Cell;
  };
+type RefreshResult = 
+ record {
+   marketDataError: opt text;
+   marketDataOk: bool;
+   priorityAssetsError: opt text;
+   priorityAssetsOk: bool;
+ };
 type PriorityAsset = 
  record {
    id: text;
@@ -74,6 +81,7 @@ type Portfolio =
    name: text;
    totalProfitLoss: float64;
    totalPurchaseValue: float64;
+   totalValue: float64;
    trackedAssets: vec text;
    transactions: vec Transaction;
    unrealizedProfitLoss: float64;
@@ -106,6 +114,13 @@ type HttpHeader =
  record {
    name: text;
    value: text;
+ };
+type ExchangeRate = 
+ record {
+   lastError: opt text;
+   lastUpdated: int;
+   rate: float64;
+   sourceTimestamp: int;
  };
 type Cell = 
  record {
@@ -159,6 +174,7 @@ service : {
   fetchMarketData: () -> ();
   fetchPriorityAssetPrices: () -> ();
   fetchTechnicalData: (assetId: text) -> ();
+  getApiDoc: () -> (text) query;
   getAvailableAssets: () -> (vec text) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserProfileWithStatus: () -> (AuthResult_1) query;
@@ -167,6 +183,7 @@ service : {
                                         text;
                                         text;
                                       }) query;
+  getExchangeRate: () -> (opt ExchangeRate) query;
   getHistoricalPrice: (coinGeckoId: text, date: int) -> (float64);
   getLastFetchError: () ->
    (record {
@@ -210,6 +227,8 @@ service : {
   initializeAccessControl: () -> ();
   isAuthenticated: () -> (bool) query;
   isCallerAdmin: () -> (bool) query;
+  refreshAllPrices: () -> (RefreshResult);
+  refreshExchangeRate: () -> (ExchangeRate);
   removeCustomPriorityAsset: (coinGeckoId: text) ->
    (record {
       error: opt text;

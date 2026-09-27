@@ -239,6 +239,14 @@ export default function PortfolioChart({
         const realizedPL = sellValue - costBasis;
         cumulativeRealizedPL += realizedPL;
 
+        // Mirror the backend's totalPurchaseValue semantics: a sell removes
+        // the sold quantity's cost basis from the cumulative purchase value,
+        // so this line tracks the backend card instead of only ever growing.
+        cumulativePurchaseValue = Math.max(
+          0,
+          cumulativePurchaseValue - costBasis,
+        );
+
         const newAmount = Math.max(0, holding.amount - txAmount);
         const newTotalCost = Math.max(0, holding.totalCost - costBasis);
         holdings.set(symbol, {

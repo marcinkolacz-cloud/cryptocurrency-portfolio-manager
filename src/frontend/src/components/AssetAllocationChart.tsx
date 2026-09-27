@@ -11,6 +11,8 @@ import {
   Tooltip,
 } from "recharts";
 import type { Portfolio } from "../backend";
+import { useCurrency } from "../contexts/CurrencyContext";
+import { Money } from "./Money";
 
 interface AssetAllocationChartProps {
   portfolio: Portfolio;
@@ -92,6 +94,7 @@ export default function AssetAllocationChart({
 }: AssetAllocationChartProps) {
   const t = translations[language];
   const palette = useAllocationPalette();
+  const { formatMoney } = useCurrency();
   const [showPercentage, setShowPercentage] = useState(false);
 
   const chartData = useMemo(() => {
@@ -126,15 +129,6 @@ export default function AssetAllocationChart({
       .sort((a, b) => b.value - a.value);
   }, [portfolio, showPercentage]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
   const formatPercent = (value: number) => {
     return `${new Intl.NumberFormat(language === "pl" ? "pl-PL" : "en-US", {
       minimumFractionDigits: 1,
@@ -161,8 +155,7 @@ export default function AssetAllocationChart({
             {data.name}
           </p>
           <p className="font-terminal text-xs text-terminal-muted mb-1">
-            {t.value}:{" "}
-            <span className="text-terminal">{formatCurrency(data.value)}</span>
+            {t.value}: <Money usd={data.value} className="text-terminal" />
           </p>
           <p className="font-terminal text-xs text-terminal-muted">
             {t.percentage}:{" "}
@@ -180,19 +173,50 @@ export default function AssetAllocationChart({
   // enough to read (>= INLINE_LABEL_MIN_PERCENT). Honors the $/% toggle.
   // Explicit fontSize bumps the label above recharts' ~11px default for
   // better readability alongside the larger list rows and legend.
+  // SVG text cannot host the <Money> component, so the USD/PLN pair is built
+  // as two stacked <tspan> lines from the same shared formatter.
   const renderInlineLabel = (entry: {
     name: string;
     value: number;
     percentage: number;
   }) => {
     if (entry.percentage < INLINE_LABEL_MIN_PERCENT) return "";
-    const text = showPercentage
-      ? formatPercent(entry.percentage)
-      : formatCurrency(entry.value);
+    if (showPercentage) {
+      return (
+        <tspan
+          fontSize={13}
+          fill={palette.labelFill}
+          style={{ font: "inherit" }}
+        >
+          {formatPercent(entry.percentage)}
+        </tspan>
+      );
+    }
+    const { usd, pln } = formatMoney(entry.value);
     return (
-      <tspan fontSize={13} fill={palette.labelFill} style={{ font: "inherit" }}>
-        {text}
-      </tspan>
+      <>
+        <tspan
+          x={0}
+          dy={0}
+          fontSize={13}
+          fill={palette.labelFill}
+          style={{ font: "inherit" }}
+        >
+          {usd}
+        </tspan>
+        {pln ? (
+          <tspan
+            x={0}
+            dy={12}
+            fontSize={10}
+            fill={palette.labelFill}
+            opacity={0.7}
+            style={{ font: "inherit" }}
+          >
+            {pln}
+          </tspan>
+        ) : null}
+      </>
     );
   };
 
@@ -303,8 +327,11 @@ export default function AssetAllocationChart({
                     <span className="font-terminal text-lg font-bold text-terminal w-20 shrink-0 truncate">
                       {entry.name}
                     </span>
-                    <span className="font-terminal text-lg text-terminal flex-1 text-right tabular-nums truncate">
-                      {formatCurrency(entry.value)}
+                    <span className="flex-1 text-right">
+                      <Money
+                        usd={entry.value}
+                        className="text-lg text-terminal"
+                      />
                     </span>
                     <span className="font-terminal text-lg text-terminal-muted w-20 shrink-0 text-right tabular-nums">
                       {formatPercent(entry.percentage)}

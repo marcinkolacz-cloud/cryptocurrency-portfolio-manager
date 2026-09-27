@@ -8,10 +8,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  useFetchMarketData,
-  useFetchPriorityAssetPrices,
+  useGetExchangeRate,
   useGetIsAdmin,
   useGetLastFetchError,
+  useRefreshAllPrices,
 } from "@/hooks/useQueries";
 import {
   Activity,
@@ -20,8 +20,9 @@ import {
   Loader2,
   Plus,
   RefreshCw,
+  TriangleAlert,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface MarketDataStatusPanelProps {
   language: "pl" | "en";
@@ -37,6 +38,7 @@ const translations = {
     loading: "Ładowanie",
     connected: "Połączono",
     lastUpdated: "Ostatnia aktualizacja",
+    lastUpdatedUnknown: "Nieznana",
     calculationQuality: "Jakość obliczeń",
     trackedAssets: "Śledzone aktywa",
     debugTitle: "Debug: ostatni błąd pobierania",
@@ -51,13 +53,25 @@ const translations = {
     refreshPrices: "Odśwież ceny",
     refreshPricesLoading: "Odświeżanie...",
     refreshPricesError: "Błąd odświeżania cen",
+    refreshPricesErrorMarketData: "Nie udało się odświeżyć danych rynkowych",
+    refreshPricesErrorPriorityAssets:
+      "Nie udało się odświeżyć cen aktywów priorytetowych",
+    refreshPricesErrorBoth:
+      "Nie udało się odświeżyć danych rynkowych ani cen aktywów priorytetowych",
+    refreshPricesErrorDetail: "Szczegóły błędu",
+    refreshPricesSuccess: "Ceny zaktualizowane",
     addTokenButton: "Dodaj token",
+    adminCheckError: "Nie udało się sprawdzić uprawnień administratora.",
+    adminCheckRetry: "Spróbuj ponownie",
+    exchangeRateError: "Błąd kursu USD/PLN",
+    exchangeRateErrorDetail: "Szczegóły błędu",
   },
   en: {
     marketDataStatus: "Market Data Status",
     loading: "Loading",
     connected: "Connected",
     lastUpdated: "Last updated",
+    lastUpdatedUnknown: "Unknown",
     calculationQuality: "Calculation Quality",
     trackedAssets: "Tracked Assets",
     debugTitle: "Debug: last fetch error",
@@ -72,7 +86,17 @@ const translations = {
     refreshPrices: "Refresh prices",
     refreshPricesLoading: "Refreshing...",
     refreshPricesError: "Error refreshing prices",
+    refreshPricesErrorMarketData: "Failed to refresh market data",
+    refreshPricesErrorPriorityAssets: "Failed to refresh priority asset prices",
+    refreshPricesErrorBoth:
+      "Failed to refresh both market data and priority asset prices",
+    refreshPricesErrorDetail: "Error details",
+    refreshPricesSuccess: "Prices updated",
     addTokenButton: "Add token",
+    adminCheckError: "Could not verify administrator permissions.",
+    adminCheckRetry: "Try again",
+    exchangeRateError: "USD/PLN rate error",
+    exchangeRateErrorDetail: "Error details",
   },
 };
 
@@ -84,41 +108,64 @@ export default function MarketDataStatusPanel({
   calculationQuality,
 }: MarketDataStatusPanelProps) {
   const t = translations[language];
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [debugOpen, setDebugOpen] = useState(false);
-  const [refreshError, setRefreshError] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [refreshSuccess, setRefreshSuccess] = useState(false);
   const [addTokenOpen, setAddTokenOpen] = useState(false);
 
   const lastFetchErrorQuery = useGetLastFetchError();
-  const showDebug = useGetIsAdmin();
+  const isAdminQuery = useGetIsAdmin();
+  const exchangeRateQuery = useGetExchangeRate();
+  // Fail closed: only treat the caller as admin once the query has resolved
+  // successfully with `true`. While loading or on error, hide admin controls.
+  // A failed check is retried by the query and can be retried manually below,
+  // so a transient error never permanently hides the controls.
+  const showDebug = isAdminQuery.isSuccess && isAdminQuery.data === true;
+  const adminCheckFailed = isAdminQuery.isError;
 
-  const fetchMarketDataMutation = useFetchMarketData();
-  const fetchPriorityAssetPricesMutation = useFetchPriorityAssetPrices();
+  const refreshAllPricesMutation = useRefreshAllPrices();
 
-  const isRefreshing =
-    fetchMarketDataMutation.isPending ||
-    fetchPriorityAssetPricesMutation.isPending;
+  const isRefreshing = refreshAllPricesMutation.isPending;
 
-  const handleRefreshPrices = async () => {
-    setRefreshError(false);
-    try {
-      await Promise.all([
-        fetchMarketDataMutation.mutateAsync(),
-        fetchPriorityAssetPricesMutation.mutateAsync(),
-      ]);
-    } catch (error) {
-      console.error("Error refreshing prices:", error);
-      setRefreshError(true);
-    }
+  const handleAdminCheckRetry = () => {
+    setRefreshError(null);
+    setRefreshSuccess(false);
+    void isAdminQuery.refetch();
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+  const handleRefreshPrices = async () => {
+    setRefreshError(null);
+    setRefreshSuccess(false);
+    try {
+      const result = await refreshAllPricesMutation.mutateAsync();
+      // The backend never traps; inspect the per-part result instead.
+      if (result.marketDataOk && result.priorityAssetsOk) {
+        setRefreshSuccess(true);
+        return;
+      }
 
-    return () => clearInterval(timer);
-  }, []);
+      const failedParts: string[] = [];
+      if (!result.marketDataOk) {
+        failedParts.push(
+          `${t.refreshPricesErrorMarketData}${
+            result.marketDataError ? `: ${result.marketDataError}` : ""
+          }`,
+        );
+      }
+      if (!result.priorityAssetsOk) {
+        failedParts.push(
+          `${t.refreshPricesErrorPriorityAssets}${
+            result.priorityAssetsError ? `: ${result.priorityAssetsError}` : ""
+          }`,
+        );
+      }
+      setRefreshError(failedParts.join(" · "));
+    } catch (error) {
+      console.error("Error refreshing prices:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      setRefreshError(`${t.refreshPricesError}: ${message}`);
+    }
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString(language === "pl" ? "pl-PL" : "en-US", {
@@ -229,9 +276,7 @@ export default function MarketDataStatusPanel({
                 {t.lastUpdated}:
               </span>
               <span className="text-sm font-terminal font-semibold text-terminal">
-                {lastUpdated
-                  ? formatTime(lastUpdated)
-                  : formatTime(currentTime)}
+                {lastUpdated ? formatTime(lastUpdated) : t.lastUpdatedUnknown}
               </span>
             </div>
           </div>
@@ -268,29 +313,31 @@ export default function MarketDataStatusPanel({
               </Badge>
             </div>
 
-            {showDebug && (
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefreshPrices}
-                    disabled={isRefreshing}
-                    className="rounded-terminal font-terminal"
-                    data-ocid="market_data_status.refresh_prices_button"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {t.refreshPricesLoading}
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        {t.refreshPrices}
-                      </>
-                    )}
-                  </Button>
+            {/* Refresh prices is available to every signed-in user — no
+                admin gate. The backend accepts any authenticated caller. */}
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshPrices}
+                  disabled={isRefreshing}
+                  className="rounded-terminal font-terminal"
+                  data-ocid="market_data_status.refresh_prices_button"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {t.refreshPricesLoading}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      {t.refreshPrices}
+                    </>
+                  )}
+                </Button>
+                {showDebug && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -302,15 +349,64 @@ export default function MarketDataStatusPanel({
                     <Plus className="h-3.5 w-3.5" />
                     {t.addTokenButton}
                   </Button>
-                </div>
-                {refreshError && (
-                  <span
-                    className="text-xs text-terminal-red"
-                    data-ocid="market_data_status.refresh_prices_error"
-                  >
-                    {t.refreshPricesError}
-                  </span>
                 )}
+              </div>
+              {refreshError && (
+                <span
+                  className="text-xs text-terminal-red"
+                  data-ocid="market_data_status.refresh_prices_error"
+                >
+                  {refreshError}
+                </span>
+              )}
+              {refreshSuccess && (
+                <span
+                  className="text-xs text-terminal-green"
+                  data-ocid="market_data_status.refresh_prices_success"
+                >
+                  {t.refreshPricesSuccess}
+                </span>
+              )}
+              {exchangeRateQuery.data?.lastError && (
+                <span
+                  className="flex items-start gap-1.5 text-xs text-terminal-red"
+                  data-ocid="market_data_status.exchange_rate_error"
+                >
+                  <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    <span className="font-semibold">
+                      {t.exchangeRateError}:
+                    </span>{" "}
+                    {exchangeRateQuery.data.lastError}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            {adminCheckFailed && (
+              <div
+                className="flex flex-col gap-1"
+                data-ocid="market_data_status.admin_check_error"
+              >
+                <span className="flex items-center gap-1.5 text-xs text-terminal-red">
+                  <TriangleAlert className="h-3.5 w-3.5" />
+                  {t.adminCheckError}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdminCheckRetry}
+                  disabled={isAdminQuery.isFetching}
+                  className="w-fit rounded-terminal font-terminal"
+                  data-ocid="market_data_status.admin_check_retry_button"
+                >
+                  {isAdminQuery.isFetching ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  {t.adminCheckRetry}
+                </Button>
               </div>
             )}
           </div>

@@ -1,4 +1,89 @@
-// Version: 1.0.0
+// Version: 4.0.0
+type AccessControlState__45017055 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__230067015<Principal, UserRole__1073662873>
+  };
+type Asset__115015238 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
+type Asset__483623877 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
+type Asset__513373034 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
+type Asset__621001643 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
+type Asset__758942814 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
 type Asset__930360235 =
   {
     amount : Float;
@@ -15,16 +100,92 @@ type Asset__930360235 =
     symbol : Text;
     totalSoldCost : Float
   };
-type Data__552063367<K, V> = {var count : Nat__93962160; kvs : [var ?(K, V)]};
-type Internal__455405067<K, V> =
-  {children : [var ?Node__279997185<K, V>]; data : Data__552063367<K, V>};
-type Leaf__114713147<K, V> = {data : Data__552063367<K, V>};
-type Map__190625089<K, V> = Map__719753394<K, V>;
-type Map__246123559<K, V> = Map__190625089<K, V>;
+type Asset__946359979 =
+  {
+    amount : Float;
+    averagePrice : Float;
+    averagePurchasePrice : Float;
+    currentPrice : Float;
+    currentValue : Float;
+    name : Text;
+    profitLoss : Float;
+    profitLossPercentage : Float;
+    purchaseValue : Float;
+    realizedProfitLoss : Float;
+    realizedProfitLossPercentage : Float;
+    symbol : Text;
+    totalSoldCost : Float
+  };
+type Data__44217153<K, V> = {var count : Nat__227979830; kvs : [var ?(K, V)]};
+type ExchangeRate__390660276 =
+  {lastError : ?Text; lastUpdated : Int; rate : Float; sourceTimestamp : Int};
+type ExchangeRate__633575834 =
+  {lastError : ?Text; lastUpdated : Int; rate : Float; sourceTimestamp : Int};
+type ExchangeRate__774310114 =
+  {lastError : ?Text; lastUpdated : Int; rate : Float; sourceTimestamp : Int};
+type Internal__283199666<K, V> =
+  {children : [var ?Node__204828119<K, V>]; data : Data__44217153<K, V>};
+type Leaf__598469445<K, V> = {data : Data__44217153<K, V>};
+type Map__230067015<K, V> = Map__405889023<K, V>;
 type Map__334413012<K, V> = {root : Tree__4145630<K, V>; size : Nat};
-type Map__719753394<K, V> =
-  {var root : Node__279997185<K, V>; var size : Nat__93962160};
+type Map__405889023<K, V> = Map__603270868<K, V>;
+type Map__603270868<K, V> =
+  {var root : Node__204828119<K, V>; var size : Nat__227979830};
 type MarketDataStatus__1069269376 = MarketDataStatus__869390846;
+type MarketDataStatus__523272360 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketDataStatus__533107824 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketDataStatus__543162922 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketDataStatus__673277769 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketDataStatus__684089603 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
+type MarketDataStatus__789554663 =
+  {
+    apiHealth : Text;
+    calculationQuality : Float;
+    colorScheme : Text;
+    lastUpdated : Int;
+    status : Text;
+    trackedAssetsCount : Nat
+  };
 type MarketDataStatus__869390846 =
   {
     apiHealth : Text;
@@ -34,7 +195,52 @@ type MarketDataStatus__869390846 =
     status : Text;
     trackedAssetsCount : Nat
   };
+type MarketData__1006842434 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type MarketData__1053498629 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
 type MarketData__386355075 = MarketData__830262390;
+type MarketData__638662169 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type MarketData__680070311 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type MarketData__73403036 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
 type MarketData__830262390 =
   {
     id : Nat;
@@ -44,11 +250,336 @@ type MarketData__830262390 =
     price : Float;
     symbol : Text
   };
+type MarketData__991629561 =
+  {
+    id : Nat;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type Nat__227979830 = Nat__920180692;
 type Nat__920180692 = Nat;
-type Nat__93962160 = Nat__920180692;
-type Node__279997185<K, V> =
-  {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
+type NewActor__203844680 = OldActor__1057821239;
+type NewActor__256259615 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var exchangeRate : {var value : ExchangeRate__390660276};
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__638662169>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__543162922>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [NewPortfolio__214512977]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__372545688>;
+    var technicalData : Map__334413012<Nat, TechnicalData__21823332>;
+    var userProfiles : Map__334413012<Principal, UserProfile__734137226>
+  };
+type NewActor__486559717 = OldActor__61572473;
+type NewActor__664089349 = OldActor__1058885862;
+type NewActor__705461471 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var exchangeRate : {var value : ExchangeRate__774310114};
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__73403036>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__533107824>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__350998735]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__889666382>;
+    var technicalData : Map__334413012<Nat, TechnicalData__730769898>;
+    var userProfiles : Map__334413012<Principal, UserProfile__652100900>
+  };
+type NewActor__949499829 = OldActor__263139629;
+type NewPortfolio__214512977 =
+  {
+    assets : [Asset__946359979];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    totalValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__741836362];
+    unrealizedProfitLoss : Float
+  };
+type Node__204828119<K, V> =
+  {#internal : Internal__283199666<K, V>; #leaf : Leaf__598469445<K, V>};
+type OldActor__1057821239 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__680070311>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__684089603>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__1045525188]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__1042602891>;
+    var technicalData : Map__334413012<Nat, TechnicalData__401183845>;
+    var userProfiles : Map__334413012<Principal, UserProfile__400946076>
+  };
+type OldActor__1058885862 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__991629561>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__673277769>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__401055066]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__943901015>;
+    var technicalData : Map__334413012<Nat, TechnicalData__403704524>;
+    var userProfiles : Map__334413012<Principal, UserProfile__609119325>
+  };
+type OldActor__148175652 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var exchangeRate : {var value : ExchangeRate__390660276};
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__638662169>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__543162922>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [OldPortfolio__30398018]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__372545688>;
+    var technicalData : Map__334413012<Nat, TechnicalData__21823332>;
+    var userProfiles : Map__334413012<Principal, UserProfile__734137226>
+  };
+type OldActor__263139629 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__1053498629>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__789554663>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__174028384]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__263734601>;
+    var technicalData : Map__334413012<Nat, TechnicalData__159308082>;
+    var userProfiles : Map__334413012<Principal, UserProfile__780622392>
+  };
+type OldActor__542196375 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__73403036>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__533107824>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__350998735]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__889666382>;
+    var technicalData : Map__334413012<Nat, TechnicalData__730769898>;
+    var userProfiles : Map__334413012<Principal, UserProfile__652100900>
+  };
+type OldActor__61572473 =
+  {
+    var _acAdminAssigned : Bool;
+    var _acState : AccessControlState__45017055;
+    var _acUserRoles : [(Principal, UserRole__1073662873)];
+    var accessControlState :
+      {
+        var adminAssigned : Bool;
+        var userRoles : Map__334413012<Principal, UserRole__1073662873>
+      };
+    var customPriorityAssetIds : [Text];
+    var customTickerMap : [(Text, Text)];
+    var isSystemHealthy : Bool;
+    var lastHealthCheck : Int;
+    var lastMarketDataError : ?Text;
+    var lastMarketDataErrorTimestamp : ?Int;
+    var lastPriorityAssetsError : ?Text;
+    var lastPriorityAssetsErrorTimestamp : ?Int;
+    var lastTechnicalDataError : ?Text;
+    var lastTechnicalDataErrorTimestamp : ?Int;
+    var marketData : Map__334413012<Nat, MarketData__1006842434>;
+    var marketDataStatus : Map__334413012<Nat, MarketDataStatus__523272360>;
+    var migrationVersion : Nat;
+    var portfolios : Map__334413012<Principal, [Portfolio__553801035]>;
+    var priorityAssets : Map__334413012<Nat, PriorityAsset__261937236>;
+    var technicalData : Map__334413012<Nat, TechnicalData__449445192>;
+    var userProfiles : Map__334413012<Principal, UserProfile__929735345>
+  };
+type OldPortfolio__30398018 =
+  {
+    assets : [Asset__946359979];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__741836362];
+    unrealizedProfitLoss : Float
+  };
+type Portfolio__1045525188 =
+  {
+    assets : [Asset__483623877];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__411219112];
+    unrealizedProfitLoss : Float
+  };
+type Portfolio__174028384 =
+  {
+    assets : [Asset__758942814];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__224778069];
+    unrealizedProfitLoss : Float
+  };
+type Portfolio__350998735 =
+  {
+    assets : [Asset__115015238];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__320919829];
+    unrealizedProfitLoss : Float
+  };
+type Portfolio__401055066 =
+  {
+    assets : [Asset__621001643];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__375857275];
+    unrealizedProfitLoss : Float
+  };
 type Portfolio__529122221 = Portfolio__934865953;
+type Portfolio__553801035 =
+  {
+    assets : [Asset__513373034];
+    createdAt : Int;
+    id : Nat;
+    name : Text;
+    totalProfitLoss : Float;
+    totalPurchaseValue : Float;
+    trackedAssets : [Text];
+    transactions : [Transaction__973038811];
+    unrealizedProfitLoss : Float
+  };
 type Portfolio__934865953 =
   {
     assets : [Asset__930360235];
@@ -57,13 +588,48 @@ type Portfolio__934865953 =
     name : Text;
     totalProfitLoss : Float;
     totalPurchaseValue : Float;
+    totalValue : Float;
     trackedAssets : [Text];
     transactions : [Transaction__339151490];
     unrealizedProfitLoss : Float
   };
-type Principal__224692764 = Principal;
-type Principal__565152929 = Principal__224692764;
+type PriorityAsset__1042602891 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type PriorityAsset__261937236 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type PriorityAsset__263734601 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
 type PriorityAsset__358510014 = PriorityAsset__413329521;
+type PriorityAsset__372545688 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
 type PriorityAsset__413329521 =
   {
     id : Text;
@@ -73,7 +639,85 @@ type PriorityAsset__413329521 =
     price : Float;
     symbol : Text
   };
+type PriorityAsset__889666382 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type PriorityAsset__943901015 =
+  {
+    id : Text;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    price : Float;
+    symbol : Text
+  };
+type TechnicalData__159308082 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
+type TechnicalData__21823332 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
+type TechnicalData__401183845 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
+type TechnicalData__403704524 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
+type TechnicalData__449445192 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
 type TechnicalData__677488086 = TechnicalData__785922366;
+type TechnicalData__730769898 =
+  {
+    change24h : Float;
+    currentPrice : Float;
+    lastUpdated : Int;
+    marketCap : Float;
+    name : Text;
+    symbol : Text;
+    volume24h : Float
+  };
 type TechnicalData__785922366 =
   {
     change24h : Float;
@@ -84,7 +728,73 @@ type TechnicalData__785922366 =
     symbol : Text;
     volume24h : Float
   };
+type Transaction__224778069 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Transaction__320919829 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
 type Transaction__339151490 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Transaction__375857275 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Transaction__411219112 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Transaction__741836362 =
+  {
+    amount : Float;
+    assetName : Text;
+    assetSymbol : Text;
+    comment : Text;
+    date : Int;
+    id : Nat;
+    price : Float;
+    type_ : Text
+  };
+type Transaction__973038811 =
   {
     amount : Float;
     assetName : Text;
@@ -101,16 +811,36 @@ type Tree__4145630<K, V> =
     #leaf;
     #red : (Tree__4145630<K, V>, K, V, Tree__4145630<K, V>)
   };
+type UserProfile__400946076 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
 type UserProfile__491224006 = UserProfile__686917189;
+type UserProfile__609119325 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
+type UserProfile__652100900 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
 type UserProfile__686917189 =
   {colorScheme : Text; language : Text; name : Text; theme : Text};
+type UserProfile__734137226 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
+type UserProfile__780622392 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
+type UserProfile__929735345 =
+  {colorScheme : Text; language : Text; name : Text; theme : Text};
 type UserRole__1073662873 = {#admin; #guest; #user};
-actor {
+{
+  "20260918_000000" : (old : OldActor__1058885862) -> NewActor__664089349;
+  "20260918_120000" : (old : OldActor__1057821239) -> NewActor__203844680;
+  "20260927_000000" : (old : OldActor__263139629) -> NewActor__949499829;
+  "20260928_000000" : (old : OldActor__61572473) -> NewActor__486559717;
+  "20260929_000000" : (old : OldActor__542196375) -> NewActor__705461471;
+  "20260930_000000" : (old : OldActor__148175652) -> NewActor__256259615
+}
+actor  {
   stable var _acAdminAssigned : Bool;
   stable var _acState :
     {
       var adminAssigned : Bool;
-      userRoles : Map__246123559<Principal, UserRole__1073662873>
+      userRoles : Map__230067015<Principal, UserRole__1073662873>
     };
   stable var _acUserRoles : [(Principal, UserRole__1073662873)];
   stable var accessControlState :
@@ -120,6 +850,7 @@ actor {
     };
   stable var customPriorityAssetIds : [Text];
   stable var customTickerMap : [(Text, Text)];
+  stable var exchangeRate : {var value : ExchangeRate__633575834};
   stable var isSystemHealthy : Bool;
   stable var lastHealthCheck : Int;
   stable var lastMarketDataError : ?Text;
@@ -134,17 +865,11 @@ actor {
     {root : Tree__4145630<Nat, MarketDataStatus__1069269376>; size : Nat};
   stable var migrationVersion : Nat;
   stable var portfolios :
-    {
-      root : Tree__4145630<Principal__565152929, [Portfolio__529122221]>;
-      size : Nat
-    };
+    {root : Tree__4145630<Principal, [Portfolio__529122221]>; size : Nat};
   stable var priorityAssets :
     {root : Tree__4145630<Nat, PriorityAsset__358510014>; size : Nat};
   stable var technicalData :
     {root : Tree__4145630<Nat, TechnicalData__677488086>; size : Nat};
   stable var userProfiles :
-    {
-      root : Tree__4145630<Principal__565152929, UserProfile__491224006>;
-      size : Nat
-    }
+    {root : Tree__4145630<Principal, UserProfile__491224006>; size : Nat}
 };
