@@ -776,11 +776,8 @@ export function updatePortfolioWithMarketPrices(
   marketData: MarketData[] | null | undefined,
   priorityAssets: PriorityAsset[] | null | undefined,
 ): Portfolio | null {
-  if (!portfolio) {
-    return null;
-  }
+  if (!portfolio) return null;
 
-  // Build price map from backend market data first (key = uppercase symbol)
   const priceMap = new Map<string, number>();
   if (Array.isArray(marketData)) {
     for (const coin of marketData) {
@@ -789,8 +786,6 @@ export function updatePortfolioWithMarketPrices(
       }
     }
   }
-
-  // Overlay priority asset prices so they take precedence for the same symbol
   if (Array.isArray(priorityAssets)) {
     for (const asset of priorityAssets) {
       if (asset?.symbol && typeof asset.price === "number" && asset.price > 0) {
@@ -799,50 +794,21 @@ export function updatePortfolioWithMarketPrices(
     }
   }
 
-  console.log(`\n💰 Updating portfolio with ${priceMap.size} market prices`);
-
   const updatedAssets = (portfolio.assets || [])
     .map((asset) => {
       if (!asset) return null;
-
       const marketPrice = priceMap.get(asset.symbol?.toUpperCase() || "");
-
-      // Priority: Use market price if available and valid
-      // Fallback: Use existing price only if market price is not available
-      // NEVER use $0 unless both market and existing prices are 0
       let currentPrice = asset.currentPrice || 0;
+      if (marketPrice && marketPrice > 0) currentPrice = marketPrice;
 
-      if (marketPrice && marketPrice > 0) {
-        currentPrice = marketPrice;
-        console.log(
-          `✅ ${asset.symbol}: Updated to market price $${marketPrice.toFixed(6)}`,
-        );
-      } else if (currentPrice > 0) {
-        console.log(
-          `⚠️ ${asset.symbol}: Using existing price $${currentPrice.toFixed(6)} (no market price)`,
-        );
-      } else {
-        console.warn(
-          `❌ ${asset.symbol}: No price available (market: ${marketPrice}, existing: ${asset.currentPrice})`,
-        );
-      }
-
-      // Refresh the live market price and recompute the derived P&L fields from
-      // that same displayed currentPrice, using the exact backend canonical
-      // formulas (main.mo updateAssets) so the row's price, dollar P&L, and
-      // percentage can never disagree. unrealizedPL is unrealized-only:
-      // (currentPrice - averagePrice) * amount, and 0 when amount <= 0.
-      // profitLoss is the canonical sum realizedProfitLoss + unrealizedPL.
-      // The remaining cost-basis fields (realizedProfitLossPercentage,
-      // purchaseValue, currentValue, totalSoldCost) stay exactly as the backend
-      // computed them.
       const amount = asset.amount || 0;
       const averagePrice = asset.averagePrice || 0;
+      const realizedProfitLoss = asset.realizedProfitLoss || 0;
       const basis = averagePrice * amount;
       const unrealizedPL =
         amount > 0 ? (currentPrice - averagePrice) * amount : 0;
       const profitLossPercentage = basis > 0 ? (unrealizedPL / basis) * 100 : 0;
-      const profitLoss = (asset.realizedProfitLoss || 0) + unrealizedPL;
+      const profitLoss = realizedProfitLoss + unrealizedPL;
 
       return {
         ...asset,
@@ -855,19 +821,14 @@ export function updatePortfolioWithMarketPrices(
       (asset): asset is Asset => asset !== null && (asset.amount || 0) > 0,
     );
 
-  // Recompute the price-dependent portfolio totals over the same amount > 0
-  // asset set the backend uses, with the exact main.mo formulas, so live prices
-  // never desync the table from the summary cards. totalPurchaseValue does not
-  // depend on price and is left untouched.
   let totalValue = 0;
   let unrealizedProfitLoss = 0;
   let totalProfitLoss = 0;
-  for (const asset of updatedAssets) {
-    const amount = asset.amount || 0;
-    const averagePrice = asset.averagePrice || 0;
-    totalValue += amount * (asset.currentPrice || 0);
-    unrealizedProfitLoss += (asset.currentPrice - averagePrice) * amount;
-    totalProfitLoss += asset.profitLoss || 0;
+  for (const a of updatedAssets) {
+    totalValue += (a.amount || 0) * (a.currentPrice || 0);
+    unrealizedProfitLoss +=
+      ((a.currentPrice || 0) - (a.averagePrice || 0)) * (a.amount || 0);
+    totalProfitLoss += a.profitLoss || 0;
   }
 
   return {

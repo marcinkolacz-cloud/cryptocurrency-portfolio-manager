@@ -38699,9 +38699,7 @@ function useGetHistoricalPrice() {
   };
 }
 function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) {
-  if (!portfolio) {
-    return null;
-  }
+  if (!portfolio) return null;
   const priceMap = /* @__PURE__ */ new Map();
   if (Array.isArray(marketData)) {
     for (const coin of marketData) {
@@ -38717,33 +38715,19 @@ function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) 
       }
     }
   }
-  console.log(`
-💰 Updating portfolio with ${priceMap.size} market prices`);
   const updatedAssets = (portfolio.assets || []).map((asset) => {
     var _a3;
     if (!asset) return null;
     const marketPrice = priceMap.get(((_a3 = asset.symbol) == null ? void 0 : _a3.toUpperCase()) || "");
     let currentPrice = asset.currentPrice || 0;
-    if (marketPrice && marketPrice > 0) {
-      currentPrice = marketPrice;
-      console.log(
-        `✅ ${asset.symbol}: Updated to market price $${marketPrice.toFixed(6)}`
-      );
-    } else if (currentPrice > 0) {
-      console.log(
-        `⚠️ ${asset.symbol}: Using existing price $${currentPrice.toFixed(6)} (no market price)`
-      );
-    } else {
-      console.warn(
-        `❌ ${asset.symbol}: No price available (market: ${marketPrice}, existing: ${asset.currentPrice})`
-      );
-    }
+    if (marketPrice && marketPrice > 0) currentPrice = marketPrice;
     const amount = asset.amount || 0;
     const averagePrice = asset.averagePrice || 0;
+    const realizedProfitLoss = asset.realizedProfitLoss || 0;
     const basis = averagePrice * amount;
     const unrealizedPL = amount > 0 ? (currentPrice - averagePrice) * amount : 0;
     const profitLossPercentage = basis > 0 ? unrealizedPL / basis * 100 : 0;
-    const profitLoss = (asset.realizedProfitLoss || 0) + unrealizedPL;
+    const profitLoss = realizedProfitLoss + unrealizedPL;
     return {
       ...asset,
       currentPrice,
@@ -38756,12 +38740,10 @@ function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) 
   let totalValue = 0;
   let unrealizedProfitLoss = 0;
   let totalProfitLoss = 0;
-  for (const asset of updatedAssets) {
-    const amount = asset.amount || 0;
-    const averagePrice = asset.averagePrice || 0;
-    totalValue += amount * (asset.currentPrice || 0);
-    unrealizedProfitLoss += (asset.currentPrice - averagePrice) * amount;
-    totalProfitLoss += asset.profitLoss || 0;
+  for (const a2 of updatedAssets) {
+    totalValue += (a2.amount || 0) * (a2.currentPrice || 0);
+    unrealizedProfitLoss += ((a2.currentPrice || 0) - (a2.averagePrice || 0)) * (a2.amount || 0);
+    totalProfitLoss += a2.profitLoss || 0;
   }
   return {
     ...portfolio,

@@ -15,8 +15,6 @@
 
 ## Learnings
 
-- Unrealized P/L percentage must divide by the same cost basis the dollar unrealized uses (averagePrice * amount); purchaseValue is scaled on sells while averagePrice is not, so it drifts from the dollar figure.
-- Asset.profitLossPercentage is a stored field recomputed only on mutations (addTransaction/updateAssets, updateAssetPrices); a formula change leaves existing stored assets stale until a transaction or price refresh, so a one-time recompute must be added as a new Enhanced Migration chain entry.
 - In this converted legacy->enhanced project, mops build emits MOPS-CHECK-DEPLOY-SKIPPED with M0263 errors because the chain's first migration has a non-empty OldActor (pre-conversion shape); this is expected and pre-existing, the build still succeeds and mops check --fix passes the stable compatibility check.
 - The deployed stable shape uses mo:base/OrderedMap.Map for map fields, so a new migration's OldActor/NewActor must use OrderedMap.Map and derive OldActor from the preceding migration's NewActor.
 - The canonical unrealized-only profitLossPercentage formula is (currentPrice - averagePrice) * amount / (averagePrice * amount) * 100, with 0.0 when averagePrice * amount is 0; it matches both updateAssets and updateAssetPrices.
@@ -40,3 +38,5 @@
 - A migration that adds a record field to a nested array element must inline both old and new element types and map over the outer OrderedMap and the inner array; OldActor must equal the preceding entry's NewActor.
 - updatePortfolioWithMarketPrices must recompute per-asset profitLoss = realizedProfitLoss + unrealizedPL and the portfolio totals totalValue/unrealizedProfitLoss/totalProfitLoss over the amount > 0 asset set, or live prices desync the table from the summary cards.
 - totalPurchaseValue is price-independent and must be left unchanged when overlaying live market prices; only totalValue, unrealizedProfitLoss, and totalProfitLoss are recomputed.
+- updatePortfolioWithMarketPrices overlays live market prices onto asset.currentPrice and recomputes profitLoss/profitLossPercentage plus portfolio totalValue/unrealizedProfitLoss/totalProfitLoss over the amount > 0 asset set; totalPurchaseValue is left untouched.
+- pnpm fix (biome check --write) strips console.log/console.warn debug statements and comments from useQueries.ts, so a post-fix diff can look large while remaining behavior-preserving.
