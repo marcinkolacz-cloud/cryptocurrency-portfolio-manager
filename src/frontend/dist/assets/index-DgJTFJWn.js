@@ -38743,17 +38743,32 @@ function updatePortfolioWithMarketPrices(portfolio, marketData, priorityAssets) 
     const basis = averagePrice * amount;
     const unrealizedPL = amount > 0 ? (currentPrice - averagePrice) * amount : 0;
     const profitLossPercentage = basis > 0 ? unrealizedPL / basis * 100 : 0;
+    const profitLoss = (asset.realizedProfitLoss || 0) + unrealizedPL;
     return {
       ...asset,
       currentPrice,
+      profitLoss,
       profitLossPercentage
     };
   }).filter(
     (asset) => asset !== null && (asset.amount || 0) > 0
   );
+  let totalValue = 0;
+  let unrealizedProfitLoss = 0;
+  let totalProfitLoss = 0;
+  for (const asset of updatedAssets) {
+    const amount = asset.amount || 0;
+    const averagePrice = asset.averagePrice || 0;
+    totalValue += amount * (asset.currentPrice || 0);
+    unrealizedProfitLoss += (asset.currentPrice - averagePrice) * amount;
+    totalProfitLoss += asset.profitLoss || 0;
+  }
   return {
     ...portfolio,
-    assets: updatedAssets
+    assets: updatedAssets,
+    totalValue,
+    unrealizedProfitLoss,
+    totalProfitLoss
   };
 }
 const ThemeContext = reactExports.createContext(void 0);

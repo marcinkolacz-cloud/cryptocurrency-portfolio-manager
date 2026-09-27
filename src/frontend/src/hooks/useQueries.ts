@@ -827,23 +827,27 @@ export function updatePortfolioWithMarketPrices(
         );
       }
 
-      // Refresh the live market price and recompute the unrealized-only
-      // profitLossPercentage from that same displayed currentPrice, using the
-      // exact backend canonical formula so the row's price and percentage can
-      // never disagree. The remaining P&L / cost-basis fields (profitLoss,
-      // realizedProfitLossPercentage, purchaseValue, currentValue,
-      // totalSoldCost) stay exactly as the backend computed them, so the
-      // summary cards and chart keep reading one canonical source.
+      // Refresh the live market price and recompute the derived P&L fields from
+      // that same displayed currentPrice, using the exact backend canonical
+      // formulas (main.mo updateAssets) so the row's price, dollar P&L, and
+      // percentage can never disagree. unrealizedPL is unrealized-only:
+      // (currentPrice - averagePrice) * amount, and 0 when amount <= 0.
+      // profitLoss is the canonical sum realizedProfitLoss + unrealizedPL.
+      // The remaining cost-basis fields (realizedProfitLossPercentage,
+      // purchaseValue, currentValue, totalSoldCost) stay exactly as the backend
+      // computed them.
       const amount = asset.amount || 0;
       const averagePrice = asset.averagePrice || 0;
       const basis = averagePrice * amount;
       const unrealizedPL =
         amount > 0 ? (currentPrice - averagePrice) * amount : 0;
       const profitLossPercentage = basis > 0 ? (unrealizedPL / basis) * 100 : 0;
+      const profitLoss = (asset.realizedProfitLoss || 0) + unrealizedPL;
 
       return {
         ...asset,
         currentPrice,
+        profitLoss,
         profitLossPercentage,
       };
     })
@@ -851,10 +855,26 @@ export function updatePortfolioWithMarketPrices(
       (asset): asset is Asset => asset !== null && (asset.amount || 0) > 0,
     );
 
-  // Portfolio-level P&L totals are backend-canonical too. Do not recompute
-  // them here; only the per-asset live price is refreshed above.
+  // Recompute the price-dependent portfolio totals over the same amount > 0
+  // asset set the backend uses, with the exact main.mo formulas, so live prices
+  // never desync the table from the summary cards. totalPurchaseValue does not
+  // depend on price and is left untouched.
+  let totalValue = 0;
+  let unrealizedProfitLoss = 0;
+  let totalProfitLoss = 0;
+  for (const asset of updatedAssets) {
+    const amount = asset.amount || 0;
+    const averagePrice = asset.averagePrice || 0;
+    totalValue += amount * (asset.currentPrice || 0);
+    unrealizedProfitLoss += (asset.currentPrice - averagePrice) * amount;
+    totalProfitLoss += asset.profitLoss || 0;
+  }
+
   return {
     ...portfolio,
     assets: updatedAssets,
+    totalValue,
+    unrealizedProfitLoss,
+    totalProfitLoss,
   };
 }
