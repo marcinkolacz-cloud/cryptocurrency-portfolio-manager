@@ -74710,10 +74710,10 @@ function AssetList({
     return `${sign2}${formatted}%`;
   };
   const summary = reactExports.useMemo(() => {
-    const totalPurchaseValue = portfolio.totalPurchaseValue || 0;
-    const unrealizedProfitLoss = portfolio.unrealizedProfitLoss || 0;
-    const totalProfitLoss = portfolio.totalProfitLoss || 0;
-    const canonicalTotalValue = portfolio.totalValue;
+    const totalPurchaseValue = (updatedPortfolio == null ? void 0 : updatedPortfolio.totalPurchaseValue) || 0;
+    const unrealizedProfitLoss = (updatedPortfolio == null ? void 0 : updatedPortfolio.unrealizedProfitLoss) || 0;
+    const totalProfitLoss = (updatedPortfolio == null ? void 0 : updatedPortfolio.totalProfitLoss) || 0;
+    const canonicalTotalValue = updatedPortfolio == null ? void 0 : updatedPortfolio.totalValue;
     const totalValue = typeof canonicalTotalValue === "number" ? canonicalTotalValue : totalPurchaseValue + unrealizedProfitLoss;
     return {
       totalValue,
@@ -74721,7 +74721,7 @@ function AssetList({
       unrealizedProfitLoss,
       totalProfitLoss
     };
-  }, [portfolio]);
+  }, [updatedPortfolio]);
   const filteredAndSortedAssets = reactExports.useMemo(() => {
     if (!(updatedPortfolio == null ? void 0 : updatedPortfolio.assets)) return [];
     let filtered = [...updatedPortfolio.assets].filter((asset) => {

@@ -1669,7 +1669,7 @@ import Expose "mo:caffeineai-oql/Expose";
     // IC system API default (2MB) applies. That is comfortably larger than a
     // 100-coin /coins/markets response (~120-200KB), so no truncation is
     // expected here. The library default is used.
-    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+    let response = try await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
       // existing marketData map — preserve prior data and record the error.
       lastMarketDataError := ?("_refreshMarketData: " # err.message());
@@ -1927,7 +1927,7 @@ import Expose "mo:caffeineai-oql/Expose";
     );
 
     let url = "https://api.coingecko.com/api/v3/simple/price?ids=" # idsParam # "&vs_currencies=usd";
-    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+    let response = try await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT clear the
       // existing priorityAssets map — preserve prior data and record the error.
       lastPriorityAssetsError := ?("_refreshPriorityAssetPrices: " # err.message());
@@ -2055,7 +2055,7 @@ import Expose "mo:caffeineai-oql/Expose";
     try {
       let dateString = _formatDateDDMMYYYY(date);
       let url = "https://api.coingecko.com/api/v3/coins/" # coinGeckoId # "/history?date=" # dateString # "&localization=false";
-      let response = await OutCall.httpGetRequest(url, [], transform);
+      let response = await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform);
       let json = switch (Json.parse(response)) {
         case (#err(_)) { return 0.0 };
         case (#ok(j)) { j };
@@ -2105,7 +2105,7 @@ import Expose "mo:caffeineai-oql/Expose";
       return { results = []; error = ?"Query must not be empty" };
     };
     let url = "https://api.coingecko.com/api/v3/search?query=" # searchQuery;
-    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+    let response = try await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform) catch (err) {
       return { results = []; error = ?("searchCoinGeckoTokens: outcall failed: " # err.message()) };
     };
     let json = switch (Json.parse(response)) {
@@ -2535,7 +2535,7 @@ import Expose "mo:caffeineai-oql/Expose";
     };
 
     let url = "https://api.coingecko.com/api/v3/coins/" # assetId # "/market_chart?vs_currency=usd&days=30";
-    let response = await OutCall.httpGetRequest(url, [], transform);
+    let response = await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform);
 
     // Return the raw JSON response as text
     response;
@@ -2550,7 +2550,7 @@ import Expose "mo:caffeineai-oql/Expose";
     };
 
     let url = "https://api.coingecko.com/api/v3/coins/" # assetId;
-    let response = try await OutCall.httpGetRequest(url, [], transform) catch (err) {
+    let response = try await OutCall.httpGetRequest(url, [{ name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" }], transform) catch (err) {
       // Outcall trapped (likely IC consensus / SysTransient). Do NOT overwrite
       // existing technicalData — preserve prior data and record the error.
       lastTechnicalDataError := ?("fetchTechnicalData(" # assetId # "): " # err.message());

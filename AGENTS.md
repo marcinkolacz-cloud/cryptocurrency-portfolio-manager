@@ -15,9 +15,6 @@
 
 ## Learnings
 
-- In this converted legacy->enhanced project, mops build emits MOPS-CHECK-DEPLOY-SKIPPED with M0263 errors because the chain's first migration has a non-empty OldActor (pre-conversion shape); this is expected and pre-existing, the build still succeeds and mops check --fix passes the stable compatibility check.
-- The deployed stable shape uses mo:base/OrderedMap.Map for map fields, so a new migration's OldActor/NewActor must use OrderedMap.Map and derive OldActor from the preceding migration's NewActor.
-- The canonical unrealized-only profitLossPercentage formula is (currentPrice - averagePrice) * amount / (averagePrice * amount) * 100, with 0.0 when averagePrice * amount is 0; it matches both updateAssets and updateAssetPrices.
 - updatePortfolioWithMarketPrices overlays live market prices onto asset.currentPrice for display; it must also recompute the displayed profitLossPercentage from that same overlaid currentPrice with the canonical unrealized-only formula, or the table shows a fresh price next to a stale percentage.
 - A migration entry that has already run on the deployed canister will not re-run, so repairing the same derived field again requires a NEW timestamped chain entry whose OldActor equals the preceding entry's NewActor.
 - The canonical unrealized-only profitLossPercentage formula is (currentPrice - averagePrice) * amount / (averagePrice * amount) * 100, with 0.0 when averagePrice * amount is 0; it matches updateAssets, updateAssetPrices, and the migration recompute.
@@ -40,3 +37,6 @@
 - totalPurchaseValue is price-independent and must be left unchanged when overlaying live market prices; only totalValue, unrealizedProfitLoss, and totalProfitLoss are recomputed.
 - updatePortfolioWithMarketPrices overlays live market prices onto asset.currentPrice and recomputes profitLoss/profitLossPercentage plus portfolio totalValue/unrealizedProfitLoss/totalProfitLoss over the amount > 0 asset set; totalPurchaseValue is left untouched.
 - pnpm fix (biome check --write) strips console.log/console.warn debug statements and comments from useQueries.ts, so a post-fix diff can look large while remaining behavior-preserving.
+- The summary useMemo in AssetList.tsx must depend on updatedPortfolio (the market-price overlay), not the raw portfolio prop, or summary cards show stale totals while the table shows live prices.
+- The CoinGecko demo API key is passed as the x-cg-demo-api-key request header on all six api.coingecko.com outcalls in main.mo; the open.er-api.com exchange-rate call in lib/exchange-rate.mo intentionally carries no such header.
+- mops build reports MOPS-CHECK-DEPLOY-SKIPPED with M0263 compatibility errors when a project uses an enhanced migration chain and the fresh PocketIC check runs against an empty canister; the build still succeeds and this is not a source defect.

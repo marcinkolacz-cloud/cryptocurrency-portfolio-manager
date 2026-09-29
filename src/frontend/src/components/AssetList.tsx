@@ -159,14 +159,15 @@ export default function AssetList({
   // totalValue field. The per-asset table renders the backend's own per-asset
   // fields, so the column sums equal these cards.
   const summary = useMemo(() => {
-    const totalPurchaseValue = portfolio.totalPurchaseValue || 0;
-    const unrealizedProfitLoss = portfolio.unrealizedProfitLoss || 0;
-    const totalProfitLoss = portfolio.totalProfitLoss || 0;
+    const totalPurchaseValue = updatedPortfolio?.totalPurchaseValue || 0;
+    const unrealizedProfitLoss = updatedPortfolio?.unrealizedProfitLoss || 0;
+    const totalProfitLoss = updatedPortfolio?.totalProfitLoss || 0;
     // totalValue is a canonical backend field; the generated bindings may lag
     // the backend until the next bindgen, so read it through a narrow view and
     // fall back to the derived value only when it is genuinely absent.
-    const canonicalTotalValue = (portfolio as { totalValue?: number })
-      .totalValue;
+    const canonicalTotalValue = (
+      updatedPortfolio as { totalValue?: number } | undefined
+    )?.totalValue;
     const totalValue =
       typeof canonicalTotalValue === "number"
         ? canonicalTotalValue
@@ -178,7 +179,7 @@ export default function AssetList({
       unrealizedProfitLoss,
       totalProfitLoss,
     };
-  }, [portfolio]);
+  }, [updatedPortfolio]);
 
   const filteredAndSortedAssets = useMemo(() => {
     if (!updatedPortfolio?.assets) return [];
